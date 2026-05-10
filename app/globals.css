@@ -1,26 +1,194 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: oklch(0.99 0.005 70);
+  --surface: oklch(0.97 0.005 70);
+  --surface-elevated: oklch(0.94 0.005 70);
+  --border: oklch(0.88 0.005 70);
+  --border-subtle: oklch(0.93 0.005 70);
+  --foreground: oklch(0.20 0.01 60);
+  --muted: oklch(0.50 0.01 65);
+  --quiet: oklch(0.65 0.01 65);
+  --accent: oklch(0.66 0.20 48);
+  --accent-foreground: oklch(1 0 0);
+  --accent-quiet: oklch(0.93 0.05 50);
+  --success: oklch(0.55 0.13 145);
+  --warning: oklch(0.65 0.14 75);
+  --danger: oklch(0.55 0.18 25);
+  --info: oklch(0.55 0.12 230);
+  --chip-bg: oklch(0.96 0.005 70);
+}
+
+.dark {
+  --background: oklch(0.155 0.003 70);
+  --surface: oklch(0.205 0.003 70);
+  --surface-elevated: oklch(0.255 0.004 70);
+  --border: oklch(0.32 0.004 70);
+  --border-subtle: oklch(0.26 0.004 70);
+  --foreground: oklch(0.96 0.003 80);
+  --muted: oklch(0.68 0.008 75);
+  --quiet: oklch(0.55 0.008 75);
+  --accent: oklch(0.72 0.185 48);
+  --accent-foreground: oklch(1 0 0);
+  --accent-quiet: oklch(0.30 0.06 50);
+  --success: oklch(0.74 0.13 145);
+  --warning: oklch(0.80 0.13 75);
+  --danger: oklch(0.68 0.18 25);
+  --info: oklch(0.70 0.10 230);
+  --chip-bg: oklch(0.235 0.004 70);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-quiet: var(--quiet);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-quiet: var(--accent-quiet);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-chip-bg: var(--chip-bg);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-border-subtle bg-surface;
+  }
+  .kpi {
+    @apply px-5 py-4;
+  }
+  .kpi .v {
+    font-family: var(--font-mono);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
+  }
+  .kpi .l {
+    @apply text-[11px] uppercase tracking-wider text-muted;
+  }
+  .chip {
+    @apply inline-block rounded-full border border-border-subtle bg-chip-bg px-2 py-[3px] text-[11px] leading-none text-foreground;
+  }
+  .chip-good {
+    border-color: color-mix(in oklch, var(--success) 35%, transparent);
+    background: color-mix(in oklch, var(--success) 12%, transparent);
+    color: var(--success);
+  }
+  .chip-warn {
+    border-color: color-mix(in oklch, var(--warning) 35%, transparent);
+    background: color-mix(in oklch, var(--warning) 12%, transparent);
+    color: var(--warning);
+  }
+  .chip-bad {
+    border-color: color-mix(in oklch, var(--danger) 35%, transparent);
+    background: color-mix(in oklch, var(--danger) 12%, transparent);
+    color: var(--danger);
+  }
+  .chip-info {
+    border-color: color-mix(in oklch, var(--info) 35%, transparent);
+    background: color-mix(in oklch, var(--info) 12%, transparent);
+    color: var(--info);
+  }
+  .btn {
+    @apply rounded-md bg-accent px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.06em] text-accent-foreground transition;
+  }
+  .btn:hover {
+    background: color-mix(in oklch, var(--accent) 90%, white);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-ghost {
+    @apply rounded-md border border-border bg-transparent px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-foreground transition;
+  }
+  .btn-ghost:hover {
+    background: var(--surface-elevated);
+  }
+  .btn-danger {
+    @apply rounded-md px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.06em] transition;
+    background: var(--danger);
+    color: oklch(1 0 0);
+  }
+  .btn-danger:hover {
+    background: color-mix(in oklch, var(--danger) 88%, white);
+  }
+  .btn-text {
+    @apply rounded-md px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted transition;
+  }
+  .btn-text:hover {
+    color: var(--foreground);
+    background: color-mix(in oklch, var(--surface-elevated) 60%, transparent);
+  }
+  .btn-text-danger {
+    @apply rounded-md px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] transition;
+    color: var(--danger);
+  }
+  .btn-text-danger:hover {
+    background: color-mix(in oklch, var(--danger) 14%, transparent);
+  }
+  .nav-btn {
+    @apply rounded-md px-3 py-2 text-sm font-medium text-muted transition;
+  }
+  .nav-btn:hover {
+    color: var(--foreground);
+  }
+  .nav-btn.active {
+    background: var(--surface-elevated);
+    color: var(--foreground);
+  }
+  .switch {
+    @apply inline-flex gap-1 rounded-md border border-border bg-surface p-1;
+  }
+  .switch button {
+    @apply rounded px-3 py-1.5 text-[12px] font-medium text-muted transition;
+  }
+  .switch button.on {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+  .bar-track {
+    @apply h-1.5 overflow-hidden rounded bg-surface-elevated;
+  }
+  .bar-fill {
+    width: 100%;
+    height: 100%;
+    background: var(--accent);
+    transform-origin: left center;
+    transition: transform 200ms ease-out;
+  }
+  .funnel-stage {
+    @apply rounded-lg border border-border-subtle;
+  }
+  .row-hover {
+    @apply transition;
+  }
+  .row-hover:hover {
+    background: var(--surface-elevated);
+  }
+  .delta-up {
+    color: var(--success);
+  }
+  .delta-down {
+    color: var(--danger);
+  }
 }

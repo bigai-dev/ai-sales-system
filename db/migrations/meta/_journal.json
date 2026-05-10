@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1778215269013,
+      "tag": "0000_misty_korvac",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1778222474916,
+      "tag": "0001_cute_tiger_shark",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1778316118087,
+      "tag": "0002_sweet_true_believers",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1778382511878,
+      "tag": "0003_flawless_wonder_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1778399591686,
+      "tag": "0004_material_warlock",
+      "breakpoints": true
+    }
+  ]
+}
