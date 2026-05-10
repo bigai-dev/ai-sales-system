@@ -3,7 +3,8 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { clients, deals } from "@/db/schema";
 import { formatMoney } from "@/db/lib/money";
-import type { KanbanColumn, Deal as DealCard } from "@/lib/data";
+import type { KanbanColumn, Deal as DealCard } from "@/lib/types/ui";
+import { DAY_MS } from "@/lib/format/time";
 
 const STAGE_META: { code: "S" | "P" | "A" | "N" | "C" | "O"; name: string; description: string }[] = [
   { code: "S", name: "Suspect", description: "Identified target, not yet contacted" },
@@ -15,7 +16,7 @@ const STAGE_META: { code: "S" | "P" | "A" | "N" | "C" | "O"; name: string; descr
 ];
 
 function daysSince(ts: number): number {
-  return Math.max(0, Math.floor((Date.now() - ts) / 86_400_000));
+  return Math.max(0, Math.floor((Date.now() - ts) / DAY_MS));
 }
 
 export const getPipelineBoard = unstable_cache(
@@ -69,20 +70,6 @@ export const getPipelineBoard = unstable_cache(
     });
   },
   ["pipeline-board"],
-  { tags: ["pipeline"] },
+  { tags: ["pipeline"], revalidate: 300 },
 );
 
-// Also export the raw deal id list keyed to (stage, company) so the kanban
-// can fire moveDealStage with a real DB id. We expose a thin variant.
-export async function getPipelineBoardWithIds() {
-  const rows = await db
-    .select({ deal: deals, client: clients })
-    .from(deals)
-    .innerJoin(clients, eq(deals.clientId, clients.id));
-
-  return rows.map(({ deal, client }) => ({
-    id: deal.id,
-    stage: deal.stage,
-    company: client.name,
-  }));
-}

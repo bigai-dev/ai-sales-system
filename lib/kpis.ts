@@ -9,7 +9,7 @@ import {
   type Range,
 } from "./quarter";
 import { formatMoney } from "@/db/lib/money";
-import type { Kpi } from "./data";
+import type { Kpi } from "./types/ui";
 
 const OPEN_STAGES = ["S", "P", "A", "N", "C"] as const satisfies readonly ("S" | "P" | "A" | "N" | "C" | "O")[];
 
@@ -23,7 +23,7 @@ export const getAvgDealSize = unstable_cache(
     return { cents: Number(rows[0]?.avgCents ?? 0) };
   },
   ["kpi-avg-deal"],
-  { tags: ["dashboard-kpis"] },
+  { tags: ["dashboard-kpis"], revalidate: 300 },
 );
 
 export const getPipelineValue = unstable_cache(
@@ -39,7 +39,7 @@ export const getPipelineValue = unstable_cache(
     };
   },
   ["kpi-pipeline"],
-  { tags: ["dashboard-kpis"] },
+  { tags: ["dashboard-kpis"], revalidate: 300 },
 );
 
 export const getDealsClosed = unstable_cache(
@@ -58,7 +58,7 @@ export const getDealsClosed = unstable_cache(
     };
   },
   ["kpi-closed"],
-  { tags: ["dashboard-kpis"] },
+  { tags: ["dashboard-kpis"], revalidate: 300 },
 );
 
 export const getCallsInRange = unstable_cache(
@@ -71,22 +71,7 @@ export const getCallsInRange = unstable_cache(
     return { count: Number(rows[0]?.n ?? 0) };
   },
   ["kpi-calls"],
-  { tags: ["dashboard-kpis"] },
-);
-
-export const getAvgTalkListen = unstable_cache(
-  async () => {
-    const rows = await db
-      .select({ talk: sql<number | null>`avg(${calls.talkPct})` })
-      .from(calls)
-      .where(and(eq(calls.status, "ended"), sql`${calls.talkPct} is not null`));
-    const t = rows[0]?.talk;
-    if (t == null) return { talk: null, listen: null };
-    const talk = Math.round(Number(t));
-    return { talk, listen: 100 - talk };
-  },
-  ["kpi-talk-listen"],
-  { tags: ["dashboard-kpis"] },
+  { tags: ["dashboard-kpis"], revalidate: 300 },
 );
 
 export async function getDashboardKpis(range: Range): Promise<Kpi[]> {

@@ -1,11 +1,7 @@
 import type { clients } from "@/db/schema";
+import type { DecisionMaker } from "@/lib/types/client";
 
 type ClientRow = typeof clients.$inferSelect;
-type DecisionMaker = {
-  name: string;
-  role: string;
-  stance: "champion" | "neutral" | "blocker";
-};
 
 /**
  * Extracts the founder's discovery profile for a client into a compact AI context

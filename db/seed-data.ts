@@ -1,34 +1,8 @@
-import type { ReactNode } from "react";
+// Demo seed data — Malaysian SMEs across the SPANCO pipeline.
+// Consumed by db/seed.ts. Not referenced at runtime by the app.
 
-export type Kpi = {
-  label: string;
-  value: string;
-  delta?: { text: string; up?: boolean };
-  chip?: { text: string; tone: "good" | "warn" | "bad" | "info" };
-  bar?: number;
-  caption: ReactNode;
-};
+import type { Client, Deal, KanbanColumn, Rep } from "@/lib/types/ui";
 
-export type Stage = {
-  name: string;
-  count: number;
-  pct: number;
-  color: string;
-  value: string;
-  weighted: string;
-};
-
-export type Rep = {
-  initials: string;
-  name: string;
-  attainment: number;
-  deals: number;
-  pipe: string;
-  calls: number;
-  gradient: string;
-};
-
-// One rep — solo founder. Used by the seed to populate the reps table.
 export const reps: Rep[] = [
   {
     initials: "DC",
@@ -41,83 +15,6 @@ export const reps: Rep[] = [
   },
 ];
 
-// Static activity series — visual filler for the dashboard line chart.
-// Replace with a real per-week aggregation once enough call history exists.
-export const callSeries = {
-  labels: ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8"],
-  callsMade: [12, 14, 18, 17, 22, 25, 28, 26],
-  pickedUp: [6, 7, 9, 8, 11, 13, 15, 14],
-  conversations: [3, 4, 5, 5, 7, 8, 10, 9],
-};
-
-// Coaching-panel fallback. Used only until the on-demand grader (triggered
-// from the dashboard) has written real rows. Tuned for the four objection
-// categories the founder hears most often: content, budget, venue, time.
-export const scoreBreakdown = [
-  { label: "Content scope clarity", score: 68 },
-  { label: "Budget probe timing", score: 56 },
-  { label: "Venue + delivery commit", score: 52 },
-  { label: "Time-block negotiation", score: 61 },
-  { label: "3-question discovery hit rate", score: 74 },
-];
-
-export const opportunities = [
-  {
-    title: "Content scope answered too generically",
-    impact: { text: "high impact", tone: "bad" as const },
-    detail:
-      "Buyers ask what's covered; \"AI workflows / prompt engineering / agentic dev\" reads as filler. Tie each module to the answer they gave on AI-knowledge level.",
-  },
-  {
-    title: "Budget probe asked too late in the call",
-    impact: { text: "high impact", tone: "bad" as const },
-    detail:
-      "Leaving the budget question until the last 5 minutes means you scope a 30-pax cohort the buyer can't fund this quarter. Probe budget after headcount, before content.",
-  },
-  {
-    title: "Venue + delivery date left vague in proposal",
-    impact: { text: "medium", tone: "warn" as const },
-    detail:
-      "\"Sometime in Q3\" pushes the deal to next quarter. Quote on-site vs remote with two specific date options on the first proposal.",
-  },
-];
-
-export const wins: [string, string, string][] = [
-  ["3-question discovery completion", "84%", "of calls"],
-  ["Headcount → cohort mapping accepted", "+22%", "close rate"],
-  ["On-site quote anchored at proposal", "61%", "of wins"],
-  ["Date locked within 7 days of proposal", "3.4d", "median"],
-];
-
-// ---------- Pipeline (kanban) ----------
-
-export type Deal = {
-  id?: string;
-  initials: string;
-  company: string;
-  contact: string;
-  role: string;
-  value: string;
-  daysInStage: number;
-  lastActivity: string;
-  insight: string;
-  tags: [string, string];
-  next: string;
-  hot?: boolean;
-  headcount?: number;
-};
-
-export type KanbanColumn = {
-  code: string;
-  name: string;
-  description: string;
-  count: number;
-  total: string;
-  deals: Deal[];
-};
-
-// Malaysian SME pipeline. Mix of KL/PJ/Penang/JB-based companies across
-// fintech, healthtech, edtech, logistics, e-commerce, and IIoT verticals.
 // Workshop priced at RM 3,500/pax + 8% SST; cohorts cap at ~35.
 export const pipelineBoard: KanbanColumn[] = [
   {
@@ -169,7 +66,7 @@ export const pipelineBoard: KanbanColumn[] = [
         tags: ["Retail / E-commerce", "Founder-led"],
         next: "Today 4pm",
       },
-    ],
+    ] satisfies Deal[],
   },
   {
     code: "P",
@@ -206,7 +103,7 @@ export const pipelineBoard: KanbanColumn[] = [
         tags: ["Marketplace", "Bottleneck pain"],
         next: "Tue 11:00am",
       },
-    ],
+    ] satisfies Deal[],
   },
   {
     code: "A",
@@ -243,7 +140,7 @@ export const pipelineBoard: KanbanColumn[] = [
         tags: ["IIoT / Manufacturing", "Penang-based"],
         next: "Tue 10:00am",
       },
-    ],
+    ] satisfies Deal[],
   },
   {
     code: "N",
@@ -296,7 +193,7 @@ export const pipelineBoard: KanbanColumn[] = [
         next: "Thu 9:00am",
         hot: true,
       },
-    ],
+    ] satisfies Deal[],
   },
   {
     code: "C",
@@ -334,7 +231,7 @@ export const pipelineBoard: KanbanColumn[] = [
         tags: ["InsurTech", "Etiqa partner"],
         next: "Tue 3:00pm",
       },
-    ],
+    ] satisfies Deal[],
   },
   {
     code: "O",
@@ -371,38 +268,9 @@ export const pipelineBoard: KanbanColumn[] = [
         tags: ["Logistics / Halal", "Expansion-ready"],
         next: "Next week",
       },
-    ],
+    ] satisfies Deal[],
   },
 ];
-
-// ---------- Clients ----------
-
-export type Client = {
-  id?: string;
-  initials: string;
-  name: string;
-  contact: string;
-  contactRole?: string;
-  stage: "Lead" | "Qualified" | "Discovery" | "Proposal" | "Negotiation" | "Closed-won";
-  industry: string;
-  size: "SMB" | "Mid-market" | "Enterprise";
-  employees: number;
-  devCount?: number;
-  arr: string;
-  health: number;
-  products: string[];
-  lastActivity: string;
-  gradient: string;
-  // ---- Discovery profile (optional; the founder fills these in over time) ----
-  goals?: string;
-  painPoints?: string;
-  currentStack?: string[];
-  decisionMakers?: { name: string; role: string; stance: "champion" | "neutral" | "blocker" }[];
-  budgetSignal?: string;
-  timelineSignal?: string;
-  source?: "referral" | "cold_inbound" | "event" | "linkedin" | "warm_intro" | "other";
-  notes?: string;
-};
 
 export const clientList: Client[] = [
   // ---- Suspect / Lead tier (3) ----
@@ -750,130 +618,3 @@ export const clientList: Client[] = [
     source: "warm_intro",
   },
 ];
-
-// ---------- Health Check (legacy seed; unused once an audit has been generated) ----------
-
-export type Dimension = {
-  name: string;
-  score: number;
-  status: "Healthy" | "At risk" | "Critical";
-  summary: string;
-  metrics: { label: string; value: string; trend: "up" | "down" | "flat" }[];
-};
-
-export const healthCheck = {
-  client: "MyEduConnect Sdn Bhd",
-  meta: "Chong Lee Hoon · VP Engineering · Edtech SaaS · 78 employees · 32 engineers across 5 squads",
-  related: ["Padu Cipta Manufacturing Solutions Sdn Bhd", "Agromart Networks Sdn Bhd", "GoBeli Group Sdn Bhd"],
-  overall: { score: 62, status: "At risk", peers: 71, delta: "▼ 9 pts vs peers" },
-  summary:
-    "Engineering throughput holds up but AI tooling adoption is fragmented across the 5 squads. Roughly a third of engineers use AI tools weekly; the rest haven't adopted. Highest leverage is a 2-day workshop standardizing prompt hygiene + PR-review patterns, then 90 days of light measurement before Aug-Sep exam season prep.",
-  callouts: [
-    { value: "2 critical issues", tone: "bad" },
-    { value: "3 high-risk areas", tone: "warn" },
-    { value: "≈25% throughput upside", tone: "good" },
-  ],
-  dimensions: [
-    {
-      name: "Tooling",
-      score: 60,
-      status: "At risk",
-      summary: "GitHub Copilot rolling out across squads; utilization uneven. No shared MCP servers or rule files.",
-      metrics: [
-        { label: "Daily AI tool usage", value: "42%", trend: "up" },
-        { label: "Shared rule files", value: "0", trend: "flat" },
-        { label: "MCP servers in use", value: "1", trend: "flat" },
-      ],
-    },
-    {
-      name: "Practices",
-      score: 54,
-      status: "At risk",
-      summary: "PR review is human-only. No prompt-hygiene guidance, no shared agent guardrails across squads.",
-      metrics: [
-        { label: "AI-assisted PR reviews", value: "14%", trend: "up" },
-        { label: "Prompt library", value: "ad-hoc", trend: "flat" },
-      ],
-    },
-    {
-      name: "Culture",
-      score: 64,
-      status: "At risk",
-      summary: "VPE Chong Lee Hoon is the champion. CFO is a budget blocker. Two senior engineers vocal about AI risk; no clear blast-radius policy.",
-      metrics: [
-        { label: "Leadership posture", value: "split", trend: "flat" },
-        { label: "Blast-radius policy", value: "none", trend: "flat" },
-      ],
-    },
-    {
-      name: "Velocity",
-      score: 70,
-      status: "Healthy",
-      summary: "PRs/dev/wk healthy. Cycle time within target. Room to grow with tighter AI loops.",
-      metrics: [
-        { label: "PRs / dev / wk", value: "3.2", trend: "up" },
-        { label: "Median cycle time", value: "1.8d", trend: "flat" },
-      ],
-    },
-    {
-      name: "Adoption",
-      score: 50,
-      status: "Critical",
-      summary: "Only ~33% of engineers use AI tools daily. Web squad ahead of mobile, infra, data, and platform.",
-      metrics: [
-        { label: "Daily-active engineers", value: "33%", trend: "up" },
-        { label: "License utilization", value: "42%", trend: "up" },
-      ],
-    },
-    {
-      name: "Outcomes",
-      score: 68,
-      status: "Healthy",
-      summary: "Defect rate stable, time-to-feature trending down. AI contribution still hard to attribute.",
-      metrics: [
-        { label: "Escaped defects / mo", value: "3.8", trend: "down" },
-        { label: "Time-to-feature", value: "10d", trend: "down" },
-      ],
-    },
-  ] as Dimension[],
-  risks: [
-    {
-      title: "Adoption gap between squads will compound",
-      detail:
-        "33% daily-active hides a wide spread. Without a workshop and shared baseline, the gap widens — hurting code review consistency across squads.",
-      tone: "bad" as const,
-      tag: "CRITICAL",
-    },
-    {
-      title: "No prompt-hygiene or guardrail policy",
-      detail:
-        "Inconsistent prompts surface as inconsistent output quality. Two-day workshop fixes this directly.",
-      tone: "bad" as const,
-      tag: "CRITICAL",
-    },
-    {
-      title: "Copilot license utilization at 42%",
-      detail:
-        "More than half of paid seats unused. Either reclaim seats or train the holders — both unlock budget headroom that the CFO will respond to.",
-      tone: "warn" as const,
-      tag: "HIGH RISK",
-    },
-  ],
-  actions: [
-    {
-      title: "2-day vibe-coding workshop (24-pax cohort)",
-      detail: "Standardize prompt hygiene, PR review patterns, and shared rule files in one block before Aug exam-prep season.",
-      impact: "≈25% throughput upside",
-    },
-    {
-      title: "Lead-engineer 1:1 series",
-      detail: "Three 1-hour sessions with squad leads to lock new patterns in code review.",
-      impact: "Adoption ↑ across squads",
-    },
-    {
-      title: "30-day readiness baseline survey",
-      detail: "Snapshot per-engineer comfort + tool usage. Re-measure 90 days post-workshop.",
-      impact: "Measurable ROI for CFO",
-    },
-  ],
-};

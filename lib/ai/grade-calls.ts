@@ -1,6 +1,6 @@
 "use server";
 import { generateText, Output } from "ai";
-import { and, desc, eq, isNotNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { reasoner } from "./deepseek";
 import { scrubObject } from "./scrub";
@@ -13,6 +13,7 @@ import {
   coachingWins,
 } from "@/db/schema";
 import { graderSchema, type GraderOutput } from "@/lib/schemas/grade-calls";
+import { STAGE_NAME, type SpancoCode } from "@/lib/constants/labels";
 
 const SYSTEM = `You are a sales-coaching reviewer. Given the transcripts of
 recent CLOSING calls, return:
@@ -27,10 +28,6 @@ recent CLOSING calls, return:
 Be specific to the transcripts provided. Do NOT make up facts. If transcripts
 are sparse or empty, return generic but realistic baseline coaching.`;
 
-const STAGE_NAMES_C: Record<string, string> = {
-  S: "Suspect", P: "Prospect", A: "Analysis",
-  N: "Negotiation", C: "Conclusion", O: "Order",
-};
 
 export async function gradeRecentClosingCalls(limit = 20): Promise<{
   ok: true;
@@ -55,23 +52,33 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
           .orderBy(desc(calls.startedAt))
           .limit(limit);
 
-  // Build the LLM context: for each call, fetch turns
-  const callsWithTurns = await Promise.all(
-    targetCalls.map(async (c) => {
-      const turns = await db.select().from(callTurns).where(eq(callTurns.callId, c.id));
-      return scrubObject({
-        title: c.title,
-        stage: STAGE_NAMES_C[c.stageHint ?? "C"] ?? c.stageHint,
-        talkPct: c.talkPct,
-        questionsAsked: c.questionsAsked,
-        sentiment: c.sentiment,
-        summary: c.summary,
-        turns: turns
-          .sort((a, b) => a.idx - b.idx)
-          .map((t) => `${t.who}: ${t.text}`),
-      });
-    }),
-  );
+  // Single batched query for all turns across the target calls — replaces
+  // an N+1 (was firing `limit` separate SELECTs in parallel). Group in JS.
+  const callIds = targetCalls.map((c) => c.id);
+  const allTurns = callIds.length
+    ? await db.select().from(callTurns).where(inArray(callTurns.callId, callIds))
+    : [];
+  const turnsByCall = new Map<string, typeof allTurns>();
+  for (const t of allTurns) {
+    const arr = turnsByCall.get(t.callId);
+    if (arr) arr.push(t);
+    else turnsByCall.set(t.callId, [t]);
+  }
+
+  const callsWithTurns = targetCalls.map((c) => {
+    const turns = turnsByCall.get(c.id) ?? [];
+    return scrubObject({
+      title: c.title,
+      stage: STAGE_NAME[(c.stageHint ?? "C") as SpancoCode] ?? c.stageHint,
+      talkPct: c.talkPct,
+      questionsAsked: c.questionsAsked,
+      sentiment: c.sentiment,
+      summary: c.summary,
+      turns: turns
+        .sort((a, b) => a.idx - b.idx)
+        .map((t) => `${t.who}: ${t.text}`),
+    });
+  });
 
   let output: GraderOutput;
   try {
@@ -85,7 +92,7 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
           : `Recent closing calls (${callsWithTurns.length}):\n${JSON.stringify(callsWithTurns)}`,
       maxOutputTokens: 1500,
     });
-    output = res.output as GraderOutput;
+    output = graderSchema.parse(res.output);
   } catch (e) {
     return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
   }
@@ -133,7 +140,6 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
 
   revalidateTag("dashboard-kpis", "default");
   revalidateTag("coaching-panel", "default");
-  revalidatePath("/");
 
   return { ok: true, data: { graded: callsWithTurns.length } };
 }

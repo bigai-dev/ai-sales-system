@@ -1,4 +1,4 @@
-import { eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, gte, isNull, lte, ne, or } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   calls,
@@ -10,6 +10,7 @@ import {
 } from "@/db/schema";
 import { formatMoney } from "@/db/lib/money";
 import { STAGE_NAME } from "@/lib/constants/labels";
+import { DAY_MS } from "@/lib/format/time";
 
 export type TaskKind =
   | "prep_briefing"
@@ -47,7 +48,6 @@ export type CalendarEvent = {
   eventAt: number;
 };
 
-const DAY_MS = 86_400_000;
 const WEEK_MS = 7 * DAY_MS;
 
 function urgencyOf(targetMs: number, now: number): TaskUrgency {
@@ -99,6 +99,8 @@ export async function getTodayInbox(): Promise<TodayInbox> {
   const calendar: CalendarEvent[] = [];
 
   // -------- Per-client deal lookup (for value + hot enrichment) --------
+  // Bounded to: open deals (stage != O) OR deals with imminent delivery dates.
+  // Skips closed-won deals from years ago that have no actionable surface.
   const allDeals = await db
     .select({
       id: deals.id,
@@ -111,7 +113,16 @@ export async function getTodayInbox(): Promise<TodayInbox> {
       deliveryDate: deals.deliveryDate,
     })
     .from(deals)
-    .leftJoin(clients, eq(deals.clientId, clients.id));
+    .leftJoin(clients, eq(deals.clientId, clients.id))
+    .where(
+      or(
+        ne(deals.stage, "O"),
+        and(
+          gte(deals.deliveryDate, now - DAY_MS),
+          lte(deals.deliveryDate, now + WEEK_MS),
+        ),
+      ),
+    );
 
   // Highest-value open deal per client (used to enrich call/proposal tasks)
   const dealByClient = new Map<string, (typeof allDeals)[number]>();
@@ -139,6 +150,10 @@ export async function getTodayInbox(): Promise<TodayInbox> {
   }
 
   // -------- Calls --------
+  // Bound to a 30-day window. Older calls don't generate fresh tasks:
+  // their debriefs are done, their follow-ups are stale, their planned
+  // dates are in the past. Keeps the scan O(recent activity).
+  const thirtyDaysAgo = now - 30 * DAY_MS;
   const allCalls = await db
     .select({
       id: calls.id,
@@ -153,7 +168,13 @@ export async function getTodayInbox(): Promise<TodayInbox> {
       analyzedAt: calls.analyzedAt,
     })
     .from(calls)
-    .leftJoin(clients, eq(calls.clientId, clients.id));
+    .leftJoin(clients, eq(calls.clientId, clients.id))
+    .where(
+      or(
+        gte(calls.scheduledAt, thirtyDaysAgo),
+        gte(calls.startedAt, thirtyDaysAgo),
+      ),
+    );
 
   for (const c of allCalls) {
     const when = c.scheduledAt ?? c.startedAt;
@@ -249,6 +270,11 @@ export async function getTodayInbox(): Promise<TodayInbox> {
   }
 
   // -------- Stale proposals --------
+  // Bound to a 90-day window — proposals older than that are abandoned, not
+  // chase-able. Build a Map of clientId → max(call.startedAt) once so the
+  // "has there been a follow-up call?" check is O(1) per proposal instead
+  // of O(calls) (was the worst N+1 in this function).
+  const ninetyDaysAgo = now - 90 * DAY_MS;
   const allProposals = await db
     .select({
       id: proposals.id,
@@ -258,7 +284,8 @@ export async function getTodayInbox(): Promise<TodayInbox> {
       cohortSize: proposals.cohortSize,
     })
     .from(proposals)
-    .leftJoin(clients, eq(proposals.clientId, clients.id));
+    .leftJoin(clients, eq(proposals.clientId, clients.id))
+    .where(gte(proposals.generatedAt, ninetyDaysAgo));
 
   const latestProposalByClient = new Map<string, (typeof allProposals)[number]>();
   for (const p of allProposals) {
@@ -268,12 +295,19 @@ export async function getTodayInbox(): Promise<TodayInbox> {
     }
   }
 
+  // O(1) lookup for "most recent call for this client" — used to short-circuit
+  // chase tasks when a call already happened after the proposal was sent.
+  const latestCallStartByClient = new Map<string, number>();
+  for (const c of allCalls) {
+    if (!c.clientId) continue;
+    const prev = latestCallStartByClient.get(c.clientId) ?? 0;
+    if (c.startedAt > prev) latestCallStartByClient.set(c.clientId, c.startedAt);
+  }
+
   for (const p of latestProposalByClient.values()) {
     if (p.generatedAt >= fiveDaysAgo) continue;
-    const hasFollowupCall = allCalls.some(
-      (c) => c.clientId === p.clientId && c.startedAt > p.generatedAt,
-    );
-    if (hasFollowupCall) continue;
+    const lastCallAt = latestCallStartByClient.get(p.clientId) ?? 0;
+    if (lastCallAt > p.generatedAt) continue;
     const e = enrich(p.clientId);
 
     pushTask({

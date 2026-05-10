@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import type { Client } from "@/lib/data";
+import type { Client } from "@/lib/types/ui";
 import AddClientDialog from "../AddClientDialog";
 
 const STAGES = ["All", "Lead", "Qualified", "Discovery", "Proposal", "Negotiation", "Closed-won"];

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { analyzeCallDebrief, saveCallNotes } from "@/lib/ai/call-debrief";
+import { generateCallDebrief, saveCallNotes } from "@/lib/ai/call-debrief";
 
 const MIN_FOR_ANALYSIS = 30;
 
@@ -44,7 +44,7 @@ export default function NotesEditor({
       setSavedAt(Date.now());
     }
     startTransition(async () => {
-      const r = await analyzeCallDebrief(callId);
+      const r = await generateCallDebrief(callId);
       setAnalyzing(false);
       if (!r.ok) setError(r.error);
     });

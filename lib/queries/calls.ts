@@ -3,19 +3,13 @@ import { db } from "@/db/client";
 import { calls, clients } from "@/db/schema";
 
 export async function getCallById(id: string) {
-  const [row] = await db.select().from(calls).where(eq(calls.id, id));
+  const [row] = await db
+    .select({ call: calls, clientName: clients.name })
+    .from(calls)
+    .leftJoin(clients, eq(calls.clientId, clients.id))
+    .where(eq(calls.id, id));
   if (!row) return null;
-
-  let clientName: string | null = null;
-  if (row.clientId) {
-    const [c] = await db
-      .select({ name: clients.name })
-      .from(clients)
-      .where(eq(clients.id, row.clientId));
-    clientName = c?.name ?? null;
-  }
-
-  return { ...row, clientName };
+  return { ...row.call, clientName: row.clientName };
 }
 
 export type CallListItem = {

@@ -4,16 +4,9 @@ import BriefingPanel from "@/components/calls/BriefingPanel";
 import NotesEditor from "@/components/calls/NotesEditor";
 import DebriefPanel from "@/components/calls/DebriefPanel";
 import { getCallById } from "@/lib/queries/calls";
+import { STATUS_LABEL, type CallStatus } from "@/lib/constants/labels";
 
 type Params = { id: string };
-
-const STATUS_LABEL: Record<string, string> = {
-  planned: "Planned",
-  completed: "Completed",
-  scheduled: "Planned",
-  ended: "Completed",
-  live: "Live",
-};
 
 export default async function CallDetailPage({
   params,
@@ -52,7 +45,7 @@ export default async function CallDetailPage({
             <span className="text-accent">{call.clientName ?? "—"}</span>
           </h1>
           <div className="text-xs text-muted mt-1">
-            {STATUS_LABEL[call.status] ?? call.status} · {startedStr}
+            {STATUS_LABEL[call.status as CallStatus] ?? call.status} · {startedStr}
           </div>
         </div>
       </div>

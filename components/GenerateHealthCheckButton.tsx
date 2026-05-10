@@ -1,7 +1,7 @@
 "use client";
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
-import { generateHealthCheck } from "@/app/(dashboard)/clients/[id]/health-check/actions";
+import { generateHealthCheck } from "@/lib/ai/health-check";
 
 export default function GenerateHealthCheckButton({
   clientId,

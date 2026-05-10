@@ -1,10 +1,16 @@
 import KpiCard from "../KpiCard";
 import DateRangeTabs from "../DateRangeTabs";
 import PipelineByStage from "../PipelineByStage";
-import CallActivityChart from "../CallActivityChart";
+import dynamic from "next/dynamic";
+
+// ~85KB gz of chart.js + react-chartjs-2. Dynamic import keeps the chart in
+// its own chunk so it's not in the initial dashboard JS payload — the chunk
+// loads when the chart component mounts. Can't use { ssr: false } here
+// because DashboardView is a Server Component (Next 15+ restriction).
+const CallActivityChart = dynamic(() => import("../CallActivityChart"));
 import CoachingPanel from "../CoachingPanel";
 import { rangeLabel, type Range } from "@/lib/quarter";
-import type { Kpi, Stage } from "@/lib/data";
+import type { Kpi, Stage } from "@/lib/types/ui";
 import type { CoachingPanelData } from "@/lib/queries/coaching";
 
 type Props = {

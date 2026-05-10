@@ -2,6 +2,7 @@ import Link from "next/link";
 import { desc } from "drizzle-orm";
 import { db } from "@/db/client";
 import { clients, healthChecks } from "@/db/schema";
+import { DAY_MS } from "@/lib/format/time";
 
 const STATUS_CHIP: Record<"Healthy" | "At risk" | "Critical", string> = {
   Healthy: "chip-good",
@@ -20,7 +21,7 @@ const STAGE_PRIORITY: Record<string, number> = {
 };
 
 function timeAgo(ms: number): string {
-  const d = Math.floor((Date.now() - ms) / 86_400_000);
+  const d = Math.floor((Date.now() - ms) / DAY_MS);
   if (d <= 0) return "today";
   if (d === 1) return "yesterday";
   if (d < 7) return `${d}d ago`;

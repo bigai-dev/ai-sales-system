@@ -4,6 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { chat } from "./deepseek";
 import { scrubObject } from "./scrub";
 import { extractDiscovery, DISCOVERY_PRIMER } from "./client-discovery";
+import { DAY_MS } from "@/lib/format/time";
 import { db } from "@/db/client";
 import { calls, clients, proposals } from "@/db/schema";
 import { formatMoneyExact } from "@/db/lib/money";
@@ -96,7 +97,7 @@ async function loadEmailContext(callId: string) {
     .limit(4);
 
   const callAt = call.startedAt ?? call.analyzedAt ?? Date.now();
-  const daysSinceCall = Math.floor((Date.now() - callAt) / 86_400_000);
+  const daysSinceCall = Math.floor((Date.now() - callAt) / DAY_MS);
 
   return scrubObject({
     client: {
@@ -126,7 +127,7 @@ async function loadEmailContext(callId: string) {
   });
 }
 
-export async function draftFollowupEmail(
+export async function generateFollowupEmail(
   callId: string,
 ): Promise<Result<EmailDraft>> {
   let context: Awaited<ReturnType<typeof loadEmailContext>>;
@@ -144,7 +145,7 @@ export async function draftFollowupEmail(
       prompt: `Context:\n${JSON.stringify(context, null, 2)}\n\nDraft the follow-up email now.`,
       maxOutputTokens: 1500,
     });
-    return { ok: true, data: result.output as EmailDraft };
+    return { ok: true, data: emailDraftSchema.parse(result.output) };
   } catch (e) {
     return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
   }

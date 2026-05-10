@@ -1,4 +1,4 @@
-const DAY_MS = 86_400_000;
+export const DAY_MS = 86_400_000;
 
 /**
  * Compact relative time. Always reads naturally regardless of magnitude.
@@ -57,7 +57,7 @@ export function calendarTime(eventAt: number, now: number = Date.now()): string 
   const ampm = hours >= 12 ? "pm" : "am";
   hours = hours % 12 || 12;
   const time = `${hours}:${mins}${ampm}`;
-  const daysOut = (eventAt - now) / 86_400_000;
+  const daysOut = (eventAt - now) / DAY_MS;
   if (daysOut >= 0 && daysOut <= 7) {
     const today = new Date(now);
     const sameDay =

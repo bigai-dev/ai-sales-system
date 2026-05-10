@@ -1,4 +1,4 @@
-import type { Kpi } from "@/lib/data";
+import type { Kpi } from "@/lib/types/ui";
 
 export default function KpiCard({ kpi }: { kpi: Kpi }) {
   return (

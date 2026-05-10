@@ -1,7 +1,7 @@
 "use client";
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
-import { dealInsight } from "@/lib/ai/deal-insight";
+import { generateDealInsight } from "@/lib/ai/deal-insight";
 
 export default function DealInsightButton({
   dealId,
@@ -22,7 +22,7 @@ export default function DealInsightButton({
         e.stopPropagation();
         start(async () => {
           setError(null);
-          const r = await dealInsight(dealId);
+          const r = await generateDealInsight(dealId);
           if (!r.ok) setError(r.error);
           router.refresh();
         });

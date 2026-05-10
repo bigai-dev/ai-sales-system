@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCallsByClient } from "@/lib/queries/calls";
 import { OUTCOME_LABEL, OUTCOME_TONE } from "@/lib/schemas/call-debrief";
 import { timeAgo } from "@/lib/format/time";
+import { STATUS_LABEL, type CallStatus } from "@/lib/constants/labels";
 
 const TONE_CHIP: Record<"good" | "warn" | "bad" | "info", string> = {
   good: "chip-good",
@@ -10,13 +11,6 @@ const TONE_CHIP: Record<"good" | "warn" | "bad" | "info", string> = {
   info: "chip-info",
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  planned: "Planned",
-  completed: "Completed",
-  scheduled: "Planned",
-  ended: "Completed",
-  live: "Live",
-};
 
 export default async function CallsList({ clientId }: { clientId: string }) {
   const rows = await getCallsByClient(clientId);
@@ -46,7 +40,7 @@ export default async function CallsList({ clientId }: { clientId: string }) {
             const label =
               c.outcome && OUTCOME_LABEL[c.outcome as keyof typeof OUTCOME_LABEL]
                 ? OUTCOME_LABEL[c.outcome as keyof typeof OUTCOME_LABEL]
-                : STATUS_LABEL[c.status] ?? c.status;
+                : STATUS_LABEL[c.status as CallStatus] ?? c.status;
             return (
               <Link
                 key={c.id}

@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { formatMoneyExact } from "@/db/lib/money";
 import { COMPANY } from "@/lib/invoice/company";
+import { DAY_MS } from "@/lib/format/time";
 
 const C = {
   bg: "#FFFFFF",
@@ -196,7 +197,7 @@ function formatDate(ms: number): string {
 }
 
 export function InvoicePdf({ data }: { data: InvoiceData }) {
-  const dueAt = data.issuedAt + COMPANY.paymentTermsDays * 86_400_000;
+  const dueAt = data.issuedAt + COMPANY.paymentTermsDays * DAY_MS;
 
   return (
     <Document

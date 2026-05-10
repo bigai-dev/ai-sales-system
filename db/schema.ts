@@ -4,6 +4,7 @@ import { createId } from "@paralleldrive/cuid2";
 import type { ProposalOutput } from "@/lib/schemas/proposal";
 import type { CallBriefing } from "@/lib/schemas/call-briefing";
 import type { CallDebrief } from "@/lib/schemas/call-debrief";
+import type { DecisionMaker } from "@/lib/types/client";
 
 const id = () =>
   text("id")
@@ -55,7 +56,7 @@ export const clients = sqliteTable(
     painPoints: text("pain_points"),
     currentStack: text("current_stack", { mode: "json" }).$type<string[]>().default([]),
     decisionMakers: text("decision_makers", { mode: "json" })
-      .$type<{ name: string; role: string; stance: "champion" | "neutral" | "blocker" }[]>()
+      .$type<DecisionMaker[]>()
       .default([]),
     budgetSignal: text("budget_signal"),
     timelineSignal: text("timeline_signal"),
@@ -333,8 +334,13 @@ export const dealInsightCache = sqliteTable("deal_insight_cache", {
 });
 
 // ---------- coaching panel (closing-call grader output) ----------
+// ownerRepId on coaching tables is nullable so the single-user system keeps
+// working without a default rep mapping. When auth lands and reps share an
+// install, queries gain a `where(eq(ownerRepId, currentRepId))` filter and
+// inserts get the rep ID from the session.
 export const coachingScores = sqliteTable("coaching_scores", {
   id: id(),
+  ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
   label: text("label").notNull(),
   score: integer("score").notNull(),
   sortIdx: integer("sort_idx").default(0).notNull(),
@@ -345,6 +351,7 @@ export const coachingScores = sqliteTable("coaching_scores", {
 
 export const coachingOpportunities = sqliteTable("coaching_opportunities", {
   id: id(),
+  ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   detail: text("detail").notNull(),
   impactText: text("impact_text").notNull(),
@@ -359,6 +366,7 @@ export const coachingOpportunities = sqliteTable("coaching_opportunities", {
 
 export const coachingWins = sqliteTable("coaching_wins", {
   id: id(),
+  ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
   prefix: text("prefix").notNull(),
   num: text("num"),
   suffix: text("suffix"),
@@ -443,11 +451,21 @@ export const healthActionsRelations = relations(healthActions, ({ one }) => ({
   }),
 }));
 
+// ---------- invoice_counters (atomic per-year sequence) ----------
+// One row per year with the last-issued seq. Atomic UPSERT via libSQL's
+// INSERT … ON CONFLICT … DO UPDATE … RETURNING — eliminates the race
+// where two concurrent invoice generations would be assigned the same number.
+export const invoiceCounters = sqliteTable("invoice_counters", {
+  year: integer("year").primaryKey(),
+  lastSeq: integer("last_seq").notNull().default(0),
+});
+
 // ---------- task_dismissals (snooze for /today queue) ----------
 export const taskDismissals = sqliteTable(
   "task_dismissals",
   {
     id: id(),
+    ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
     taskId: text("task_id").notNull(),
     snoozedUntil: ts("snoozed_until").notNull(),
     reason: text("reason"),
@@ -463,6 +481,7 @@ export const scratchNotes = sqliteTable(
   "scratch_notes",
   {
     id: id(),
+    ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
     body: text("body").notNull(),
     clientId: text("client_id").references(() => clients.id, { onDelete: "set null" }),
     dueAt: ts("due_at"),

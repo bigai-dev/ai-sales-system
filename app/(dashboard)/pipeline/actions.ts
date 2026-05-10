@@ -2,20 +2,25 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { db } from "@/db/client";
-import { deals, reps } from "@/db/schema";
+import { deals } from "@/db/schema";
 import { parseMoney } from "@/db/lib/money";
 import type { Result } from "@/lib/types";
+import type { SpancoCode } from "@/lib/constants/labels";
+import { getCurrentRepId } from "@/lib/queries/reps";
+
+// Re-exported so existing importers (components/AddDealDialog) keep working.
+export type { SpancoCode };
 
 function revalidateDealRoutes(): void {
+  // Tag-based covers cached queries (pipeline board, dashboard KPIs).
+  // Path-based covers client-router cache for the routes that read deal
+  // data directly (today queue, clients list, pipeline page).
   revalidateTag("pipeline", "default");
   revalidateTag("dashboard-kpis", "default");
   revalidatePath("/pipeline");
-  revalidatePath("/");
   revalidatePath("/today");
   revalidatePath("/clients", "layout");
 }
-
-export type SpancoCode = "S" | "P" | "A" | "N" | "C" | "O";
 
 const STAGE_PROBABILITY: Record<SpancoCode, number> = {
   S: 10, P: 25, A: 40, N: 60, C: 80, O: 100,
@@ -69,14 +74,14 @@ export async function createDeal(input: NewDealInput): Promise<Result<{ id: stri
   if (!input.clientId) return { ok: false, error: "Client is required" };
   const stage = input.stage ?? "S";
   const valueCents = input.valueCents ?? (input.value ? parseMoney(input.value) : 0);
-  const [primaryRep] = await db.select({ id: reps.id }).from(reps).where(eq(reps.isPrimary, true));
+  const repId = await getCurrentRepId();
   const now = Date.now();
 
   const [row] = await db
     .insert(deals)
     .values({
       clientId: input.clientId,
-      ownerRepId: primaryRep?.id,
+      ownerRepId: repId,
       stage,
       valueCents,
       probability: STAGE_PROBABILITY[stage],

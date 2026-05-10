@@ -10,7 +10,7 @@ import {
   Filler,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { callSeries } from "@/lib/data";
+import { callSeries } from "@/lib/data/fallbacks";
 
 ChartJS.register(
   CategoryScale,

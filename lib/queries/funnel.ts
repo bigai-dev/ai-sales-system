@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { clients } from "@/db/schema";
 import { formatMoney } from "@/db/lib/money";
-import type { Stage } from "@/lib/data";
+import type { Stage } from "@/lib/types/ui";
 
 // Funnel column colors: cool muted → warm accent as the deal progresses.
 // Aligned with the OKLCH theme tokens (muted → accent).
@@ -47,7 +47,7 @@ export const getDashboardFunnel = unstable_cache(
     });
   },
   ["dashboard-funnel"],
-  { tags: ["dashboard-kpis", "clients"] },
+  { tags: ["dashboard-kpis", "clients"], revalidate: 300 },
 );
 
 function stageProbability(s: string): number {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import PipelineBoard from "@/app/(dashboard)/pipeline/PipelineBoard";
 import AddDealDialog, { type ClientOption } from "../AddDealDialog";
-import type { KanbanColumn } from "@/lib/data";
+import type { KanbanColumn } from "@/lib/types/ui";
 
 export default function PipelineView({
   board,

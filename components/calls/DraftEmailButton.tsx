@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import Modal from "../Modal";
 import CopyMarkdownButton from "../CopyMarkdownButton";
-import { draftFollowupEmail } from "@/lib/ai/draft-email";
+import { generateFollowupEmail } from "@/lib/ai/draft-email";
 import type { EmailDraft } from "@/lib/schemas/email-draft";
 
 type Phase =
@@ -20,7 +20,7 @@ export default function DraftEmailButton({ callId }: { callId: string }) {
     setPhase({ kind: "loading" });
     setOpen(true);
     startTransition(async () => {
-      const r = await draftFollowupEmail(callId);
+      const r = await generateFollowupEmail(callId);
       if (r.ok && r.data) setPhase({ kind: "ready", draft: r.data });
       else if (r.ok) setPhase({ kind: "error", message: "Empty response" });
       else setPhase({ kind: "error", message: r.error });

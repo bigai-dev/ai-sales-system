@@ -9,7 +9,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import type { KanbanColumn, Deal } from "@/lib/data";
+import type { KanbanColumn, Deal } from "@/lib/types/ui";
 import { moveDealStage, type SpancoCode } from "./actions";
 import DealInsightButton from "@/components/DealInsightButton";
 

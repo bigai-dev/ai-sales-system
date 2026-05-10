@@ -3,6 +3,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import { createDeal, type SpancoCode } from "@/app/(dashboard)/pipeline/actions";
+import { DAY_MS } from "@/lib/format/time";
 
 const STAGES: { code: SpancoCode; name: string }[] = [
   { code: "S", name: "Suspect" },
@@ -31,7 +32,7 @@ function formatNextStepDate(iso: string): string {
   const ampm = hours >= 12 ? "pm" : "am";
   hours = hours % 12 || 12;
   const time = `${hours}:${mins}${ampm}`;
-  const daysOut = (d.getTime() - Date.now()) / 86_400_000;
+  const daysOut = (d.getTime() - Date.now()) / DAY_MS;
   if (daysOut >= 0 && daysOut <= 7) {
     const weekday = d.toLocaleDateString("en-US", { weekday: "short" });
     return `${weekday} ${time}`;

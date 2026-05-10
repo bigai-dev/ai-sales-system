@@ -3,16 +3,13 @@ import { eq } from "drizzle-orm";
 import { db, libsql } from "./client";
 import { clients, deals, reps } from "./schema";
 import { parseMoney } from "./lib/money";
-import {
-  clientList,
-  reps as seedReps,
-  pipelineBoard,
-} from "../lib/data";
+import { clientList, reps as seedReps, pipelineBoard } from "./seed-data";
 
 config({ path: ".env.local" });
 config({ path: ".env" });
 
-type SpancoCode = "S" | "P" | "A" | "N" | "C" | "O";
+import type { SpancoCode } from "../lib/constants/labels";
+import { DAY_MS } from "../lib/format/time";
 
 function clientStageFromKanban(code: SpancoCode): typeof clients.$inferInsert.stage {
   switch (code) {
@@ -133,8 +130,8 @@ async function seedDeals_() {
         headcount: d.headcount ?? null,
         lastActivity: d.lastActivity,
         lastActivityAt: Date.now(),
-        daysInStageStartsAt: Date.now() - d.daysInStage * 86_400_000,
-        closedAt: col.code === "O" ? Date.now() - d.daysInStage * 86_400_000 : null,
+        daysInStageStartsAt: Date.now() - d.daysInStage * DAY_MS,
+        closedAt: col.code === "O" ? Date.now() - d.daysInStage * DAY_MS : null,
       });
     }
   }

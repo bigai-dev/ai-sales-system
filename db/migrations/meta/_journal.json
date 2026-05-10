@@ -43,6 +43,13 @@
       "when": 1778399861843,
       "tag": "0005_brave_major_mapleleaf",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1778403490260,
+      "tag": "0006_thick_silverclaw",
+      "breakpoints": true
     }
   ]
 }

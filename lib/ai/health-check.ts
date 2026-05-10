@@ -96,7 +96,7 @@ function buildCallouts(out: HealthCheckOutput) {
   return callouts;
 }
 
-export async function runHealthCheck(clientId: string): Promise<{
+export async function generateHealthCheck(clientId: string): Promise<{
   ok: true;
   data: { id: string };
 } | {
@@ -119,7 +119,7 @@ export async function runHealthCheck(clientId: string): Promise<{
       prompt: `Client: ${JSON.stringify(context.client)}\nDeals: ${JSON.stringify(context.deals)}`,
       maxOutputTokens: 4000,
     });
-    output = result.output as HealthCheckOutput;
+    output = healthCheckSchema.parse(result.output);
   } catch (e) {
     return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
   }

@@ -3,8 +3,9 @@ import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { calls, clients, deals, reps } from "@/db/schema";
+import { calls, clients, deals } from "@/db/schema";
 import type { Result } from "@/lib/types";
+import { getCurrentRepId } from "@/lib/queries/reps";
 
 export async function createCallForClient(formData: FormData): Promise<void> {
   const clientId = String(formData.get("clientId") ?? "");
@@ -23,18 +24,14 @@ export async function createCallForClient(formData: FormData): Promise<void> {
     .orderBy(desc(deals.lastActivityAt))
     .limit(1);
 
-  const [primaryRep] = await db
-    .select({ id: reps.id })
-    .from(reps)
-    .where(eq(reps.isPrimary, true))
-    .limit(1);
+  const repId = await getCurrentRepId();
 
   const [row] = await db
     .insert(calls)
     .values({
       clientId,
       dealId: openDeal[0]?.id ?? null,
-      repId: primaryRep?.id ?? null,
+      repId,
       status: "planned",
       scheduledAt: Date.now(),
     })

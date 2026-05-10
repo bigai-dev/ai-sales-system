@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { taskDismissals, scratchNotes } from "@/db/schema";
 
-const DAY_MS = 86_400_000;
+import { DAY_MS } from "@/lib/format/time";
 
 const SNOOZE_PRESETS: Record<string, number> = {
   "4h": 4 * 60 * 60 * 1000,

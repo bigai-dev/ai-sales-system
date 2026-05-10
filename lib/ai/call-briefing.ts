@@ -153,7 +153,7 @@ export async function generateCallBriefing(callId: string): Promise<Result<CallB
       prompt: `Client + audit + open deal + prior calls:\n${JSON.stringify(context.context, null, 2)}\n\nProduce the briefing now.`,
       maxOutputTokens: 1500,
     });
-    briefing = result.output as CallBriefing;
+    briefing = callBriefingSchema.parse(result.output);
   } catch (e) {
     return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
   }

@@ -5,7 +5,7 @@ import {
   coachingScores as scoreT,
   coachingWins as winT,
 } from "@/db/schema";
-import { scoreBreakdown as seedScores, opportunities as seedOpps, wins as seedWins } from "@/lib/data";
+import { scoreBreakdown as seedScores, opportunities as seedOpps, wins as seedWins } from "@/lib/data/fallbacks";
 
 export type CoachingPanelData = {
   scores: { label: string; score: number }[];
@@ -50,5 +50,5 @@ export const getCoachingPanel = unstable_cache(
     };
   },
   ["coaching-panel"],
-  { tags: ["coaching-panel"] },
+  { tags: ["coaching-panel"], revalidate: 300 },
 );

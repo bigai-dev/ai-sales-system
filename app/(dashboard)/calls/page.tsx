@@ -1,20 +1,13 @@
 import Link from "next/link";
 import { getRecentCalls } from "@/lib/queries/calls";
 import { OUTCOME_LABEL, OUTCOME_TONE } from "@/lib/schemas/call-debrief";
+import { STATUS_LABEL, type CallStatus } from "@/lib/constants/labels";
 
 const TONE_CHIP: Record<"good" | "warn" | "bad" | "info", string> = {
   good: "chip-good",
   warn: "chip-warn",
   bad: "chip-bad",
   info: "chip-info",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  planned: "Planned",
-  completed: "Completed",
-  scheduled: "Planned",
-  ended: "Completed",
-  live: "Live",
 };
 
 function timeAgo(ms: number): string {
@@ -113,7 +106,7 @@ function CallRow({
   const outcomeLabel =
     call.outcome && OUTCOME_LABEL[call.outcome as keyof typeof OUTCOME_LABEL]
       ? OUTCOME_LABEL[call.outcome as keyof typeof OUTCOME_LABEL]
-      : STATUS_LABEL[call.status] ?? call.status;
+      : STATUS_LABEL[call.status as CallStatus] ?? call.status;
 
   return (
     <Link

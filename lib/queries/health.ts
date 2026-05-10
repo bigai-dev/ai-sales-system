@@ -7,7 +7,7 @@ import {
   healthDimensions,
   healthRisks,
 } from "@/db/schema";
-import type { Dimension } from "@/lib/data";
+import type { Dimension } from "@/lib/types/ui";
 
 export async function getLatestHealthCheck(clientId: string) {
   const [header] = await db

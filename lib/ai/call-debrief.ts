@@ -1,7 +1,7 @@
 "use server";
 import { generateText, Output } from "ai";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { chat } from "./deepseek";
 import { scrub, scrubObject } from "./scrub";
 import { extractDiscovery, DISCOVERY_PRIMER } from "./client-discovery";
@@ -122,7 +122,7 @@ async function loadDebriefContext(callId: string) {
   };
 }
 
-export async function analyzeCallDebrief(callId: string): Promise<Result<CallDebrief>> {
+export async function generateCallDebrief(callId: string): Promise<Result<CallDebrief>> {
   let context: Awaited<ReturnType<typeof loadDebriefContext>>;
   try {
     context = await loadDebriefContext(callId);
@@ -139,7 +139,7 @@ export async function analyzeCallDebrief(callId: string): Promise<Result<CallDeb
       prompt: `Context:\n${JSON.stringify(context.context, null, 2)}\n\nRep notes:\n"""\n${context.notes}\n"""\n\nProduce the debrief.`,
       maxOutputTokens: 1500,
     });
-    debrief = result.output as CallDebrief;
+    debrief = callDebriefSchema.parse(result.output);
   } catch (e) {
     return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
   }
@@ -161,7 +161,9 @@ export async function analyzeCallDebrief(callId: string): Promise<Result<CallDeb
   revalidatePath("/calls");
   revalidatePath(`/clients/${context.clientId}`);
   revalidatePath("/today");
-  revalidatePath("/");
+  // Tag-based instead of revalidatePath("/") — invalidates the dashboard's
+  // cached KPIs without nuking unrelated route caches.
+  revalidateTag("dashboard-kpis", "default");
   return { ok: true, data: debrief };
 }
 

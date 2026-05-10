@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { chat } from "./deepseek";
 import { scrubObject } from "./scrub";
 import { extractDiscovery, DISCOVERY_PRIMER } from "./client-discovery";
+import { DAY_MS } from "@/lib/format/time";
 import { db } from "@/db/client";
 import { clients, deals, proposals } from "@/db/schema";
 import { proposalSchema, type ProposalOutput } from "@/lib/schemas/proposal";
@@ -136,7 +137,7 @@ async function loadContext(clientId: string) {
     priorProposal: priorProposal
       ? {
           generatedDaysAgo: Math.floor(
-            (Date.now() - priorProposal.generatedAt) / 86_400_000,
+            (Date.now() - priorProposal.generatedAt) / DAY_MS,
           ),
           cohortSize: priorProposal.cohortSize,
           venue: priorProposal.venue,
@@ -184,7 +185,7 @@ export async function generateProposalCore(
       maxOutputTokens: 3000,
       abortSignal: signal,
     });
-    output = result.output as ProposalOutput;
+    output = proposalSchema.parse(result.output);
   } catch (e) {
     if (signal?.aborted) {
       return { ok: false, error: "Cancelled" };
@@ -224,11 +225,10 @@ export async function generateProposalCore(
   const markdown = buildProposalMarkdown(doc);
 
   revalidateTag("proposals", "default");
+  revalidateTag("pipeline", "default");
+  revalidateTag("dashboard-kpis", "default");
   revalidatePath(`/clients/${clientId}`);
   revalidatePath("/today");
-  // Pipeline shows deal momentum signals; dashboard rolls up proposal counts.
-  revalidatePath("/pipeline");
-  revalidatePath("/");
 
   return {
     ok: true,

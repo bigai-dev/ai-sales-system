@@ -3,7 +3,8 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { clients } from "@/db/schema";
 import { formatMoney } from "@/db/lib/money";
-import type { Client } from "@/lib/data";
+import type { Client } from "@/lib/types/ui";
+import { DAY_MS } from "@/lib/format/time";
 
 export const getClientList = unstable_cache(
   async (): Promise<Client[]> => {
@@ -29,7 +30,9 @@ export const getClientList = unstable_cache(
     }));
   },
   ["clients-list"],
-  { tags: ["clients"] },
+  // Self-heal every 5 minutes even if no tag fires — covers writes from
+  // scripts/maintenance that don't go through server actions.
+  { tags: ["clients"], revalidate: 300 },
 );
 
 export async function getClientById(id: string) {
@@ -37,13 +40,8 @@ export async function getClientById(id: string) {
   return rows[0];
 }
 
-export async function getClientByName(name: string) {
-  const rows = await db.select().from(clients).where(eq(clients.name, name));
-  return rows[0];
-}
-
 function formatRelativeDays(ts: number): string {
-  const days = Math.floor((Date.now() - ts) / 86_400_000);
+  const days = Math.floor((Date.now() - ts) / DAY_MS);
   if (days === 0) return "today";
   if (days === 1) return "yesterday";
   if (days < 7) return `${days}d ago`;

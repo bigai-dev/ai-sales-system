@@ -1,4 +1,4 @@
-import type { Stage } from "@/lib/data";
+import type { Stage } from "@/lib/types/ui";
 
 export default function PipelineByStage({ stages }: { stages: Stage[] }) {
   return (

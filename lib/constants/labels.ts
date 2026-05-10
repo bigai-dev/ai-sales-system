@@ -1,4 +1,4 @@
-// Shared display labels for SPANCO stages and discovery sources.
+// Shared display labels for SPANCO stages, discovery sources, and call status.
 // Single source of truth — extend here, not in feature files.
 
 export type SpancoCode = "S" | "P" | "A" | "N" | "C" | "O";
@@ -27,4 +27,16 @@ export const SOURCE_LABEL: Record<ClientSource, string> = {
   linkedin: "LinkedIn",
   warm_intro: "Warm intro",
   other: "Other",
+};
+
+// Call status — mirrors the schema enum on calls.status. New values must be
+// added here AND in db/schema.ts (compiler will flag mismatches).
+export type CallStatus = "live" | "ended" | "scheduled" | "planned" | "completed";
+
+export const STATUS_LABEL: Record<CallStatus, string> = {
+  planned: "Planned",
+  scheduled: "Planned",
+  completed: "Completed",
+  ended: "Completed",
+  live: "Live",
 };

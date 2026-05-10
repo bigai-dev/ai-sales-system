@@ -5,6 +5,10 @@ import { db } from "@/db/client";
 import { clients } from "@/db/schema";
 import { parseMoney } from "@/db/lib/money";
 import type { Result } from "@/lib/types";
+import type { DecisionMaker, ClientSize, ClientStage } from "@/lib/types/client";
+
+// Re-exported for component imports.
+export type { DecisionMaker };
 
 function initialsOf(name: string): string {
   return name
@@ -20,7 +24,7 @@ export type NewClientInput = {
   contactName: string;
   contactRole?: string;
   industry?: string;
-  size?: "SMB" | "Mid-market" | "Enterprise";
+  size?: ClientSize;
   employees?: number;
   devCount?: number;
   arr?: string; // "RM 70K" — workshop value (excl. SST)
@@ -59,7 +63,6 @@ export async function createClient(input: NewClientInput): Promise<Result<{ id: 
   revalidateTag("clients", "default");
   revalidateTag("dashboard-kpis", "default");
   revalidatePath("/clients");
-  revalidatePath("/");
   revalidatePath("/today");
   return { ok: true, data: { id: row.id } };
 }
@@ -88,15 +91,8 @@ export async function updateClient(id: string, patch: ClientPatch): Promise<Resu
   revalidateTag("dashboard-kpis", "default");
   revalidatePath("/clients");
   revalidatePath(`/clients/${id}`);
-  revalidatePath("/");
   return { ok: true };
 }
-
-export type DecisionMaker = {
-  name: string;
-  role: string;
-  stance: "champion" | "neutral" | "blocker";
-};
 
 export type DiscoveryPatch = {
   goals?: string;
@@ -155,6 +151,5 @@ export async function deleteClient(id: string): Promise<Result> {
   revalidateTag("dashboard-kpis", "default");
   revalidatePath("/clients");
   revalidatePath("/pipeline");
-  revalidatePath("/");
   return { ok: true };
 }

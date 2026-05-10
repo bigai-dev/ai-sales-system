@@ -32,3 +32,20 @@ export async function getPrimaryRep(): Promise<PrimaryRep> {
 
   return { initials: "?", name: "—", role: "—" };
 }
+
+/**
+ * Returns the rep ID that owns the current request. Today this is just the
+ * primary rep (single-user system). When auth lands, swap the body to read
+ * from the session — every caller already routes through here, so the change
+ * is a one-liner. Don't bypass this helper; that's the seam.
+ */
+export async function getCurrentRepId(): Promise<string | null> {
+  const [primary] = await db
+    .select({ id: reps.id })
+    .from(reps)
+    .where(eq(reps.isPrimary, true))
+    .limit(1);
+  if (primary) return primary.id;
+  const [fallback] = await db.select({ id: reps.id }).from(reps).limit(1);
+  return fallback?.id ?? null;
+}

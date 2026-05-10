@@ -38,10 +38,6 @@ export function rangeCaption(range: Range): string {
   return `this ${range}`;
 }
 
-// Backwards-compat aliases for callers that only knew about quarter.
-export const quarterStartMs = (d?: Date) => rangeStartMs("quarter", d);
-export const quarterLabel = (d?: Date) => rangeLabel("quarter", d);
-
 // Quarterly pipeline target in sen (1/100 RM). RM 1,000,000.
 // Only meaningful when the active range is "quarter".
 export const QUARTER_TARGET_CENTS = 1_000_000_00;

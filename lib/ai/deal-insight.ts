@@ -8,6 +8,7 @@ import { scrubObject } from "./scrub";
 import { db } from "@/db/client";
 import { clients, dealInsightCache, deals } from "@/db/schema";
 import { formatMoney } from "@/db/lib/money";
+import { DAY_MS } from "@/lib/format/time";
 import type { Result } from "@/lib/types";
 
 function hash(s: string) {
@@ -26,13 +27,13 @@ Given the deal record below, write ONE specific, observable coaching note in
 discovery question to land, which objection to pre-empt, which cohort size to
 propose. No pleasantries. No fluff.`;
 
-export async function dealInsight(dealId: string): Promise<Result<{ text: string }>> {
+export async function generateDealInsight(dealId: string): Promise<Result<{ text: string }>> {
   const [deal] = await db.select().from(deals).where(eq(deals.id, dealId));
   if (!deal) return { ok: false, error: "Deal not found" };
   const [client] = await db.select().from(clients).where(eq(clients.id, deal.clientId));
   if (!client) return { ok: false, error: "Client not found" };
 
-  const days = Math.floor((Date.now() - deal.daysInStageStartsAt) / 86_400_000);
+  const days = Math.floor((Date.now() - deal.daysInStageStartsAt) / DAY_MS);
   const ctx = scrubObject({
     company: client.name,
     industry: client.industry,
