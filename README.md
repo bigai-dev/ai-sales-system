@@ -16,6 +16,7 @@ Workshop economics: **RM 3,500 / pax + 8% SST**, cohorts capped at ~35.
 | `/pipeline` | SPANCO kanban (Suspect → Prospect → Analysis → Negotiation → Conclusion → Order), drag-to-move |
 | `/api/proposal/pdf` | Workshop proposal PDF generator |
 | `/api/invoice/pdf` | 8% SST tax invoice PDF generator with auto-incrementing `INV-{YYYY}-{NNNN}` numbering |
+| Dashboard "Generate coaching plan" button | On-demand: grades the founder's recent closing calls and rewrites the coaching panel |
 
 ## AI features
 
@@ -28,7 +29,7 @@ All AI features use [DeepSeek](https://platform.deepseek.com) via the [Vercel AI
 | Draft follow-up email | Subject + body grounded in debrief + proposal + decision-maker stances; copy-paste into Gmail |
 | Workshop proposal | Cohort sizing, day-1/day-2 module split, venue recommendation, dates, follow-ups, next steps. Differentiates from prior proposals on regeneration. |
 | Readiness audit | 6-dimension scoring (Tooling, Practices, Culture, Velocity, Adoption, Outcomes) with risks + recommended actions |
-| Closing-call grader | Hourly cron grades recently-closed call transcripts |
+| Closing-call grader | Manually triggered from the dashboard; grades recently-closed call transcripts |
 | Deal insight | One-line strategic context for kanban cards |
 
 ## Tech stack
@@ -81,7 +82,7 @@ npm run dev
 | `TURSO_DATABASE_URL` | yes | `libsql://<your-db>.turso.io` |
 | `TURSO_AUTH_TOKEN` | yes | `turso db tokens create <db>` |
 | `DEEPSEEK_API_KEY` | yes | DeepSeek dashboard → API Keys |
-| `CRON_SECRET` | yes (prod) | Long random string. Vercel auto-injects as `Authorization: Bearer ${CRON_SECRET}` on cron invocations. Without it, the `/api/cron/grade-calls` endpoint rejects all requests. Generate with `openssl rand -hex 32`. |
+| `CRON_SECRET` | optional | Reserved for future scheduled jobs. No cron is currently configured (the closing-call grader runs on-demand via the dashboard button). Safe to leave blank. |
 
 ## Deploying to Vercel
 
@@ -96,7 +97,7 @@ npm run dev
 
 The repo pins to **Singapore (sin1)** for proximity to Malaysian users. The Turso primary lives in Tokyo (`aws-ap-northeast-1`); `sin1` is the best balance for end-to-end latency. If most users are in Japan/Korea, switch to `hnd1`.
 
-A cron is configured at `0 * * * *` (hourly) hitting `/api/cron/grade-calls`. Vercel's cron auth is via the `CRON_SECRET` env var.
+No scheduled jobs are configured. The closing-call grader runs on-demand from the dashboard.
 
 ### Function runtimes
 
@@ -105,7 +106,6 @@ All API routes run on Node.js (not Edge). PDF generation uses native packages (`
 `maxDuration` is set explicitly:
 - PDF routes: 30s
 - AI generation routes: 60s (proposal can take ~20s)
-- Grade-calls cron: 120s
 
 ## Migrations in production
 
@@ -145,7 +145,6 @@ app/
     proposal/pdf/     # Proposal PDF generation
     invoice/pdf/      # Tax invoice PDF generation
     proposal/         # AI proposal generation (cancellable)
-    cron/grade-calls/ # Hourly closing-call grader
 
 components/           # ~30 React components, mostly server with client islands
 lib/

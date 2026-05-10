@@ -50,9 +50,9 @@ export const callSeries = {
   conversations: [3, 4, 5, 5, 7, 8, 10, 9],
 };
 
-// Coaching-panel fallback. Used only until the cron grader has written real
-// rows. Tuned for the four objection categories the founder hears most often:
-// content, budget, venue, time.
+// Coaching-panel fallback. Used only until the on-demand grader (triggered
+// from the dashboard) has written real rows. Tuned for the four objection
+// categories the founder hears most often: content, budget, venue, time.
 export const scoreBreakdown = [
   { label: "Content scope clarity", score: 68 },
   { label: "Budget probe timing", score: 56 },
