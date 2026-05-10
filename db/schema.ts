@@ -104,7 +104,13 @@ export const deals = sqliteTable(
       .$defaultFn(() => Date.now())
       .notNull(),
   },
-  (t) => [index("deals_stage_idx").on(t.stage), index("deals_client_idx").on(t.clientId)],
+  (t) => [
+    index("deals_stage_idx").on(t.stage),
+    index("deals_client_idx").on(t.clientId),
+    // Hot WHERE/sort columns for KPIs and Today queue.
+    index("deals_closed_at_idx").on(t.closedAt),
+    index("deals_invoice_number_idx").on(t.invoiceNumber),
+  ],
 );
 
 // ---------- script_templates ----------
@@ -163,7 +169,16 @@ export const calls = sqliteTable(
     suggestedStage: text("suggested_stage", { enum: ["S", "P", "A", "N", "C", "O"] }),
     analyzedAt: ts("analyzed_at"),
   },
-  (t) => [index("calls_deal_idx").on(t.dealId), index("calls_client_idx").on(t.clientId)],
+  (t) => [
+    index("calls_deal_idx").on(t.dealId),
+    index("calls_client_idx").on(t.clientId),
+    // Status + time columns are filtered/sorted on every Today queue render
+    // and every KPI calculation.
+    index("calls_status_idx").on(t.status),
+    index("calls_started_at_idx").on(t.startedAt),
+    index("calls_scheduled_at_idx").on(t.scheduledAt),
+    index("calls_analyzed_at_idx").on(t.analyzedAt),
+  ],
 );
 
 // ---------- call_turns ----------
@@ -227,7 +242,11 @@ export const healthChecks = sqliteTable(
       .$defaultFn(() => Date.now())
       .notNull(),
   },
-  (t) => [index("health_checks_client_idx").on(t.clientId)],
+  (t) => [
+    index("health_checks_client_idx").on(t.clientId),
+    // Used by getLatestHealthCheck and timeline.
+    index("health_checks_generated_at_idx").on(t.generatedAt),
+  ],
 );
 
 export const healthDimensions = sqliteTable("health_dimensions", {
@@ -293,7 +312,12 @@ export const proposals = sqliteTable(
       .$defaultFn(() => Date.now())
       .notNull(),
   },
-  (t) => [index("proposals_client_idx").on(t.clientId)],
+  (t) => [
+    index("proposals_client_idx").on(t.clientId),
+    // Sorted desc on every "latest proposal" lookup (draft-email, today queue,
+    // proposal-core's prior-proposal context).
+    index("proposals_generated_at_idx").on(t.generatedAt),
+  ],
 );
 
 // ---------- deal_insight_cache ----------

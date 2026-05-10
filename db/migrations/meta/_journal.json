@@ -36,6 +36,13 @@
       "when": 1778399591686,
       "tag": "0004_material_warlock",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1778399861843,
+      "tag": "0005_brave_major_mapleleaf",
+      "breakpoints": true
     }
   ]
 }
