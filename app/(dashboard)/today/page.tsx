@@ -142,28 +142,30 @@ export default async function TodayPage() {
         </div>
       )}
 
-      {orderedUrgencies.map((u) => {
-        const items = buckets[u];
-        if (items.length === 0) return null;
-        return (
-          <div key={u}>
-            <div className="flex items-baseline justify-between mb-2">
-              <div className="text-[11px] uppercase tracking-wider font-semibold text-muted">
-                {URGENCY_LABEL[u]}{" "}
-                <span className="text-quiet font-normal">· {items.length}</span>
+      <div data-tour="today-list" className="space-y-6">
+        {orderedUrgencies.map((u) => {
+          const items = buckets[u];
+          if (items.length === 0) return null;
+          return (
+            <div key={u}>
+              <div className="flex items-baseline justify-between mb-2">
+                <div className="text-[11px] uppercase tracking-wider font-semibold text-muted">
+                  {URGENCY_LABEL[u]}{" "}
+                  <span className="text-quiet font-normal">· {items.length}</span>
+                </div>
+                <div className="text-[11px] text-muted">{URGENCY_CAPTION[u]}</div>
               </div>
-              <div className="text-[11px] text-muted">{URGENCY_CAPTION[u]}</div>
-            </div>
-            <div className="panel p-1.5">
-              <div className="space-y-0.5">
-                {items.map((t) => (
-                  <TaskRow key={t.id} task={t} />
-                ))}
+              <div className="panel p-1.5">
+                <div className="space-y-0.5">
+                  {items.map((t) => (
+                    <TaskRow key={t.id} task={t} />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </section>
   );
 }

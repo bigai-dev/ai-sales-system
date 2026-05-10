@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import TourLauncher from "./tour/TourLauncher";
 
 function titleFor(pathname: string): string {
   if (pathname === "/today") return "Today";
@@ -21,7 +22,8 @@ export default function TopBar() {
       <h1 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted ml-12 md:ml-0">
         {titleFor(pathname)}
       </h1>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        <TourLauncher />
         <ThemeToggle />
       </div>
     </header>

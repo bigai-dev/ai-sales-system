@@ -103,7 +103,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
         </div>
       </div>
 
-      <div className="mb-6">
+      <div data-tour="client-discovery" className="mb-6">
         <ClientDiscoveryPanel
           clientId={id}
           initial={{
@@ -120,7 +120,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
         />
       </div>
 
-      <div className="mb-4">
+      <div data-tour="client-timeline" className="mb-4">
         <ClientTimeline clientId={id} />
       </div>
 
@@ -145,7 +145,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
             />
           </div>
         </div>
-        <div className="panel p-5 col-span-12 md:col-span-5">
+        <div data-tour="deals-panel" className="panel p-5 col-span-12 md:col-span-5">
           <div className="font-semibold mb-3">Deals</div>
           {clientDeals.length === 0 && (
             <div className="text-sm text-muted">No deals yet for this client.</div>

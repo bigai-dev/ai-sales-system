@@ -599,6 +599,19 @@ export const clientList: Client[] = [
     lastActivity: "today",
     gradient: "from-orange-400 to-rose-500",
     source: "event",
+    goals:
+      "Equip 18 internal engineers with AI-assisted code review skills before the Q3 ERP migration kicks off.",
+    painPoints:
+      "PR review backlog of 4-7 days is blocking core ERP integration work. Senior engineers spend ~40% of their time on review instead of building.",
+    currentStack: ["GitHub", "Java/Spring", "Oracle DB", "Jenkins", "Copilot"],
+    decisionMakers: [
+      { name: "Anitha Pillai", role: "Head of Digital", stance: "champion" },
+      { name: "Tan Wei Loon", role: "CTO", stance: "neutral" },
+    ],
+    budgetSignal: "RM 65K board-approved upskilling budget",
+    timelineSignal: "Workshop locked for next month, pre-ERP-migration",
+    notes:
+      "Listed manufacturer. Pre-work survey confirmed 14 of 18 engineers have used Copilot but never structured PR-review workflows. CFO approved budget on the second meeting.",
   },
   {
     initials: "HL",

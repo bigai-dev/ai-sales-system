@@ -33,7 +33,7 @@ export default function DashboardView({ kpis, stages, coaching, range }: Props) 
         <DateRangeTabs active={range} />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div data-tour="kpi-row" className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {kpis.map((k) => (
           <KpiCard key={k.label} kpi={k} />
         ))}

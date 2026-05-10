@@ -1,7 +1,7 @@
 import { config } from "dotenv";
-import { eq } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 import { db, libsql } from "./client";
-import { clients, deals, reps } from "./schema";
+import { calls, clients, deals, reps } from "./schema";
 import { parseMoney } from "./lib/money";
 import { clientList, reps as seedReps, pipelineBoard } from "./seed-data";
 
@@ -10,6 +10,7 @@ config({ path: ".env" });
 
 import type { SpancoCode } from "../lib/constants/labels";
 import { DAY_MS } from "../lib/format/time";
+import type { CallDebrief } from "../lib/schemas/call-debrief";
 
 function clientStageFromKanban(code: SpancoCode): typeof clients.$inferInsert.stage {
   switch (code) {
@@ -38,8 +39,8 @@ async function seedReps_() {
 
 async function seedClients_() {
   for (const c of clientList) {
-    const existing = await db.select().from(clients).where(eq(clients.name, c.name));
-    if (existing.length === 0) {
+    const [existing] = await db.select().from(clients).where(eq(clients.name, c.name));
+    if (!existing) {
       await db.insert(clients).values({
         name: c.name,
         initials: c.initials,
@@ -65,6 +66,26 @@ async function seedClients_() {
         source: c.source ?? null,
         notes: c.notes ?? null,
       });
+      continue;
+    }
+
+    // Backfill discovery fields onto existing rows ONLY when the DB value is
+    // null — preserves any edits the founder has already made through the UI.
+    const patch: Partial<typeof clients.$inferInsert> = {};
+    if (existing.goals == null && c.goals) patch.goals = c.goals;
+    if (existing.painPoints == null && c.painPoints) patch.painPoints = c.painPoints;
+    if ((!existing.currentStack || (existing.currentStack as string[]).length === 0) && c.currentStack?.length) {
+      patch.currentStack = c.currentStack;
+    }
+    if ((!existing.decisionMakers || (existing.decisionMakers as unknown[]).length === 0) && c.decisionMakers?.length) {
+      patch.decisionMakers = c.decisionMakers;
+    }
+    if (existing.budgetSignal == null && c.budgetSignal) patch.budgetSignal = c.budgetSignal;
+    if (existing.timelineSignal == null && c.timelineSignal) patch.timelineSignal = c.timelineSignal;
+    if (existing.source == null && c.source) patch.source = c.source;
+    if (existing.notes == null && c.notes) patch.notes = c.notes;
+    if (Object.keys(patch).length > 0) {
+      await db.update(clients).set(patch).where(eq(clients.id, existing.id));
     }
   }
 }
@@ -148,15 +169,101 @@ function probabilityFor(stage: SpancoCode): number {
   }
 }
 
+// Seeds one analyzed call so the demo tour's "AI debrief" step always has
+// real content to anchor on. Picks Bumimax because it already has a stage-O
+// deal + rich discovery — every demo step lights up against the same client.
+async function seedDemoCall_() {
+  const [client] = await db
+    .select()
+    .from(clients)
+    .where(eq(clients.name, "Bumimax Industrial Bhd"));
+  if (!client) return;
+
+  // Idempotent: if Bumimax already has any analyzed call, skip.
+  const existing = await db
+    .select({ id: calls.id })
+    .from(calls)
+    .where(and(eq(calls.clientId, client.id), isNotNull(calls.analyzedAt)))
+    .limit(1);
+  if (existing.length > 0) return;
+
+  const [primary] = await db.select().from(reps).where(eq(reps.isPrimary, true));
+  const [bumimaxDeal] = await db
+    .select({ id: deals.id })
+    .from(deals)
+    .where(eq(deals.clientId, client.id))
+    .limit(1);
+
+  const startedAt = Date.now() - 2 * DAY_MS;
+  const endedAt = startedAt + 35 * 60_000;
+  const analyzedAt = endedAt + 5 * 60_000;
+
+  const debrief: CallDebrief = {
+    outcome: "closed_won",
+    summary:
+      "Anitha confirmed workshop dates for next month and the cohort split — 18 engineers across two batches of 9. Tan Wei Loon (CTO) joined for ~10 min to clarify pre-work expectations and Copilot license provisioning.",
+    objectionsRaised: [
+      {
+        category: "time",
+        verbatim:
+          "Anitha pushed back on running both days consecutively — concerned about ERP migration prep eating engineers' headspace.",
+      },
+    ],
+    commitments: [
+      {
+        who: "rep",
+        what: "Send tax invoice + dates + venue confirmation by tomorrow EOD.",
+      },
+      {
+        who: "rep",
+        what: "Share pre-work survey + Copilot license kit-list 2 weeks before kickoff.",
+      },
+      {
+        who: "client",
+        what: "Confirm room booking at Bumimax HQ by Wednesday.",
+      },
+    ],
+    nextStep:
+      "Send tax invoice today; workshop confirmation pack with venue + agenda by tomorrow EOD.",
+    suggestedStage: "O",
+    coachingNote:
+      "Strong recap discipline — verbally summarized the 3 commitments before hanging up, which is why Anitha sent the room booking email an hour later. Keep doing that.",
+  };
+
+  await db.insert(calls).values({
+    clientId: client.id,
+    dealId: bumimaxDeal?.id ?? null,
+    repId: primary?.id ?? null,
+    title: "Confirm workshop dates · Bumimax",
+    status: "completed",
+    scheduledAt: startedAt,
+    startedAt,
+    endedAt,
+    talkPct: 38,
+    questionsAsked: 6,
+    sentiment: 2,
+    summary: debrief.summary,
+    notes:
+      "Anitha confirmed dates 12-13 May. Cohort 18 split into 2 batches of 9. CTO Tan Wei Loon joined for 10 min — wants kit list 2 weeks ahead. Pushed back on consecutive days (ERP migration prep). Agreed on workshop confirmation pack by tomorrow EOD. They'll confirm HQ room booking by Wed.",
+    debrief,
+    outcome: "closed_won",
+    nextStep: debrief.nextStep,
+    suggestedStage: "O",
+    analyzedAt,
+  });
+}
+
 async function main() {
   await seedReps_();
   await seedClients_();
   await seedDeals_();
+  await seedDemoCall_();
 
   const counts = {
     reps: (await db.select().from(reps)).length,
     clients: (await db.select().from(clients)).length,
     deals: (await db.select().from(deals)).length,
+    calls: (await db.select().from(calls)).length,
   };
   console.log("✓ seed complete", counts);
   libsql.close();

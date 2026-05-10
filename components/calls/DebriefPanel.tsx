@@ -24,7 +24,7 @@ export default function DebriefPanel({
 }) {
   if (!debrief) {
     return (
-      <div className="panel p-6">
+      <div data-tour="debrief-panel" className="panel p-6">
         <div className="text-[11px] uppercase tracking-wider text-muted">
           Debrief
         </div>
@@ -40,7 +40,7 @@ export default function DebriefPanel({
   const tone = TONE_CHIP[OUTCOME_TONE[debrief.outcome]];
 
   return (
-    <div className="panel p-5 space-y-5">
+    <div data-tour="debrief-panel" className="panel p-5 space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-[11px] uppercase tracking-wider text-muted">
