@@ -3,15 +3,38 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
-type NavItem = { label: string; href: string; icon: ReactNode };
+type NavItem = {
+  label: string;
+  href: string;
+  icon: ReactNode;
+  // When true, render as a non-clickable placeholder with a "Soon" tag.
+  comingSoon?: boolean;
+};
 
-const NAV: NavItem[] = [
+// Primary workspace nav — the day-to-day CRM surfaces.
+const NAV_MAIN: NavItem[] = [
   { label: "Today", href: "/today", icon: <TodayIcon /> },
   { label: "Dashboard", href: "/", icon: <DashboardIcon /> },
   { label: "Pipeline", href: "/pipeline", icon: <PipelineIcon /> },
   { label: "Calls", href: "/calls", icon: <CallsIcon /> },
   { label: "Clients", href: "/clients", icon: <ClientsIcon /> },
   { label: "Readiness", href: "/health-check", icon: <ReadinessIcon /> },
+];
+
+// Training section — separate group with its own submenus.
+const NAV_TRAINING: NavItem[] = [
+  { label: "Overview", href: "/training", icon: <OverviewIcon /> },
+  { label: "Trends", href: "/training/trends", icon: <TrainingIcon /> },
+  {
+    label: "Drills",
+    href: "/training/drills",
+    icon: <DrillsIcon />,
+  },
+  {
+    label: "Playbook",
+    href: "/training/playbook",
+    icon: <PlaybookIcon />,
+  },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -21,6 +44,10 @@ function isActive(pathname: string, href: string) {
   const onHealthCheck = pathname.endsWith("/health-check");
   if (href === "/health-check") return onHealthCheck;
   if (onHealthCheck) return false;
+  // /training is the section landing — it should highlight only on exact
+  // match so the deeper Trends/Drills/Playbook items can claim active state
+  // when the user is on those routes.
+  if (href === "/training") return pathname === "/training";
   return pathname === href || pathname.startsWith(href + "/");
 }
 
@@ -66,34 +93,40 @@ export default function Sidebar({
             S
           </div>
           <div className="min-w-0">
-            <div className="font-semibold text-[15px] leading-tight">SalesAI</div>
+            <div className="font-semibold text-[15px] leading-tight tracking-tight">SALES.AI</div>
             <div className="text-[10px] uppercase tracking-wider text-muted mt-0.5">
               Vibe-coding training
             </div>
           </div>
         </Link>
 
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {NAV.map((item) => {
-            const active = isActive(pathname, item.href);
-            return (
-              <Link
+        <nav className="flex-1 px-3 py-4 overflow-y-auto">
+          <div className="space-y-0.5">
+            {NAV_MAIN.map((item) => (
+              <NavLink
                 key={item.href}
-                href={item.href}
+                item={item}
+                active={isActive(pathname, item.href)}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition ${
-                  active
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted hover:text-foreground hover:bg-surface-elevated/60"
-                }`}
-              >
-                <span className="shrink-0" aria-hidden>
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+              />
+            ))}
+          </div>
+
+          <div className="mt-5 pt-4 border-t border-border-subtle">
+            <div className="px-3 mb-2 text-[10px] uppercase tracking-wider text-muted font-semibold">
+              Training
+            </div>
+            <div className="space-y-0.5">
+              {NAV_TRAINING.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  active={isActive(pathname, item.href)}
+                  onClick={() => setOpen(false)}
+                />
+              ))}
+            </div>
+          </div>
         </nav>
 
         <div className="border-t border-border-subtle px-4 py-3 flex items-center gap-3">
@@ -109,6 +142,49 @@ export default function Sidebar({
         </div>
       </aside>
     </>
+  );
+}
+
+function NavLink({
+  item,
+  active,
+  onClick,
+}: {
+  item: NavItem;
+  active: boolean;
+  onClick: () => void;
+}) {
+  if (item.comingSoon) {
+    return (
+      <div
+        className="flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-semibold text-muted/60 cursor-not-allowed"
+        aria-disabled
+      >
+        <span className="shrink-0" aria-hidden>
+          {item.icon}
+        </span>
+        <span className="flex-1">{item.label}</span>
+        <span className="text-[9px] uppercase tracking-wider rounded bg-surface-elevated px-1.5 py-0.5 border border-border-subtle">
+          Soon
+        </span>
+      </div>
+    );
+  }
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      className={`flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition ${
+        active
+          ? "bg-accent text-accent-foreground"
+          : "text-muted hover:text-foreground hover:bg-surface-elevated/60"
+      }`}
+    >
+      <span className="shrink-0" aria-hidden>
+        {item.icon}
+      </span>
+      <span>{item.label}</span>
+    </Link>
   );
 }
 
@@ -220,6 +296,82 @@ function ClientsIcon() {
       <circle cx="9" cy="7" r="4" />
       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function TrainingIcon() {
+  // Used by the "Trends" submenu — line going up-and-to-the-right.
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 17l6-6 4 4 8-8" />
+      <path d="M14 7h7v7" />
+    </svg>
+  );
+}
+
+function OverviewIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 3" />
+    </svg>
+  );
+}
+
+function DrillsIcon() {
+  // Target — drills are about hitting the target.
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PlaybookIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2V5z" />
+      <path d="M4 17h15" />
+      <path d="M9 7h6" />
     </svg>
   );
 }

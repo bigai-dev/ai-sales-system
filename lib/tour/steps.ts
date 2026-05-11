@@ -3,7 +3,7 @@ import type { TourStep } from "./types";
 export const TOUR_STEPS: TourStep[] = [
   {
     id: "welcome",
-    title: "Welcome to SalesAI",
+    title: "Welcome to SALES.AI",
     body:
       "60-second tour of how a Malaysian SME founder runs the full sales cycle here — from cold lead to paid SST invoice. Hit Next to start.",
     placement: "center",

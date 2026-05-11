@@ -61,6 +61,28 @@ export const callDebriefSchema = z.object({
     .describe(
       "One observation about HOW the rep handled the call — strength to repeat or gap to fix. Be specific.",
     ),
+  briefingEval: z
+    .object({
+      discoveryQuestionsAnswered: z
+        .array(z.boolean())
+        .describe(
+          "Parallel to briefing.discoveryQuestions (same length, same order). True if the rep got a usable answer to that question in this call.",
+        ),
+      expectedObjectionsHit: z
+        .array(z.boolean())
+        .describe(
+          "Parallel to briefing.expectedObjections (same length, same order). True if that objection actually surfaced in this call (regardless of whether it was handled well).",
+        ),
+      nextStageMoveLanded: z
+        .boolean()
+        .describe(
+          "True if the rep extracted the briefing's nextStageMove commitment (the verbatim 'what'). False if the call advanced the deal in some other way or did not advance it at all.",
+        ),
+    })
+    .nullable()
+    .describe(
+      "Set to null when no briefing existed for this call. Otherwise, evaluate the call against the briefing's plan. Lengths of the two boolean arrays MUST match the briefing arrays exactly.",
+    ),
 });
 
 export type CallDebrief = z.infer<typeof callDebriefSchema>;

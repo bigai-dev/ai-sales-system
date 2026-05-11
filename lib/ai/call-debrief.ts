@@ -5,8 +5,10 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { chat } from "./deepseek";
 import { scrub, scrubObject } from "./scrub";
 import { extractDiscovery, DISCOVERY_PRIMER } from "./client-discovery";
+import { computeCallMetrics } from "./call-metrics";
+import { extractPlays } from "./extract-plays";
 import { db } from "@/db/client";
-import { clients, calls, deals } from "@/db/schema";
+import { clients, calls, callMetrics, deals } from "@/db/schema";
 import {
   callDebriefSchema,
   type CallDebrief,
@@ -58,6 +60,20 @@ for this exact conversation. Evaluate the call against it explicitly:
   in coachingNote ("budget never came up — must address before proposal").
 - Did the rep get answers to the briefing's discoveryQuestions? If a critical
   one was missed, the coachingNote should call it out.
+
+When a briefing is present, ALSO populate the briefingEval object:
+- discoveryQuestionsAnswered: a boolean array EXACTLY the same length as
+  briefing.discoveryQuestions, in the same order. true if the rep got a usable
+  answer to that question in this call (mentioned in notes, summary, or
+  commitments). false otherwise.
+- expectedObjectionsHit: a boolean array EXACTLY the same length as
+  briefing.expectedObjections, in the same order. true if that objection
+  actually surfaced in this call.
+- nextStageMoveLanded: true ONLY if the rep extracted the briefing's
+  nextStageMove "what" commitment (or its semantic equivalent). false
+  otherwise — including the case where the deal advanced via a different path.
+
+If no briefing is present, set briefingEval to null.
 
 ${DISCOVERY_PRIMER}
 
@@ -144,6 +160,25 @@ export async function generateCallDebrief(callId: string): Promise<Result<CallDe
     return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
   }
 
+  // Pull the briefing + talkPct + notes now: metrics computation needs
+  // briefing+talkPct, and play extraction needs the rep's call notes.
+  // Reload here to keep this function self-contained even if the prior
+  // loadDebriefContext signature changes upstream.
+  const [callRow] = await db
+    .select({
+      briefing: calls.briefing,
+      talkPct: calls.talkPct,
+      notes: calls.notes,
+    })
+    .from(calls)
+    .where(eq(calls.id, callId));
+
+  const metrics = computeCallMetrics({
+    briefing: callRow?.briefing ?? null,
+    debrief,
+    talkPct: callRow?.talkPct ?? null,
+  });
+
   await db
     .update(calls)
     .set({
@@ -157,13 +192,55 @@ export async function generateCallDebrief(callId: string): Promise<Result<CallDe
       endedAt: Date.now(),
     })
     .where(eq(calls.id, callId));
+
+  // Upsert callMetrics: re-debriefing the same call should overwrite, not
+  // accumulate. libSQL's INSERT … ON CONFLICT … DO UPDATE handles this.
+  await db
+    .insert(callMetrics)
+    .values({
+      callId,
+      stageProgression: metrics.stageProgression,
+      briefingAdherence: metrics.briefingAdherence,
+      discoveryCoverage: metrics.discoveryCoverage,
+      objectionPreparedness: metrics.objectionPreparedness,
+      talkPct: metrics.talkPct,
+    })
+    .onConflictDoUpdate({
+      target: callMetrics.callId,
+      set: {
+        stageProgression: metrics.stageProgression,
+        briefingAdherence: metrics.briefingAdherence,
+        discoveryCoverage: metrics.discoveryCoverage,
+        objectionPreparedness: metrics.objectionPreparedness,
+        talkPct: metrics.talkPct,
+        computedAt: Date.now(),
+      },
+    });
+
+  // Extract plays (Playbook pillar) from the freshly-saved debrief. Runs
+  // in the same request so the Playbook page reflects the latest call as
+  // soon as the rep returns to it. Any failure here is non-fatal — we log
+  // and move on; the rep can re-debrief to retry.
+  try {
+    await extractPlays({
+      callId,
+      briefing: callRow?.briefing ?? null,
+      debrief,
+      notes: callRow?.notes ?? null,
+    });
+  } catch (e) {
+    console.error("extractPlays failed:", (e as Error).message);
+  }
+
   revalidatePath(`/calls/${callId}`);
   revalidatePath("/calls");
   revalidatePath(`/clients/${context.clientId}`);
   revalidatePath("/today");
+  revalidatePath("/training/playbook");
   // Tag-based instead of revalidatePath("/") — invalidates the dashboard's
   // cached KPIs without nuking unrelated route caches.
   revalidateTag("dashboard-kpis", "default");
+  revalidateTag("training-trends", "default");
   return { ok: true, data: debrief };
 }
 

@@ -113,8 +113,8 @@ export function ProposalPdf({ doc }: { doc: ProposalDoc }) {
   return (
     <Document
       title={`Workshop proposal — ${client}`}
-      author="SalesAI"
-      creator="SalesAI"
+      author="SALES.AI"
+      creator="SALES.AI"
     >
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
@@ -214,7 +214,7 @@ export function ProposalPdf({ doc }: { doc: ProposalDoc }) {
         </View>
 
         <View style={styles.footer} fixed>
-          <Text>SalesAI · 2-day vibe-coding workshop</Text>
+          <Text>SALES.AI · 2-day vibe-coding workshop</Text>
           <Text
             render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
           />

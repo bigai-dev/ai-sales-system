@@ -228,6 +228,8 @@ async function seedDemoCall_() {
     suggestedStage: "O",
     coachingNote:
       "Strong recap discipline — verbally summarized the 3 commitments before hanging up, which is why Anitha sent the room booking email an hour later. Keep doing that.",
+    // No briefing was attached to this seeded call, so briefingEval is null.
+    briefingEval: null,
   };
 
   await db.insert(calls).values({

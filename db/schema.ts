@@ -4,6 +4,7 @@ import { createId } from "@paralleldrive/cuid2";
 import type { ProposalOutput } from "@/lib/schemas/proposal";
 import type { CallBriefing } from "@/lib/schemas/call-briefing";
 import type { CallDebrief } from "@/lib/schemas/call-debrief";
+import type { CallDryRun } from "@/lib/schemas/dry-run";
 import type { DecisionMaker } from "@/lib/types/client";
 
 const id = () =>
@@ -155,6 +156,10 @@ export const calls = sqliteTable(
     briefing: text("briefing", { mode: "json" }).$type<CallBriefing>(),
     notes: text("notes"),
     debrief: text("debrief", { mode: "json" }).$type<CallDebrief>(),
+    // Dry-run drilling done before the call. Populated by the Dry Run modal
+    // on the briefing page; consumed by the debrief prompt to evaluate
+    // whether the rep delivered the lines they practiced.
+    dryRun: text("dry_run", { mode: "json" }).$type<CallDryRun>(),
     outcome: text("outcome", {
       enum: [
         "connected",
@@ -338,43 +343,89 @@ export const dealInsightCache = sqliteTable("deal_insight_cache", {
 // working without a default rep mapping. When auth lands and reps share an
 // install, queries gain a `where(eq(ownerRepId, currentRepId))` filter and
 // inserts get the rep ID from the session.
-export const coachingScores = sqliteTable("coaching_scores", {
-  id: id(),
-  ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
-  label: text("label").notNull(),
-  score: integer("score").notNull(),
-  sortIdx: integer("sort_idx").default(0).notNull(),
-  generatedAt: ts("generated_at")
-    .$defaultFn(() => Date.now())
-    .notNull(),
-});
+export const coachingScores = sqliteTable(
+  "coaching_scores",
+  {
+    id: id(),
+    ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
+    runId: text("run_id"),
+    label: text("label").notNull(),
+    score: integer("score").notNull(),
+    sortIdx: integer("sort_idx").default(0).notNull(),
+    generatedAt: ts("generated_at")
+      .$defaultFn(() => Date.now())
+      .notNull(),
+  },
+  (t) => [index("coaching_scores_run_idx").on(t.runId, t.generatedAt)],
+);
 
-export const coachingOpportunities = sqliteTable("coaching_opportunities", {
-  id: id(),
-  ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  detail: text("detail").notNull(),
-  impactText: text("impact_text").notNull(),
-  impactTone: text("impact_tone", { enum: ["good", "warn", "bad", "info"] })
-    .default("warn")
-    .notNull(),
-  sortIdx: integer("sort_idx").default(0).notNull(),
-  generatedAt: ts("generated_at")
-    .$defaultFn(() => Date.now())
-    .notNull(),
-});
+export const coachingOpportunities = sqliteTable(
+  "coaching_opportunities",
+  {
+    id: id(),
+    ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
+    runId: text("run_id"),
+    title: text("title").notNull(),
+    detail: text("detail").notNull(),
+    impactText: text("impact_text").notNull(),
+    impactTone: text("impact_tone", { enum: ["good", "warn", "bad", "info"] })
+      .default("warn")
+      .notNull(),
+    sortIdx: integer("sort_idx").default(0).notNull(),
+    generatedAt: ts("generated_at")
+      .$defaultFn(() => Date.now())
+      .notNull(),
+  },
+  (t) => [index("coaching_opps_run_idx").on(t.runId, t.generatedAt)],
+);
 
-export const coachingWins = sqliteTable("coaching_wins", {
-  id: id(),
-  ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
-  prefix: text("prefix").notNull(),
-  num: text("num"),
-  suffix: text("suffix"),
-  sortIdx: integer("sort_idx").default(0).notNull(),
-  generatedAt: ts("generated_at")
-    .$defaultFn(() => Date.now())
-    .notNull(),
-});
+export const coachingWins = sqliteTable(
+  "coaching_wins",
+  {
+    id: id(),
+    ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
+    runId: text("run_id"),
+    prefix: text("prefix").notNull(),
+    num: text("num"),
+    suffix: text("suffix"),
+    sortIdx: integer("sort_idx").default(0).notNull(),
+    generatedAt: ts("generated_at")
+      .$defaultFn(() => Date.now())
+      .notNull(),
+  },
+  (t) => [index("coaching_wins_run_idx").on(t.runId, t.generatedAt)],
+);
+
+// ---------- call_metrics (Tracking pillar) ----------
+// Derived metrics per debriefed call — all computed from existing structured
+// data on `calls` (briefing/debrief JSON, talkPct, suggestedStage). No LLM
+// grading involved. Written at debrief time so reads are O(1).
+export const callMetrics = sqliteTable(
+  "call_metrics",
+  {
+    callId: text("call_id")
+      .primaryKey()
+      .references(() => calls.id, { onDelete: "cascade" }),
+    ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
+    // 0 or 1: did debrief.suggestedStage advance past client.stage at call time?
+    stageProgression: integer("stage_progression").notNull().default(0),
+    // 0 or 1: did the actual outcome match the briefing's planned nextStageMove?
+    // Null when no briefing existed.
+    briefingAdherence: integer("briefing_adherence"),
+    // 0-100: % of briefing.discoveryQuestions surfaced in the debrief.
+    // Null when no briefing existed.
+    discoveryCoverage: integer("discovery_coverage"),
+    // 0-100: of briefing.expectedObjections, % that surfaced AND were
+    // responded to in the debrief. Null when no briefing existed.
+    objectionPreparedness: integer("objection_preparedness"),
+    // 0-100: rep talk percentage (denormalized from calls.talkPct).
+    talkPct: integer("talk_pct"),
+    computedAt: ts("computed_at")
+      .$defaultFn(() => Date.now())
+      .notNull(),
+  },
+  (t) => [index("call_metrics_computed_idx").on(t.computedAt)],
+);
 
 // ---------- relations ----------
 export const clientsRelations = relations(clients, ({ many, one }) => ({
@@ -492,6 +543,91 @@ export const scratchNotes = sqliteTable(
   },
   (t) => [index("scratch_notes_done_idx").on(t.doneAt)],
 );
+
+// ---------- drills (Rehearsal pillar) ----------
+// One row per drill submission. The `bucket` column matches the four
+// objection categories the briefing/debrief flow already uses.
+export const drills = sqliteTable(
+  "drills",
+  {
+    id: id(),
+    ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
+    bucket: text("bucket", {
+      enum: ["content", "budget", "venue", "time"],
+    }).notNull(),
+    scenarioPrompt: text("scenario_prompt").notNull(),
+    // 3 short bullets the LLM emits alongside the scenario; the grader uses
+    // them as a rubric so judgments stay anchored to the same criteria the
+    // scenario was generated against.
+    rubric: text("rubric", { mode: "json" }).$type<string[]>().default([]).notNull(),
+    repResponse: text("rep_response").notNull(),
+    grade: integer("grade").notNull(),
+    feedback: text("feedback").notNull(),
+    didExceedBest: bool("did_exceed_best").default(false).notNull(),
+    createdAt: ts("created_at")
+      .$defaultFn(() => Date.now())
+      .notNull(),
+  },
+  (t) => [
+    index("drills_bucket_idx").on(t.bucket),
+    index("drills_created_idx").on(t.createdAt),
+  ],
+);
+
+// ---------- plays (Playbook pillar) ----------
+// Auto-extracted from real calls. Each play anchors a winning move to a
+// specific moment on a specific call — never hand-authored. Source enum
+// records WHY this play was extracted so we can re-run the extraction
+// rules later without losing provenance.
+export const plays = sqliteTable(
+  "plays",
+  {
+    id: id(),
+    callId: text("call_id")
+      .notNull()
+      .references(() => calls.id, { onDelete: "cascade" }),
+    ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
+    bucket: text("bucket", {
+      enum: ["content", "budget", "venue", "time", "other"],
+    }).notNull(),
+    scenario: text("scenario").notNull(),
+    repResponseExcerpt: text("rep_response_excerpt").notNull(),
+    outcome: text("outcome").notNull(),
+    source: text("source", {
+      enum: ["coaching_strength", "drill_delivered", "closed_won"],
+    }).notNull(),
+    pinned: bool("pinned").default(false).notNull(),
+    hidden: bool("hidden").default(false).notNull(),
+    createdAt: ts("created_at")
+      .$defaultFn(() => Date.now())
+      .notNull(),
+  },
+  (t) => [
+    index("plays_bucket_idx").on(t.bucket),
+    index("plays_call_idx").on(t.callId),
+    index("plays_pinned_idx").on(t.pinned),
+  ],
+);
+
+// One row per bucket — the rep's best-graded response to date. Updated
+// (not appended) whenever a new drill grades higher than the existing best.
+export const drillBestResponses = sqliteTable("drill_best_responses", {
+  bucket: text("bucket", {
+    enum: ["content", "budget", "venue", "time"],
+  })
+    .primaryKey()
+    .notNull(),
+  ownerRepId: text("owner_rep_id").references(() => reps.id, { onDelete: "cascade" }),
+  drillId: text("drill_id").references(() => drills.id, { onDelete: "set null" }),
+  // callId is set if this best response was later detected as having been
+  // delivered live in a real call — used by Phase D's play extraction.
+  callId: text("call_id").references(() => calls.id, { onDelete: "set null" }),
+  repResponse: text("rep_response").notNull(),
+  grade: integer("grade").notNull(),
+  updatedAt: ts("updated_at")
+    .$defaultFn(() => Date.now())
+    .notNull(),
+});
 
 // helper unused-export to avoid tree-shaking complaints in older bundlers
 export const _primaryKey = primaryKey;

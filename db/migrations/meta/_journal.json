@@ -50,6 +50,27 @@
       "when": 1778403490260,
       "tag": "0006_thick_silverclaw",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1778427816035,
+      "tag": "0007_awesome_norrin_radd",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1778429388466,
+      "tag": "0008_petite_rafael_vega",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1778429954673,
+      "tag": "0009_lonely_phil_sheldon",
+      "breakpoints": true
     }
   ]
 }

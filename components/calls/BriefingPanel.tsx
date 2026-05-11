@@ -4,13 +4,17 @@ import {
   type CallBriefing,
 } from "@/lib/schemas/call-briefing";
 import GenerateBriefingButton from "./GenerateBriefingButton";
+import DryRunButton from "../DryRunButton";
+import type { CallDryRun } from "@/lib/schemas/dry-run";
 
 export default function BriefingPanel({
   callId,
   briefing,
+  dryRun,
 }: {
   callId: string;
   briefing: CallBriefing | null;
+  dryRun: CallDryRun | null;
 }) {
   if (!briefing) {
     return (
@@ -42,7 +46,10 @@ export default function BriefingPanel({
             {briefing.context}
           </div>
         </div>
-        <GenerateBriefingButton callId={callId} hasBriefing />
+        <div className="flex items-center gap-2 shrink-0">
+          <DryRunButton callId={callId} initialDryRun={dryRun} hasBriefing />
+          <GenerateBriefingButton callId={callId} hasBriefing />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

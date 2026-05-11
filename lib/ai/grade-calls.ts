@@ -2,6 +2,7 @@
 import { generateText, Output } from "ai";
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { createId } from "@paralleldrive/cuid2";
 import { reasoner } from "./deepseek";
 import { scrubObject } from "./scrub";
 import { db } from "@/db/client";
@@ -97,14 +98,15 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
     return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
   }
 
-  // Replace existing coaching panel content
-  await db.delete(coachingScores);
-  await db.delete(coachingOpportunities);
-  await db.delete(coachingWins);
+  // Append a new run instead of replacing. The dashboard panel reads only
+  // rows belonging to the latest runId; the Training Trends view reads
+  // historical runs to chart progress over time.
+  const runId = createId();
 
   if (output.scores.length) {
     await db.insert(coachingScores).values(
       output.scores.map((s, idx) => ({
+        runId,
         label: s.label,
         score: s.score,
         sortIdx: idx,
@@ -115,6 +117,7 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
   if (output.opportunities.length) {
     await db.insert(coachingOpportunities).values(
       output.opportunities.map((o, idx) => ({
+        runId,
         title: o.title,
         detail: o.detail,
         impactText: o.impact,
@@ -130,6 +133,7 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
   if (output.wins.length) {
     await db.insert(coachingWins).values(
       output.wins.map((w, idx) => ({
+        runId,
         prefix: w.prefix,
         num: w.num ?? null,
         suffix: w.suffix ?? null,
@@ -140,6 +144,7 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
 
   revalidateTag("dashboard-kpis", "default");
   revalidateTag("coaching-panel", "default");
+  revalidateTag("training-trends", "default");
 
   return { ok: true, data: { graded: callsWithTurns.length } };
 }

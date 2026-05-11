@@ -12,7 +12,10 @@ function titleFor(pathname: string): string {
   if (pathname === "/clients") return "Client Directory";
   if (pathname.endsWith("/health-check")) return "Workshop Readiness";
   if (pathname.startsWith("/clients/")) return "Client Profile";
-  return "SalesAI";
+  if (pathname === "/training") return "Training";
+  if (pathname === "/training/trends") return "Training · Trends";
+  if (pathname.startsWith("/training/")) return "Training";
+  return "SALES.AI";
 }
 
 export default function TopBar() {

@@ -50,7 +50,11 @@ export default async function CallDetailPage({
         </div>
       </div>
 
-      <BriefingPanel callId={call.id} briefing={call.briefing ?? null} />
+      <BriefingPanel
+        callId={call.id}
+        briefing={call.briefing ?? null}
+        dryRun={call.dryRun ?? null}
+      />
       <NotesEditor
         callId={call.id}
         initialNotes={call.notes ?? ""}

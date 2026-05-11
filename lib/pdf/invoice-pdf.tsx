@@ -203,7 +203,7 @@ export function InvoicePdf({ data }: { data: InvoiceData }) {
     <Document
       title={`Tax invoice ${data.invoiceNumber} — ${data.client.name}`}
       author={COMPANY.legalName}
-      creator="SalesAI"
+      creator="SALES.AI"
     >
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>

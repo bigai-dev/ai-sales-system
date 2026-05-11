@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SalesAI — Sales Intelligence",
+  title: "SALES.AI — Sales Intelligence",
   description: "Sales intelligence dashboard for vibe-coding training workshops",
 };
 
