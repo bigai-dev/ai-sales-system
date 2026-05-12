@@ -1,5 +1,6 @@
 "use client";
 import { useOptimistic, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   PointerSensor,
@@ -10,7 +11,8 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import type { KanbanColumn, Deal } from "@/lib/types/ui";
-import { moveDealStage, type SpancoCode } from "./actions";
+import { moveDealStage } from "./actions";
+import type { SpancoCode } from "@/lib/constants/labels";
 import DealInsightButton from "@/components/DealInsightButton";
 
 type Move = { dealId: string; from: SpancoCode; to: SpancoCode };
@@ -105,6 +107,7 @@ function Column({ col }: { col: KanbanColumn }) {
 }
 
 function Card({ deal }: { deal: Deal }) {
+  const router = useRouter();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: deal.id ?? deal.company,
     disabled: !deal.id,
@@ -112,12 +115,22 @@ function Card({ deal }: { deal: Deal }) {
   const style = transform
     ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
     : undefined;
+  // Click → navigate to client profile. Drag is preserved because dnd-kit's
+  // PointerSensor uses a 6px activation distance, so a click without movement
+  // never starts a drag. Buttons inside the card (e.g. AI insight regenerate)
+  // get a free pass via the .closest("button") check.
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (!deal.clientId) return;
+    if ((e.target as HTMLElement).closest("button")) return;
+    router.push(`/clients/${deal.clientId}`);
+  }
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
+      onClick={handleClick}
       className={`rounded-xl border border-border-subtle bg-surface p-3 hover:border-accent transition cursor-grab ${isDragging ? "opacity-50" : ""}`}
     >
       <div className="flex items-start gap-2">

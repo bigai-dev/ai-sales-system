@@ -7,8 +7,11 @@ import { parseMoney } from "@/db/lib/money";
 import type { Result } from "@/lib/types";
 import type { DecisionMaker, ClientSize, ClientStage } from "@/lib/types/client";
 
-// Re-exported for component imports.
-export type { DecisionMaker };
+// NOTE: do not re-export `DecisionMaker` (or any type) from this file.
+// Next.js's server-actions loader treats every export in a `"use server"`
+// file as a runtime action and emits `export { DecisionMaker }` which
+// crashes at load time because TypeScript types don't exist at runtime.
+// Importers should pull `DecisionMaker` directly from `@/lib/types/client`.
 
 function initialsOf(name: string): string {
   return name

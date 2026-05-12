@@ -35,6 +35,7 @@ export type Rep = {
 
 export type Deal = {
   id?: string;
+  clientId?: string;
   initials: string;
   company: string;
   contact: string;

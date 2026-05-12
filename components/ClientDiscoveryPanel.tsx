@@ -3,9 +3,9 @@
 import { useState, useTransition } from "react";
 import {
   updateClientDiscovery,
-  type DecisionMaker,
   type DiscoveryPatch,
 } from "@/app/(dashboard)/clients/actions";
+import type { DecisionMaker } from "@/lib/types/client";
 import { SOURCE_LABEL } from "@/lib/constants/labels";
 
 const STANCE_TONE: Record<DecisionMaker["stance"], string> = {

@@ -142,3 +142,23 @@ export async function getRecentDrills(bucket: DrillBucket, limit = 5) {
     .orderBy(desc(drills.createdAt))
     .limit(limit);
 }
+
+// Most recent drills across ALL buckets. Used by the Training overview so the
+// rep can see their activity even when a drill didn't qualify for the streak
+// (sub-40-char response or grade <30). Includes the bucket so each row can
+// link back to its bucket page.
+export async function getRecentDrillsAcrossBuckets(limit = 5) {
+  return db
+    .select({
+      id: drills.id,
+      bucket: drills.bucket,
+      grade: drills.grade,
+      feedback: drills.feedback,
+      repResponse: drills.repResponse,
+      didExceedBest: drills.didExceedBest,
+      createdAt: drills.createdAt,
+    })
+    .from(drills)
+    .orderBy(desc(drills.createdAt))
+    .limit(limit);
+}

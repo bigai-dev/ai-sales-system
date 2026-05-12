@@ -8,8 +8,11 @@ import type { Result } from "@/lib/types";
 import type { SpancoCode } from "@/lib/constants/labels";
 import { getCurrentRepId } from "@/lib/queries/reps";
 
-// Re-exported so existing importers (components/AddDealDialog) keep working.
-export type { SpancoCode };
+// NOTE: do not re-export `SpancoCode` from this file. Next.js's server-actions
+// loader treats every export in a `"use server"` file as a runtime action and
+// will generate `export { SpancoCode }` which crashes at load time because
+// types don't exist at runtime. Importers should pull the type directly from
+// `@/lib/constants/labels`.
 
 function revalidateDealRoutes(): void {
   // Tag-based covers cached queries (pipeline board, dashboard KPIs).

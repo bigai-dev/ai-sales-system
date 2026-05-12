@@ -40,6 +40,7 @@ export const getPipelineBoard = unstable_cache(
       bucket.totalCents += deal.valueCents;
       bucket.deals.push({
         id: deal.id,
+        clientId: client.id,
         initials: client.initials,
         company: client.name,
         contact: client.contactName,

@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { getBucketSummaries, getDrillStreak } from "@/lib/queries/drills";
+import {
+  getBucketSummaries,
+  getDrillStreak,
+  getRecentDrillsAcrossBuckets,
+} from "@/lib/queries/drills";
+import { DRILL_BUCKET_LABEL } from "@/lib/schemas/drill";
 
 export const metadata = {
   title: "Training drills",
@@ -8,9 +13,10 @@ export const metadata = {
 const STREAK_FIRE = "\u{1F525}"; // 🔥
 
 export default async function DrillsHub() {
-  const [summaries, streak] = await Promise.all([
+  const [summaries, streak, recentDrills] = await Promise.all([
     getBucketSummaries(),
     getDrillStreak(),
+    getRecentDrillsAcrossBuckets(5),
   ]);
 
   return (
@@ -40,6 +46,65 @@ export default async function DrillsHub() {
           </div>
         </div>
       </div>
+
+      {recentDrills.length > 0 && (
+        <div className="panel p-5">
+          <div className="flex items-end justify-between mb-3">
+            <div>
+              <div className="text-xs uppercase tracking-wider text-muted">
+                Recent drills
+              </div>
+              <div className="text-sm text-muted mt-1">
+                Every drill counts toward your activity. Streak needs ≥40 chars
+                and grade ≥30.
+              </div>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {recentDrills.map((d) => {
+              const qualifies = d.repResponse.length >= 40 && d.grade >= 30;
+              return (
+                <Link
+                  key={d.id}
+                  href={`/training/drills/${d.bucket}`}
+                  className="block border-t first:border-t-0 border-border-subtle pt-3 first:pt-0 row-hover -mx-2 px-2 rounded-md"
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <div className="flex items-baseline gap-2">
+                      <div className="font-semibold">{d.grade}</div>
+                      <div className="text-xs uppercase tracking-wider text-muted">
+                        {DRILL_BUCKET_LABEL[d.bucket]}
+                      </div>
+                      {!qualifies && (
+                        <span className="chip text-[10px]">
+                          doesn&apos;t count for streak
+                        </span>
+                      )}
+                      {d.didExceedBest && (
+                        <span className="chip chip-good text-[10px]">
+                          new best
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-muted">
+                      {new Date(d.createdAt).toLocaleString("en-MY", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted mt-1 line-clamp-2">
+                    {d.repResponse}
+                  </div>
+                  <div className="text-[11px] mt-1 italic">{d.feedback}</div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {summaries.map((s) => (

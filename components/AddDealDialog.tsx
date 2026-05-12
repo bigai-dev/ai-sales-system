@@ -2,7 +2,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
-import { createDeal, type SpancoCode } from "@/app/(dashboard)/pipeline/actions";
+import { createDeal } from "@/app/(dashboard)/pipeline/actions";
+import type { SpancoCode } from "@/lib/constants/labels";
 import { DAY_MS } from "@/lib/format/time";
 
 const STAGES: { code: SpancoCode; name: string }[] = [

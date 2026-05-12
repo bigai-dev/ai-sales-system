@@ -11,6 +11,14 @@ export async function createCallForClient(formData: FormData): Promise<void> {
   const clientId = String(formData.get("clientId") ?? "");
   if (!clientId) throw new Error("Missing clientId");
 
+  // scheduledAt comes from a <input type="datetime-local"> in the Plan-Call
+  // modal. The browser submits it as "YYYY-MM-DDTHH:mm" in the user's local
+  // timezone; new Date() parses that as local time. Fall back to now if the
+  // field is missing (e.g. an older form / programmatic caller).
+  const scheduledAtRaw = String(formData.get("scheduledAt") ?? "").trim();
+  const parsed = scheduledAtRaw ? new Date(scheduledAtRaw).getTime() : NaN;
+  const scheduledAt = Number.isFinite(parsed) ? parsed : Date.now();
+
   const [client] = await db
     .select({ id: clients.id })
     .from(clients)
@@ -33,7 +41,11 @@ export async function createCallForClient(formData: FormData): Promise<void> {
       dealId: openDeal[0]?.id ?? null,
       repId,
       status: "planned",
-      scheduledAt: Date.now(),
+      scheduledAt,
+      // startedAt has a NOT NULL constraint with a default of `Date.now()`.
+      // We don't override it — the planned-list sort uses `scheduledAt`, so
+      // `startedAt` can keep its real meaning ("the actual time the call
+      // session was opened") which is "now" at creation time.
     })
     .returning({ id: calls.id });
 

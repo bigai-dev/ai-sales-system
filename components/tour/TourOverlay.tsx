@@ -89,31 +89,45 @@ function AnchoredStep({ step, index, total, onNext, onPrev, onExit }: StepProps)
   const [searchFailed, setSearchFailed] = useState(false);
   const arrowRef = useRef<HTMLDivElement>(null);
 
-  // Poll for the anchor element after step changes — accounts for the
-  // brief window between router.push and the new route's elements mounting.
-  // If the anchor never appears (missing data, failed seed, route mismatch),
-  // surface a centered fallback so the tour never silently breaks.
+  // Wait for the anchor element to mount on the new route. Server-rendered
+  // pages backed by remote DBs (Turso/Tokyo) can take several seconds to hand
+  // off — a fixed short polling window drops the tour into centered-fallback
+  // mode prematurely. Strategy: try immediately, then watch the DOM via
+  // MutationObserver until it appears, with a 15s hard timeout as the final
+  // safety net so the tour never hangs.
   useEffect(() => {
     if (!step.anchor) return;
     let cancelled = false;
-    let attempts = 0;
-    const find = () => {
-      if (cancelled) return;
-      const el = document.querySelector<HTMLElement>(step.anchor!);
-      if (el) {
-        setAnchor(el);
-        setSearchFailed(false);
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        return;
-      }
-      if (++attempts < 60) setTimeout(find, 50); // up to 3s
-      else setSearchFailed(true);
-    };
     setAnchor(null);
     setSearchFailed(false);
-    find();
+
+    const tryFind = (): boolean => {
+      if (cancelled) return false;
+      const el = document.querySelector<HTMLElement>(step.anchor!);
+      if (!el) return false;
+      setAnchor(el);
+      setSearchFailed(false);
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      return true;
+    };
+
+    if (tryFind()) return;
+
+    const observer = new MutationObserver(() => {
+      if (tryFind()) observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    const timeout = setTimeout(() => {
+      if (cancelled) return;
+      if (!tryFind()) setSearchFailed(true);
+      observer.disconnect();
+    }, 15000);
+
     return () => {
       cancelled = true;
+      observer.disconnect();
+      clearTimeout(timeout);
     };
   }, [step]);
 
@@ -136,17 +150,115 @@ function AnchoredStep({ step, index, total, onNext, onPrev, onExit }: StepProps)
     };
   }, [anchor]);
 
-  const { refs, floatingStyles, middlewareData, placement } = useFloating({
-    elements: { reference: anchor },
-    placement: step.placement as Placement,
-    middleware: [
-      offset(SPOT_PAD + 8),
-      flip(),
-      shift({ padding: 16 }),
-      arrow({ element: arrowRef }),
-    ],
-    whileElementsMounted: autoUpdate,
-  });
+  // For anchors taller/wider than the viewport (long task lists, full client
+  // panels), the popover must sit next to the *visible* slice of the anchor,
+  // not its off-screen extents. We render an invisible "ghost" element fixed
+  // to the visible-slice rectangle and use it as Floating-UI's reference via
+  // its callback-ref API. The original anchor still drives ARIA, scrolling,
+  // and the spotlight overlay.
+  const [ghostRect, setGhostRect] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!anchor) {
+      setGhostRect(null);
+      return;
+    }
+    const recompute = () => {
+      const r = anchor.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const vw = window.innerWidth;
+      const side = (step.placement ?? "bottom").split("-")[0];
+      const fitsVertically = r.top >= 0 && r.bottom <= vh;
+      const fitsHorizontally = r.left >= 0 && r.right <= vw;
+      // If the anchor fully fits in the viewport, use its own rectangle —
+      // Floating-UI will place the popover *outside* the anchor's edge, where
+      // it won't overlap the anchor's content. The visible-slice strip below
+      // is only needed for anchors that extend off-screen.
+      if (
+        ((side === "top" || side === "bottom") && fitsVertically) ||
+        ((side === "left" || side === "right") && fitsHorizontally)
+      ) {
+        setGhostRect({
+          top: r.top,
+          left: r.left,
+          width: r.width,
+          height: r.height,
+        });
+        return;
+      }
+      // Anchor extends past the viewport on the relevant axis. Use a 1px
+      // strip on the edge of the visible slice that matches the placement,
+      // so Floating-UI has space on the opposite side to render the popover.
+      const sliceTop = Math.max(0, Math.min(vh, r.top));
+      const sliceBottom = Math.max(0, Math.min(vh, r.bottom));
+      const sliceLeft = Math.max(0, Math.min(vw, r.left));
+      const sliceRight = Math.max(0, Math.min(vw, r.right));
+      const sliceWidth = Math.max(0, sliceRight - sliceLeft);
+      const sliceHeight = Math.max(0, sliceBottom - sliceTop);
+      let top = sliceTop;
+      let left = sliceLeft;
+      let width = sliceWidth;
+      let height = sliceHeight;
+      if (side === "top") {
+        top = Math.max(0, sliceBottom - 1);
+        height = 1;
+      } else if (side === "bottom") {
+        height = 1;
+      } else if (side === "left") {
+        left = Math.max(0, sliceRight - 1);
+        width = 1;
+      } else if (side === "right") {
+        width = 1;
+      }
+      setGhostRect({ top, left, width, height });
+    };
+    recompute();
+    const ro = new ResizeObserver(recompute);
+    ro.observe(anchor);
+    window.addEventListener("scroll", recompute, true);
+    window.addEventListener("resize", recompute);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("scroll", recompute, true);
+      window.removeEventListener("resize", recompute);
+    };
+  }, [anchor, step.placement]);
+
+  // Disable main-axis flip only for horizontal placements (left/right).
+  // Rationale: flipping a horizontal popover to the opposite side lands it
+  // over the sidebar (left) or off-screen (right). For top/bottom we *want*
+  // flip to work — e.g. step 3's "bottom" needs to flip to "top" when the
+  // today list is too tall to fit a popover below it.
+  const placementSide = ((step.placement ?? "bottom") as string).split("-")[0];
+  const isHorizontalPlacement =
+    placementSide === "left" || placementSide === "right";
+
+  const { refs, floatingStyles, middlewareData, placement, update } =
+    useFloating({
+      strategy: "fixed",
+      placement: step.placement as Placement,
+      middleware: [
+        offset(SPOT_PAD + 8),
+        flip({
+          padding: 16,
+          mainAxis: !isHorizontalPlacement,
+          crossAxis: false,
+        }),
+        shift({ padding: 16, crossAxis: true }),
+        arrow({ element: arrowRef }),
+      ],
+      whileElementsMounted: autoUpdate,
+    });
+
+  // Force a position recompute whenever the ghost rect changes (scroll/resize).
+  useEffect(() => {
+    update();
+  }, [ghostRect, update]);
 
   // Fallback: anchor never showed up. Render centered, no spotlight.
   if (searchFailed && !anchor) {
@@ -165,7 +277,22 @@ function AnchoredStep({ step, index, total, onNext, onPrev, onExit }: StepProps)
   return (
     <>
       <Spotlight rect={rect} />
-      {anchor && (
+      {ghostRect && (
+        <div
+          ref={refs.setReference}
+          aria-hidden
+          style={{
+            position: "fixed",
+            top: ghostRect.top,
+            left: ghostRect.left,
+            width: ghostRect.width,
+            height: ghostRect.height,
+            pointerEvents: "none",
+            visibility: "hidden",
+          }}
+        />
+      )}
+      {anchor && ghostRect && (
         <div
           ref={refs.setFloating}
           style={floatingStyles}

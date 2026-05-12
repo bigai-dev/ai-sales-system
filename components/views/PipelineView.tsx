@@ -35,13 +35,6 @@ export default function PipelineView({
           >
             {hotOnly ? "🔥 Hot only · clear" : "Filter"}
           </Link>
-          <button
-            className="btn-ghost opacity-50 cursor-not-allowed"
-            disabled
-            title="Available with a team plan — currently you're the only rep"
-          >
-            Group by rep
-          </button>
           <AddDealDialog clients={clients} />
         </div>
       </div>

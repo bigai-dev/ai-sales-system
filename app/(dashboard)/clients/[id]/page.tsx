@@ -9,7 +9,7 @@ import CallsList from "@/components/CallsList";
 import ClientTimeline from "@/components/ClientTimeline";
 import InvoiceButton from "@/components/InvoiceButton";
 import ClientDiscoveryPanel, { type Discovery } from "@/components/ClientDiscoveryPanel";
-import { createCallForClient } from "@/app/(dashboard)/calls/actions";
+import PlanCallButton from "@/components/PlanCallButton";
 import { OUTCOME_LABEL, OUTCOME_TONE } from "@/lib/schemas/call-debrief";
 import { SOURCE_LABEL, STAGE_NAME } from "@/lib/constants/labels";
 
@@ -68,12 +68,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
           </div>
         </div>
         <div className="flex gap-2">
-          <form action={createCallForClient}>
-            <input type="hidden" name="clientId" value={id} />
-            <button type="submit" className="btn-ghost">
-              Plan call
-            </button>
-          </form>
+          <PlanCallButton clientId={id} />
           <Link href={`/clients/${id}/health-check`} className="btn">
             Generate readiness audit
           </Link>

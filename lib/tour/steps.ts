@@ -50,7 +50,7 @@ export const TOUR_STEPS: TourStep[] = [
     title: "AI debrief in 5 seconds",
     body:
       "Paste the transcript or rough notes. DeepSeek extracts outcome, objections, commitments, and the next move — then drafts a Gmail-ready follow-up email.",
-    placement: "top",
+    placement: "right",
     route: (t) => (t.callId ? `/calls/${t.callId}` : "/calls"),
     anchor: '[data-tour="debrief-panel"]',
   },

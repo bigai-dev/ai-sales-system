@@ -10,16 +10,19 @@ const TONE_CHIP: Record<"good" | "warn" | "bad" | "info", string> = {
   info: "chip-info",
 };
 
-function timeAgo(ms: number): string {
-  const diff = Date.now() - ms;
-  const m = Math.floor(diff / 60_000);
+function formatWhen(ms: number): string {
+  const diff = ms - Date.now();
+  const future = diff > 0;
+  const absMs = Math.abs(diff);
+  const m = Math.floor(absMs / 60_000);
   if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
+  if (m < 60) return future ? `in ${m}m` : `${m}m ago`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
+  if (h < 24) return future ? `in ${h}h` : `${h}h ago`;
   const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d ago`;
-  if (d < 30) return `${Math.floor(d / 7)}w ago`;
+  if (d < 7) return future ? `in ${d}d` : `${d}d ago`;
+  if (d < 30)
+    return future ? `in ${Math.floor(d / 7)}w` : `${Math.floor(d / 7)}w ago`;
   return new Date(ms).toLocaleDateString("en-MY", {
     year: "numeric",
     month: "short",
@@ -30,10 +33,26 @@ function timeAgo(ms: number): string {
 export default async function CallsPage() {
   const calls = await getRecentCalls(50);
 
-  const planned = calls.filter((c) => c.status === "planned" || c.status === "scheduled");
-  const completed = calls.filter(
-    (c) => c.status === "completed" || c.status === "ended",
-  );
+  // Planned: nearest-to-today at top → farthest-future at bottom.
+  // We sort by `scheduledAt` ascending (smaller timestamp = sooner). Calls
+  // missing a scheduledAt fall to the bottom of the planned section.
+  const planned = calls
+    .filter((c) => c.status === "planned" || c.status === "scheduled")
+    .sort((a, b) => {
+      const aT = a.scheduledAt ?? Number.POSITIVE_INFINITY;
+      const bT = b.scheduledAt ?? Number.POSITIVE_INFINITY;
+      return aT - bT;
+    });
+  // Completed: most-recent-ended at top. Falls back to startedAt if endedAt
+  // is missing (some legacy seed rows). Both reflect "nearest to today" for
+  // past calls.
+  const completed = calls
+    .filter((c) => c.status === "completed" || c.status === "ended")
+    .sort((a, b) => {
+      const aT = a.endedAt ?? a.startedAt;
+      const bT = b.endedAt ?? b.startedAt;
+      return bT - aT;
+    });
 
   return (
     <section className="space-y-6">
@@ -118,7 +137,7 @@ function CallRow({
           {call.clientName ?? "Unscoped call"}
         </div>
         <div className="text-[11px] text-muted mt-0.5">
-          {timeAgo(when)}
+          {formatWhen(when)}
           {call.nextStep ? <> · Next: {call.nextStep}</> : null}
         </div>
       </div>

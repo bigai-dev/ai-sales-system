@@ -60,26 +60,21 @@ export default function TourProvider({ children }: { children: ReactNode }) {
   }, [navigateTo]);
 
   const next = useCallback(() => {
-    setIndex((i) => {
-      const ni = Math.min(i + 1, TOUR_STEPS.length - 1);
-      if (ni === i) {
-        setActive(false);
-        return i;
-      }
-      const ns = TOUR_STEPS[ni]!;
-      if (targets) navigateTo(ns, targets);
-      return ni;
-    });
-  }, [navigateTo, targets]);
+    const ni = Math.min(index + 1, TOUR_STEPS.length - 1);
+    if (ni === index) {
+      setActive(false);
+      return;
+    }
+    setIndex(ni);
+    if (targets) navigateTo(TOUR_STEPS[ni]!, targets);
+  }, [index, navigateTo, targets]);
 
   const prev = useCallback(() => {
-    setIndex((i) => {
-      const ni = Math.max(i - 1, 0);
-      const ns = TOUR_STEPS[ni]!;
-      if (targets) navigateTo(ns, targets);
-      return ni;
-    });
-  }, [navigateTo, targets]);
+    const ni = Math.max(index - 1, 0);
+    if (ni === index) return;
+    setIndex(ni);
+    if (targets) navigateTo(TOUR_STEPS[ni]!, targets);
+  }, [index, navigateTo, targets]);
 
   const exit = useCallback(() => {
     setActive(false);
