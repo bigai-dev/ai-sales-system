@@ -13,28 +13,28 @@ type NavItem = {
 
 // Primary workspace nav — the day-to-day CRM surfaces.
 const NAV_MAIN: NavItem[] = [
-  { label: "Today", href: "/today", icon: <TodayIcon /> },
   { label: "Dashboard", href: "/", icon: <DashboardIcon /> },
-  { label: "Pipeline", href: "/pipeline", icon: <PipelineIcon /> },
-  { label: "Calls", href: "/calls", icon: <CallsIcon /> },
   { label: "Clients", href: "/clients", icon: <ClientsIcon /> },
-  { label: "Readiness", href: "/health-check", icon: <ReadinessIcon /> },
+  { label: "Fit check", href: "/health-check", icon: <ReadinessIcon /> },
+  { label: "Calls", href: "/calls", icon: <CallsIcon /> },
+  { label: "Deals", href: "/pipeline", icon: <PipelineIcon /> },
+  { label: "Today", href: "/today", icon: <TodayIcon /> },
 ];
 
 // Training section — separate group with its own submenus.
 const NAV_TRAINING: NavItem[] = [
   { label: "Overview", href: "/training", icon: <OverviewIcon /> },
-  { label: "Trends", href: "/training/trends", icon: <TrainingIcon /> },
-  {
-    label: "Drills",
-    href: "/training/drills",
-    icon: <DrillsIcon />,
-  },
   {
     label: "Playbook",
     href: "/training/playbook",
     icon: <PlaybookIcon />,
   },
+  {
+    label: "Drills",
+    href: "/training/drills",
+    icon: <DrillsIcon />,
+  },
+  { label: "Trends", href: "/training/trends", icon: <TrainingIcon /> },
 ];
 
 function isActive(pathname: string, href: string) {

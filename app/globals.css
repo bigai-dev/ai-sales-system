@@ -192,3 +192,30 @@ body {
     color: var(--danger);
   }
 }
+
+/* Movie Mode (webinar demo) — scene reveal + "AI thinking" shimmer. */
+@keyframes movie-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes movie-shimmer {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+.movie-fade-up {
+  animation: movie-fade-up 0.5s ease both;
+}
+.movie-shimmer {
+  animation: movie-shimmer 1.1s ease-in-out infinite;
+}

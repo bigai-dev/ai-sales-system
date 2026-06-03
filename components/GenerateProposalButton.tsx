@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import CopyMarkdownButton from "./CopyMarkdownButton";
 import type { ProposalDoc } from "@/lib/exporters/proposal";
@@ -46,6 +47,7 @@ export default function GenerateProposalButton({ clientId }: { clientId: string 
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const abortRef = useRef<AbortController | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (phase.kind !== "ready") return;
@@ -85,6 +87,11 @@ export default function GenerateProposalButton({ clientId }: { clientId: string 
       setPhase({ kind: "error", message: "Empty response" });
       return;
     }
+
+    // The proposal is now saved server-side. Refresh the route so the client
+    // page's "Proposals" list re-reads from the DB and shows it immediately —
+    // otherwise the saved proposal stays invisible until a manual reload.
+    router.refresh();
 
     setPhase({ kind: "loading", stage: "rendering" });
     try {

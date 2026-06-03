@@ -2,16 +2,17 @@
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import TourLauncher from "./tour/TourLauncher";
+import MovieLauncher from "./movie/MovieLauncher";
 
 function titleFor(pathname: string): string {
   if (pathname === "/today") return "Today";
-  if (pathname === "/") return "Sales Pipeline Dashboard";
-  if (pathname === "/pipeline") return "SPANCO Pipeline";
-  if (pathname === "/calls") return "Call Sessions";
-  if (pathname.startsWith("/calls/")) return "Call Session";
-  if (pathname === "/clients") return "Client Directory";
-  if (pathname.endsWith("/health-check")) return "Workshop Readiness";
-  if (pathname.startsWith("/clients/")) return "Client Profile";
+  if (pathname === "/") return "Dashboard";
+  if (pathname === "/pipeline") return "Your deals";
+  if (pathname === "/calls") return "Calls";
+  if (pathname.startsWith("/calls/")) return "Call";
+  if (pathname === "/clients") return "Clients";
+  if (pathname.endsWith("/health-check")) return "Fit check";
+  if (pathname.startsWith("/clients/")) return "Client";
   if (pathname === "/training") return "Training";
   if (pathname === "/training/trends") return "Training · Trends";
   if (pathname.startsWith("/training/")) return "Training";
@@ -26,6 +27,7 @@ export default function TopBar() {
         {titleFor(pathname)}
       </h1>
       <div className="flex items-center gap-2">
+        <MovieLauncher />
         <TourLauncher />
         <ThemeToggle />
       </div>

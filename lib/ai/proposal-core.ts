@@ -1,4 +1,4 @@
-import { generateText, Output } from "ai";
+import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { desc, eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { chat } from "./deepseek";
@@ -175,22 +175,40 @@ export async function generateProposalCore(
     return { ok: false, error: (e as Error).message };
   }
 
-  let output: ProposalOutput;
-  try {
-    const result = await generateText({
-      model: chat,
-      output: Output.object({ schema: proposalSchema }),
-      system: SYSTEM_PROMPT,
-      prompt: `Client + audit + open deal context:\n${JSON.stringify(context.prompt, null, 2)}\n\nProduce the proposal now.`,
-      maxOutputTokens: 3000,
-      abortSignal: signal,
-    });
-    output = proposalSchema.parse(result.output);
-  } catch (e) {
-    if (signal?.aborted) {
-      return { ok: false, error: "Cancelled" };
+  // DeepSeek treats the schema as a prompt hint, not a hard decoding
+  // constraint, so a run occasionally emits valid JSON that misses one bound.
+  // One retry (the model re-samples) clears virtually all of these. For the
+  // rare case it still fails, we log the exact field that broke (e.cause is the
+  // Zod validation error) so it's diagnosable, and show the user a plain message.
+  let output: ProposalOutput | undefined;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    if (signal?.aborted) return { ok: false, error: "Cancelled" };
+    try {
+      const result = await generateText({
+        model: chat,
+        output: Output.object({ schema: proposalSchema }),
+        system: SYSTEM_PROMPT,
+        prompt: `Client + audit + open deal context:\n${JSON.stringify(context.prompt, null, 2)}\n\nProduce the proposal now.`,
+        maxOutputTokens: 3000,
+        abortSignal: signal,
+      });
+      output = proposalSchema.parse(result.output);
+      break;
+    } catch (e) {
+      if (signal?.aborted) return { ok: false, error: "Cancelled" };
+      const detail = NoObjectGeneratedError.isInstance(e)
+        ? `${e.message} — ${(e.cause as Error | undefined)?.message ?? "no detail"}`
+        : (e as Error).message;
+      console.warn(`Proposal generation attempt ${attempt}/2 failed: ${detail}`);
     }
-    return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
+  }
+
+  if (!output) {
+    return {
+      ok: false,
+      error:
+        "The AI returned an incomplete proposal twice in a row. Please try generating again — if it keeps happening, regenerate the readiness audit first.",
+    };
   }
 
   // Bail out before writing if the user already cancelled.

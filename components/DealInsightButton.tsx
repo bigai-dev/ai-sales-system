@@ -29,7 +29,7 @@ export default function DealInsightButton({
       }}
       disabled={pending}
       title={error ?? undefined}
-      className="text-[10px] uppercase tracking-wider text-accent hover:text-[#a78bfa] transition disabled:opacity-50"
+      className="text-[10px] uppercase tracking-wider text-muted hover:text-accent transition disabled:opacity-50"
     >
       {pending ? "Thinking…" : hasInsight ? "↻ Regenerate" : "✨ Generate AI insight"}
     </button>

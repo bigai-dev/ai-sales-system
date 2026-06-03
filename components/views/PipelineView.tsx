@@ -18,7 +18,7 @@ export default function PipelineView({
       <div className="flex items-end justify-between mb-6">
         <div>
           <div className="text-xs text-muted uppercase tracking-wider">
-            Pipeline · SPANCO method
+            Your deals
           </div>
           <h1 className="text-2xl font-bold mt-1">
             {hotOnly

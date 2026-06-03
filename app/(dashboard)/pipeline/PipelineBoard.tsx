@@ -65,7 +65,7 @@ export default function PipelineBoard({ initialBoard }: { initialBoard: KanbanCo
   }
 
   return (
-    <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+    <DndContext id="pipeline-board" sensors={sensors} onDragEnd={onDragEnd}>
       <div className="grid grid-flow-col auto-cols-[minmax(260px,1fr)] gap-4 overflow-x-auto pb-4">
         {board.map((col) => (
           <Column key={col.code} col={col} />
@@ -80,7 +80,7 @@ function Column({ col }: { col: KanbanColumn }) {
   return (
     <div
       ref={setNodeRef}
-      className={`panel p-3 min-w-[260px] transition-colors ${isOver ? "border-accent" : ""}`}
+      className={`rounded-xl border border-border-subtle bg-background p-3 min-w-65 transition-colors ${isOver ? "border-accent" : ""}`}
     >
       <div className="flex items-center justify-between mb-1">
         <div className="text-sm font-semibold">
@@ -131,10 +131,10 @@ function Card({ deal }: { deal: Deal }) {
       {...attributes}
       {...listeners}
       onClick={handleClick}
-      className={`rounded-xl border border-border-subtle bg-surface p-3 hover:border-accent transition cursor-grab ${isDragging ? "opacity-50" : ""}`}
+      className={`rounded-xl border border-border bg-surface p-3 shadow-sm hover:border-accent hover:shadow-md transition cursor-grab ${isDragging ? "opacity-50 shadow-lg" : ""}`}
     >
       <div className="flex items-start gap-2">
-        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center font-bold text-xs">
+        <div className="w-8 h-8 rounded-lg bg-surface-elevated text-accent flex items-center justify-center font-bold text-xs">
           {deal.initials}
         </div>
         <div className="flex-1 min-w-0">
@@ -161,7 +161,7 @@ function Card({ deal }: { deal: Deal }) {
       </div>
       <div className="mt-2 rounded-lg border border-border-subtle bg-background p-2">
         <div className="flex items-center justify-between mb-1">
-          <div className="text-[10px] uppercase tracking-wider text-accent">AI insight</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted">AI insight</div>
           {deal.id && <DealInsightButton dealId={deal.id} hasInsight={!!deal.insight} />}
         </div>
         {deal.insight ? (
