@@ -1,48 +1,33 @@
 # SalesAI
 
-A full-stack sales CRM purpose-built for a Malaysian solo founder selling 2-day vibe-coding workshops. The intent: run an entire sales cycle — from cold lead through paid invoice — without leaving the app.
+An AI-powered sales CRM that runs an entire deal cycle — from cold lead to paid invoice — without leaving the app.
 
-Workshop economics: **RM 3,500 / pax + 8% SST**, cohorts capped at ~35.
+SalesAI is a full-stack CRM purpose-built for a solo founder selling 2-day vibe-coding workshops to Malaysian SMEs. It pairs a SPANCO sales pipeline with DeepSeek AI that drafts call briefings, debriefs, proposals, follow-up emails, readiness audits, and self-coaching plans — every output grounded in each client's own discovery profile.
 
-## What's inside
+## Features
 
-| Surface | What it does |
-|---|---|
-| `/today` | Daily task queue: scheduled calls (next 7 days), urgency-bucketed actions (overdue / today / this week / later), per-task snooze, quick-capture for ad-hoc reminders |
-| `/clients` | Client list with stage, industry, size, and readiness filters |
-| `/clients/[id]` | Client detail: discovery profile (goals, pain points, stack, decision-makers, budget/timeline signals, source), unified timeline of all calls + proposals + audits, deal list with one-click tax invoice |
-| `/clients/[id]/health-check` | AI-generated readiness audit across 6 engineering dimensions |
-| `/calls/[id]` | Pre-call AI briefing → notes (auto-saved) → post-call AI debrief → one-click "Draft email" follow-up |
-| `/pipeline` | SPANCO kanban (Suspect → Prospect → Analysis → Negotiation → Conclusion → Order), drag-to-move |
-| `/api/proposal/pdf` | Workshop proposal PDF generator |
-| `/api/invoice/pdf` | 8% SST tax invoice PDF generator with auto-incrementing `INV-{YYYY}-{NNNN}` numbering |
-| Dashboard "Generate coaching plan" button | On-demand: grades the founder's recent closing calls and rewrites the coaching panel |
+- **Daily task queue** (`/today`) — scheduled calls for the next 7 days, urgency-bucketed actions (overdue / today / this week / later), per-task snooze, and quick-capture for ad-hoc reminders.
+- **Client management** (`/clients`) — list with stage, industry, size, and readiness filters; detail pages with a discovery profile (goals, pain points, stack, decision-makers, budget/timeline signals) and a unified timeline of calls, proposals, and audits.
+- **SPANCO pipeline** (`/pipeline`) — drag-and-drop kanban across the Suspect → Prospect → Analysis → Negotiation → Conclusion → Order stages.
+- **AI call workflow** (`/calls/[id]`) — pre-call briefing, auto-saved notes, post-call debrief, and one-click follow-up email drafting.
+- **AI readiness audit** (`/health-check`) — scores each client across 6 engineering dimensions (Tooling, Practices, Culture, Velocity, Adoption, Outcomes) with risks and recommended actions.
+- **AI sales training** (`/training`) — extract reusable plays into a playbook, practice drills against AI-generated scenarios, grade your responses, and track trends over time.
+- **On-demand coaching** — a dashboard button grades the founder's recent closing calls and rewrites the coaching panel.
+- **PDF generation** — workshop proposal PDFs and 8% SST tax invoices with auto-incrementing `INV-{YYYY}-{NNNN}` numbering.
+- **Light/dark theme** — OKLCH design tokens with a flash-free (FOUC-free) dark mode.
 
-## AI features
+## Tech Stack
 
-All AI features use [DeepSeek](https://platform.deepseek.com) via the [Vercel AI SDK](https://sdk.vercel.ai/) with structured Zod-validated outputs. The client's discovery profile (goals, pain points, decision-maker stances, stack) is fed into every prompt so AI output references the founder's actual knowledge, not generic boilerplate.
+- **Framework:** Next.js 16 (App Router) on the Node.js runtime
+- **Language:** TypeScript, React 19
+- **Database:** libSQL / Turso (edge-distributed SQLite) via Drizzle ORM
+- **AI:** DeepSeek through the Vercel AI SDK (`ai`, `@ai-sdk/deepseek`, `@ai-sdk/react`)
+- **Validation:** Zod schemas for structured AI output
+- **PDF:** `@react-pdf/renderer`
+- **UI:** Tailwind CSS v4, `@dnd-kit` for kanban drag-and-drop, Chart.js + `react-chartjs-2` for charts
+- **IDs:** cuid2
 
-| Feature | What it produces |
-|---|---|
-| Pre-call briefing | Tailored discovery questions, predicted objections, target stage move, watchouts |
-| Call debrief | Outcome classification, commitments extracted, suggested next stage, coaching note. Cross-references the briefing's plan to flag missed objectives. |
-| Draft follow-up email | Subject + body grounded in debrief + proposal + decision-maker stances; copy-paste into Gmail |
-| Workshop proposal | Cohort sizing, day-1/day-2 module split, venue recommendation, dates, follow-ups, next steps. Differentiates from prior proposals on regeneration. |
-| Readiness audit | 6-dimension scoring (Tooling, Practices, Culture, Velocity, Adoption, Outcomes) with risks + recommended actions |
-| Closing-call grader | Manually triggered from the dashboard; grades recently-closed call transcripts |
-| Deal insight | One-line strategic context for kanban cards |
-
-## Tech stack
-
-- **Next.js 16** (App Router) on **Node.js runtime**
-- **Drizzle ORM** + **libSQL/Turso** (edge-distributed SQLite)
-- **DeepSeek** via `@ai-sdk/deepseek` + `ai` SDK v6
-- **@react-pdf/renderer** for proposal & invoice PDFs
-- **Tailwind v4** with OKLCH design tokens, light/dark theme
-- **Zod** for AI output schema validation
-- **dnd-kit** for kanban drag-and-drop
-
-## Local setup
+## Getting Started
 
 ### Prerequisites
 
@@ -50,128 +35,49 @@ All AI features use [DeepSeek](https://platform.deepseek.com) via the [Vercel AI
 - A [Turso](https://turso.tech) database (`turso db create salesai-dev`)
 - A [DeepSeek API key](https://platform.deepseek.com)
 
-### First-run
+### Installation
 
 ```bash
-cp .env.example .env.local
-# Fill in TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, DEEPSEEK_API_KEY, CRON_SECRET
-
 npm install
-npm run db:push    # sync schema to Turso
-npm run db:seed    # 14 Malaysian SME clients + matching pipeline deals
-npm run dev
 ```
 
-### Common scripts
+### Environment Variables
 
-| Command | What it does |
-|---|---|
-| `npm run dev` | Dev server with Webpack (Next 16 default for now) |
-| `npm run build` | Production build |
-| `npm run db:push` | Sync schema to DB (no migration history; for dev) |
-| `npm run db:generate` | Produce a new migration file from schema changes |
-| `npm run db:migrate` | Apply migrations sequentially (use this in CI/prod) |
-| `npm run db:seed` | Seed demo data (14 Malaysian SMEs, half with discovery filled in) |
-| `npm run db:reset` | Wipe all rows + push schema + reseed (development reset) |
-| `npm run db:studio` | Open Drizzle Studio |
+Copy `.env.example` to `.env.local` and fill in:
 
-## Environment variables
+| Variable | Description |
+|----------|-------------|
+| `TURSO_DATABASE_URL` | Connection URL for your Turso (libSQL) database, e.g. `libsql://<your-db>.turso.io`. |
+| `TURSO_AUTH_TOKEN` | Auth token for the Turso database (`turso db tokens create <db>`). |
+| `DEEPSEEK_API_KEY` | API key for DeepSeek, used by all AI features. |
+| `CRON_SECRET` | Optional. Reserved for future scheduled jobs; the closing-call grader currently runs on-demand, so this can be left blank. |
 
-| Var | Required | Notes |
-|---|---|---|
-| `TURSO_DATABASE_URL` | yes | `libsql://<your-db>.turso.io` |
-| `TURSO_AUTH_TOKEN` | yes | `turso db tokens create <db>` |
-| `DEEPSEEK_API_KEY` | yes | DeepSeek dashboard → API Keys |
-| `CRON_SECRET` | optional | Reserved for future scheduled jobs. No cron is currently configured (the closing-call grader runs on-demand via the dashboard button). Safe to leave blank. |
-
-## Deploying to Vercel
-
-### One-time setup
-
-1. Push this repo to GitHub.
-2. Import into Vercel.
-3. Add the 4 env vars above (Production scope).
-4. The first deploy will run `npm run build`. Migrations are NOT auto-applied — you'll need to run `npm run db:migrate` against the production Turso URL once before traffic hits the new schema (see "Migrations in production" below).
-
-### vercel.json
-
-The repo pins to **Singapore (sin1)** for proximity to Malaysian users. The Turso primary lives in Tokyo (`aws-ap-northeast-1`); `sin1` is the best balance for end-to-end latency. If most users are in Japan/Korea, switch to `hnd1`.
-
-No scheduled jobs are configured. The closing-call grader runs on-demand from the dashboard.
-
-### Function runtimes
-
-All API routes run on Node.js (not Edge). PDF generation uses native packages (`@react-pdf/renderer`), DB driver is libSQL — neither edge-compatible. `serverExternalPackages: ["@react-pdf/renderer"]` in `next.config.ts` keeps the PDF lib out of the bundle.
-
-`maxDuration` is set explicitly:
-- PDF routes: 30s
-- AI generation routes: 60s (proposal can take ~20s)
-
-## Migrations in production
-
-Drizzle Kit migrations live in `db/migrations/`. To apply them against the production Turso database:
+### Running Locally
 
 ```bash
-TURSO_DATABASE_URL=<prod-url> TURSO_AUTH_TOKEN=<prod-token> npm run db:migrate
+npm run db:push    # sync the schema to your Turso database
+npm run db:seed    # seed demo data (Malaysian SME clients + pipeline deals)
+npm run dev        # start the dev server
 ```
 
-A typical workflow when adding a column:
+Then open http://localhost:3000 in your browser.
 
-```bash
-# 1. Edit db/schema.ts
-# 2. Generate migration
-npm run db:generate
-# 3. Review the SQL in db/migrations/<NNNN>_<slug>.sql
-# 4. Apply locally (or use db:push in dev)
-npm run db:migrate
-# 5. Commit the migration
-# 6. After deploy, apply against prod
-TURSO_DATABASE_URL=<prod> TURSO_AUTH_TOKEN=<prod> npm run db:migrate
-```
+## Project Structure
 
-> ⚠️ libSQL has limited `ALTER COLUMN` support. Stick to additive migrations (new columns, new tables, new indexes). For destructive migrations, prefer creating a new column, backfilling, then dropping the old.
+- `app/(dashboard)/` — dashboard routes: `today`, `clients`, `pipeline`, `calls`, `health-check`, `training`
+- `app/api/` — server routes for proposal and invoice PDF generation, plus AI proposal generation
+- `components/` — React components (mostly server components with client islands)
+- `lib/ai/` — server actions and helpers for each AI feature (briefing, debrief, proposal, email, health-check, grading, plays)
+- `lib/queries/` — cached database query functions
+- `lib/schemas/` — Zod schemas validating AI output
+- `lib/pdf/` — `@react-pdf/renderer` document components
+- `lib/` (other) — exporters, formatters, constants, and invoice numbering helpers
+- `db/` — Drizzle schema, libSQL client, seed/reset scripts, and generated migrations
+- `public/` — static assets, including the synchronous theme-init script for flash-free dark mode
 
-## Project layout
+## Notes
 
-```
-app/
-  (dashboard)/        # Authenticated dashboard routes
-    today/            # Task queue
-    clients/          # Client list + detail
-    pipeline/         # SPANCO kanban
-    calls/            # Briefing/notes/debrief flow
-    health-check/     # Readiness audit list + detail
-  api/
-    proposal/pdf/     # Proposal PDF generation
-    invoice/pdf/      # Tax invoice PDF generation
-    proposal/         # AI proposal generation (cancellable)
-
-components/           # ~30 React components, mostly server with client islands
-lib/
-  ai/                 # Server actions + helpers per AI feature
-  queries/            # Cached DB query functions (unstable_cache + tags)
-  schemas/            # Zod schemas for AI output validation
-  pdf/                # @react-pdf/renderer document components
-  exporters/          # Markdown exporters
-  format/             # Time + money formatters
-  constants/          # Shared display labels (STAGE_NAME, SOURCE_LABEL)
-  invoice/            # Company info + invoice numbering
-
-db/
-  schema.ts           # Drizzle schema (single source of truth)
-  client.ts           # libSQL connection
-  seed.ts             # Reseed from lib/data.ts
-  reset.ts            # Wipe all rows
-  migrations/         # Drizzle Kit-generated migrations
-
-public/theme-init.js  # Synchronous classic script for FOUC-free dark mode
-```
-
-## Domain conventions
-
-- All money is stored as integer **sen** (1 RM = 100 sen) to avoid float drift.
-- All timestamps are integer **unix-ms**.
-- IDs are [cuid2](https://github.com/paralleldrive/cuid2).
-- Stage codes use SPANCO letters (`S`, `P`, `A`, `N`, `C`, `O`); display strings live in `lib/constants/labels.ts`.
-- Workshop value (excl. SST) is denormalized on `deals.valueCents` for fast pipeline rendering. SST is calculated on-the-fly via `db/lib/money.ts`.
-- The `health` field on `clients` (0–100) tracks AI-readiness; updated by readiness audits.
+- This project was built as a demo for the Vibe Coding Workshop.
+- **Domain conventions:** money is stored as integer *sen* (1 RM = 100 sen) to avoid float drift; timestamps are integer unix-ms; pipeline stages use SPANCO letter codes (`S`, `P`, `A`, `N`, `C`, `O`) with display labels in `lib/constants/`.
+- **Migrations:** `npm run db:push` is for development. For production, generate and apply migrations with `npm run db:generate` and `npm run db:migrate`. libSQL has limited `ALTER COLUMN` support, so prefer additive migrations.
+- **Deployment:** the included `vercel.json` pins the region to Singapore (`sin1`) for proximity to Malaysian users. All API routes run on the Node.js runtime (PDF and libSQL packages are not edge-compatible).
