@@ -3,7 +3,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Client } from "@/lib/types/ui";
 import AddClientDialog from "../AddClientDialog";
-import { STAGE, STAGE_CODES } from "@/lib/constants/labels";
+import { STAGE, STAGE_CODES, readinessStatusFromScore, READINESS_STATUS_LABEL, READINESS_STATUS_TONE } from "@/lib/constants/labels";
+import { routes } from "@/lib/constants/routes";
+import { PAGE } from "@/lib/constants/copy";
+import { ButtonLink, EmptyState, Field, PageHeader, Select, StatusChip } from "@/components/ui";
 
 const STAGES = ["All", ...STAGE_CODES.map((c) => STAGE[c].label)];
 const INDUSTRIES = [
@@ -21,12 +24,19 @@ const INDUSTRIES = [
   "Public sector",
 ];
 const SIZES = ["All", "SMB", "Mid-market", "Enterprise"];
-const SORTS = ["value", "name", "stage", "industry", "size", "health", "engineers"] as const;
+const SORTS = [
+  { value: "value", label: "Workshop value" },
+  { value: "name", label: "Name" },
+  { value: "stage", label: "Stage" },
+  { value: "industry", label: "Industry" },
+  { value: "size", label: "Size" },
+  { value: "health", label: "Readiness" },
+  { value: "engineers", label: "Engineers" },
+] as const;
+type SortKey = (typeof SORTS)[number]["value"];
 
-function healthTone(h: number) {
-  if (h >= 75) return "chip-good";
-  if (h >= 60) return "chip-warn";
-  return "chip-bad";
+function moneyNumber(s: string): number {
+  return parseInt(s.replace(/[^0-9]/g, ""), 10) || 0;
 }
 
 export default function ClientsView({ clientList }: { clientList: Client[] }) {
@@ -34,7 +44,7 @@ export default function ClientsView({ clientList }: { clientList: Client[] }) {
   const [stage, setStage] = useState("All");
   const [industry, setIndustry] = useState("All");
   const [size, setSize] = useState("All");
-  const [sort, setSort] = useState<(typeof SORTS)[number]>("value");
+  const [sort, setSort] = useState<SortKey>("value");
 
   const filtered = useMemo(() => {
     let list = [...clientList];
@@ -57,205 +67,172 @@ export default function ClientsView({ clientList }: { clientList: Client[] }) {
           return (b.devCount ?? 0) - (a.devCount ?? 0);
         case "value":
         default:
-          return parseInt(b.arr.replace(/[^0-9]/g, "")) - parseInt(a.arr.replace(/[^0-9]/g, ""));
+          return moneyNumber(b.arr) - moneyNumber(a.arr);
       }
     });
     return list;
   }, [clientList, stage, industry, size, sort]);
 
-  const totalK = filtered.reduce(
-    (s, c) => s + parseInt(c.arr.replace(/[^0-9]/g, "")),
-    0,
-  );
+  const totalK = filtered.reduce((s, c) => s + moneyNumber(c.arr), 0);
+  const hasFilters = stage !== "All" || industry !== "All" || size !== "All";
 
   return (
     <section>
-      <div className="flex items-end justify-between mb-6">
-        <div>
-          <div className="text-xs text-muted uppercase tracking-wider">Clients</div>
-          <h1 className="text-2xl font-bold mt-1">
-            {filtered.length} clients ·{" "}
-            <span className="text-accent">RM {totalK}K total workshop value</span>
-          </h1>
-        </div>
-        <div className="flex gap-2">
-          <div className="switch">
-            <button onClick={() => setView("Grid")} className={view === "Grid" ? "on" : ""}>
-              Grid
-            </button>
-            <button onClick={() => setView("Table")} className={view === "Table" ? "on" : ""}>
-              Table
-            </button>
-          </div>
-          <AddClientDialog />
-        </div>
-      </div>
+      <PageHeader
+        title={PAGE.clients.title}
+        description={`${filtered.length} client${filtered.length === 1 ? "" : "s"} · RM ${totalK}K total workshop value`}
+        actions={
+          <>
+            <ButtonLink href={routes.readinessIndex()} variant="ghost">
+              Readiness checks
+            </ButtonLink>
+            <div className="switch">
+              <button onClick={() => setView("Grid")} className={view === "Grid" ? "on" : ""}>
+                Cards
+              </button>
+              <button onClick={() => setView("Table")} className={view === "Table" ? "on" : ""}>
+                Table
+              </button>
+            </div>
+            <AddClientDialog />
+          </>
+        }
+      />
 
-      <div className="panel p-4 mb-6 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-        <Filter label="Stage" value={stage} onChange={setStage} options={STAGES} />
-        <Filter label="Industry" value={industry} onChange={setIndustry} options={INDUSTRIES} />
-        <Filter label="Size" value={size} onChange={setSize} options={SIZES} />
-        <Filter
-          label="Sort by"
-          value={sort}
-          onChange={(v) => setSort(v as (typeof SORTS)[number])}
-          options={[...SORTS]}
-        />
+      <div className="panel mb-6 grid grid-cols-2 gap-3 p-4 md:grid-cols-4">
+        <Field label="Stage">
+          <Select value={stage} onChange={(e) => setStage(e.target.value)}>
+            {STAGES.map((o) => (
+              <option key={o}>{o}</option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Industry">
+          <Select value={industry} onChange={(e) => setIndustry(e.target.value)}>
+            {INDUSTRIES.map((o) => (
+              <option key={o}>{o}</option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Size">
+          <Select value={size} onChange={(e) => setSize(e.target.value)}>
+            {SIZES.map((o) => (
+              <option key={o}>{o}</option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Sort by">
+          <Select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+            {SORTS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyClients hasFilters={stage !== "All" || industry !== "All" || size !== "All"} />
+        hasFilters ? (
+          <EmptyState
+            title="No clients match these filters."
+            hint="Try widening the stage, industry or size filters above."
+          />
+        ) : (
+          <EmptyState
+            title="No clients yet."
+            hint="Add a client to start. From their page you can plan calls, run a readiness check and create proposals."
+            action={<AddClientDialog />}
+          />
+        )
       ) : view === "Grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((c) => (
-            <Link
-              key={c.name}
-              href={c.id ? `/clients/${c.id}` : "#"}
-              className="panel p-4 block hover:border-accent transition-colors"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={"w-9 h-9 rounded-lg bg-surface-elevated text-accent flex items-center justify-center font-semibold text-xs"}
-                  >
-                    {c.initials}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((c) => {
+            const status = readinessStatusFromScore(c.health);
+            return (
+              <Link
+                key={c.id ?? c.name}
+                href={c.id ? routes.client(c.id) : "#"}
+                className="panel block p-4 transition-colors hover:border-accent"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-xs font-semibold text-accent">
+                      {c.initials}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold">{c.name}</div>
+                      <div className="truncate text-xs text-muted">{c.contact}</div>
+                    </div>
                   </div>
+                  <StatusChip className="shrink-0">{c.stage}</StatusChip>
+                </div>
+                <div className="mt-2 text-xs text-muted">
+                  {c.industry} · {c.size} · {c.employees.toLocaleString()} staff
+                  {typeof c.devCount === "number" ? ` · ${c.devCount} engineers` : ""}
+                </div>
+                <div className="mt-4 flex items-end justify-between gap-3">
                   <div>
-                    <div className="font-semibold">{c.name}</div>
-                    <div className="text-[11px] text-muted">{c.contact}</div>
+                    <div className="text-xs text-muted">Workshop value</div>
+                    <div className="text-xl font-semibold tabular-nums">{c.arr}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-muted">Readiness</div>
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="text-xl font-semibold tabular-nums">{c.health}</span>
+                      <StatusChip tone={READINESS_STATUS_TONE[status]}>
+                        {READINESS_STATUS_LABEL[status]}
+                      </StatusChip>
+                    </div>
                   </div>
                 </div>
-                <span className="chip">{c.stage}</span>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-1 text-[11px] text-muted">
-                <span className="chip">{c.industry}</span>
-                <span className="chip">{c.size}</span>
-                {typeof c.devCount === "number" && (
-                  <span className="chip chip-info">{c.devCount} engineers</span>
-                )}
-                <span className="chip">{c.employees.toLocaleString()} emp</span>
-              </div>
-              <div className="mt-3 flex items-baseline justify-between">
-                <div>
-                  <div className="text-[11px] text-muted uppercase tracking-wider">
-                    Workshop value
-                  </div>
-                  <div className="text-xl font-bold">{c.arr}</div>
+                <div className="bar-track mt-3">
+                  <div className="bar-fill" style={{ width: `${c.health}%` }} />
                 </div>
-                <div className="text-right">
-                  <div className="text-[11px] text-muted uppercase tracking-wider">
-                    Readiness
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-xl font-bold">{c.health}</div>
-                    <span className={`chip ${healthTone(c.health)}`}>
-                      {c.health >= 75 ? "good" : c.health >= 60 ? "watch" : "risk"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="bar-track mt-3">
-                <div
-                  className="bar-fill"
-                  style={{
-                    width: `${c.health}%`,
-                    background:
-                      undefined,  // accent-only health bar in theme
-                  }}
-                />
-              </div>
-              <div className="text-[11px] text-muted mt-3">
-                Last activity · {c.lastActivity}
-              </div>
-            </Link>
-          ))}
+                <div className="mt-3 text-xs text-muted">Last activity · {c.lastActivity}</div>
+              </Link>
+            );
+          })}
         </div>
       ) : (
-        <div className="panel p-0 overflow-x-auto">
+        <div className="panel overflow-x-auto p-0">
           <table className="w-full text-sm">
-            <thead className="text-left text-[11px] uppercase tracking-wider text-muted">
+            <thead className="text-left text-xs font-medium text-muted">
               <tr>
                 <th className="px-4 py-3">Client</th>
                 <th className="px-4 py-3">Stage</th>
                 <th className="px-4 py-3">Industry</th>
                 <th className="px-4 py-3">Size</th>
                 <th className="px-4 py-3">Engineers</th>
-                <th className="px-4 py-3">Workshop $</th>
+                <th className="px-4 py-3">Workshop value</th>
                 <th className="px-4 py-3">Readiness</th>
                 <th className="px-4 py-3">Last activity</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((c) => (
-                <tr key={c.name} className="border-t border-border-subtle row-hover">
-                  <td className="px-4 py-3 font-medium">{c.name}</td>
-                  <td className="px-4 py-3 text-muted">{c.stage}</td>
-                  <td className="px-4 py-3 text-muted">{c.industry}</td>
-                  <td className="px-4 py-3 text-muted">{c.size}</td>
-                  <td className="px-4 py-3 text-muted">{c.devCount ?? "—"}</td>
-                  <td className="px-4 py-3 font-semibold">{c.arr}</td>
-                  <td className="px-4 py-3">
-                    <span className={`chip ${healthTone(c.health)}`}>{c.health}</span>
-                  </td>
-                  <td className="px-4 py-3 text-muted">{c.lastActivity}</td>
-                </tr>
-              ))}
+              {filtered.map((c) => {
+                const status = readinessStatusFromScore(c.health);
+                return (
+                  <tr key={c.id ?? c.name} className="row-hover border-t border-border-subtle">
+                    <td className="px-4 py-3 font-medium">
+                      {c.id ? <Link href={routes.client(c.id)}>{c.name}</Link> : c.name}
+                    </td>
+                    <td className="px-4 py-3 text-muted">{c.stage}</td>
+                    <td className="px-4 py-3 text-muted">{c.industry}</td>
+                    <td className="px-4 py-3 text-muted">{c.size}</td>
+                    <td className="px-4 py-3 text-muted">{c.devCount ?? "—"}</td>
+                    <td className="px-4 py-3 font-semibold tabular-nums">{c.arr}</td>
+                    <td className="px-4 py-3">
+                      <StatusChip tone={READINESS_STATUS_TONE[status]}>{c.health}</StatusChip>
+                    </td>
+                    <td className="px-4 py-3 text-muted">{c.lastActivity}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
     </section>
-  );
-}
-
-function EmptyClients({ hasFilters }: { hasFilters: boolean }) {
-  if (hasFilters) {
-    return (
-      <div className="panel p-8 text-center">
-        <div className="text-sm text-foreground">No clients match these filters.</div>
-        <div className="text-xs text-muted mt-1">
-          Try widening the Stage, Industry, or Size filters above.
-        </div>
-      </div>
-    );
-  }
-  return (
-    <div className="panel p-8 text-center">
-      <div className="text-sm text-foreground">No clients yet.</div>
-      <div className="text-xs text-muted mt-1 max-w-md mx-auto">
-        Click <strong className="text-foreground">+ Add client</strong> to start
-        tracking a prospect. You'll be able to plan calls, generate readiness
-        audits, and create proposals from each client's page.
-      </div>
-    </div>
-  );
-}
-
-function Filter({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-}) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-[10px] uppercase tracking-wider text-muted">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="bg-surface-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
-      >
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }

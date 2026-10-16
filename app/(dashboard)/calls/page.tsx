@@ -1,9 +1,9 @@
-import { PAGE } from "@/lib/constants/copy";
-import Link from "next/link";
-import { TONE_CHIP } from "@/lib/constants/labels";
 import { getRecentCalls } from "@/lib/queries/calls";
-import { OUTCOME_LABEL, OUTCOME_TONE } from "@/lib/schemas/call-debrief";
-import { STATUS_LABEL, type CallStatus } from "@/lib/constants/labels";
+import CallRow from "@/components/calls/CallRow";
+import { EmptyState, PageHeader, Panel } from "@/components/ui";
+import { PAGE } from "@/lib/constants/copy";
+
+export const metadata = { title: PAGE.calls.title };
 
 function formatWhen(ms: number): string {
   const diff = ms - Date.now();
@@ -16,129 +16,58 @@ function formatWhen(ms: number): string {
   if (h < 24) return future ? `in ${h}h` : `${h}h ago`;
   const d = Math.floor(h / 24);
   if (d < 7) return future ? `in ${d}d` : `${d}d ago`;
-  if (d < 30)
-    return future ? `in ${Math.floor(d / 7)}w` : `${Math.floor(d / 7)}w ago`;
-  return new Date(ms).toLocaleDateString("en-MY", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  if (d < 30) return future ? `in ${Math.floor(d / 7)}w` : `${Math.floor(d / 7)}w ago`;
+  return new Date(ms).toLocaleDateString("en-MY", { year: "numeric", month: "short", day: "numeric" });
 }
-
-export const metadata = { title: PAGE.calls.title };
 
 export default async function CallsPage() {
   const calls = await getRecentCalls(50);
 
-  // Planned: nearest-to-today at top → farthest-future at bottom.
-  // We sort by `scheduledAt` ascending (smaller timestamp = sooner). Calls
-  // missing a scheduledAt fall to the bottom of the planned section.
+  // Planned: soonest first. Calls without a time fall to the bottom.
   const planned = calls
     .filter((c) => c.status === "planned" || c.status === "scheduled")
-    .sort((a, b) => {
-      const aT = a.scheduledAt ?? Number.POSITIVE_INFINITY;
-      const bT = b.scheduledAt ?? Number.POSITIVE_INFINITY;
-      return aT - bT;
-    });
-  // Completed: most-recent-ended at top. Falls back to startedAt if endedAt
-  // is missing (some legacy seed rows). Both reflect "nearest to today" for
-  // past calls.
+    .sort(
+      (a, b) =>
+        (a.scheduledAt ?? Number.POSITIVE_INFINITY) - (b.scheduledAt ?? Number.POSITIVE_INFINITY),
+    );
+  // Completed: most recent first.
   const completed = calls
     .filter((c) => c.status === "completed" || c.status === "ended")
-    .sort((a, b) => {
-      const aT = a.endedAt ?? a.startedAt;
-      const bT = b.endedAt ?? b.startedAt;
-      return bT - aT;
-    });
+    .sort((a, b) => (b.endedAt ?? b.startedAt) - (a.endedAt ?? a.startedAt));
 
   return (
-    <section className="space-y-6">
-      <div>
-        <div className="text-xs text-muted uppercase tracking-wider">Calls</div>
-        <h1 className="text-2xl font-bold mt-1">
-          {calls.length} session{calls.length === 1 ? "" : "s"} ·{" "}
-          <span className="text-accent">{planned.length} planned</span>
-        </h1>
-        <div className="text-xs text-muted mt-1">
-          Start a new session from any client&apos;s page.
-        </div>
-      </div>
+    <section className="space-y-4">
+      <PageHeader
+        title={PAGE.calls.title}
+        description={`${planned.length} planned · ${completed.length} completed. Plan a new call from a client's page.`}
+      />
+
+      {calls.length === 0 && (
+        <EmptyState
+          title="No calls yet."
+          hint="Open a client and press Plan call to start one."
+        />
+      )}
 
       {planned.length > 0 && (
-        <div>
-          <div className="text-[11px] uppercase tracking-wider text-muted mb-2">
-            Planned · ready to take
-          </div>
-          <div className="space-y-2">
+        <Panel title="Planned" padding="sm">
+          <div className="divide-y divide-border-subtle">
             {planned.map((c) => (
-              <CallRow key={c.id} call={c} />
+              <CallRow key={c.id} call={c} when={formatWhen(c.scheduledAt ?? c.startedAt)} />
             ))}
           </div>
-        </div>
+        </Panel>
       )}
 
       {completed.length > 0 && (
-        <div>
-          <div className="text-[11px] uppercase tracking-wider text-muted mb-2">
-            Recent debriefs
-          </div>
-          <div className="space-y-2">
+        <Panel title="Completed" padding="sm">
+          <div className="divide-y divide-border-subtle">
             {completed.map((c) => (
-              <CallRow key={c.id} call={c} />
+              <CallRow key={c.id} call={c} when={formatWhen(c.endedAt ?? c.startedAt)} />
             ))}
           </div>
-        </div>
-      )}
-
-      {calls.length === 0 && (
-        <div className="panel p-6 text-sm text-muted">
-          No calls yet. Open a client and click <strong>Plan call</strong> to start.
-        </div>
+        </Panel>
       )}
     </section>
-  );
-}
-
-function CallRow({
-  call,
-}: {
-  call: {
-    id: string;
-    clientId: string | null;
-    clientName: string | null;
-    status: string;
-    outcome: string | null;
-    scheduledAt: number | null;
-    startedAt: number;
-    nextStep: string | null;
-  };
-}) {
-  const when = call.scheduledAt ?? call.startedAt;
-  const tone =
-    call.outcome &&
-    OUTCOME_TONE[call.outcome as keyof typeof OUTCOME_TONE]
-      ? TONE_CHIP[OUTCOME_TONE[call.outcome as keyof typeof OUTCOME_TONE]]
-      : "chip-info";
-  const outcomeLabel =
-    call.outcome && OUTCOME_LABEL[call.outcome as keyof typeof OUTCOME_LABEL]
-      ? OUTCOME_LABEL[call.outcome as keyof typeof OUTCOME_LABEL]
-      : STATUS_LABEL[call.status as CallStatus] ?? call.status;
-
-  return (
-    <Link
-      href={`/calls/${call.id}`}
-      className="panel p-4 flex items-center justify-between gap-4 row-hover"
-    >
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium truncate">
-          {call.clientName ?? "Unscoped call"}
-        </div>
-        <div className="text-[11px] text-muted mt-0.5">
-          {formatWhen(when)}
-          {call.nextStep ? <> · Next: {call.nextStep}</> : null}
-        </div>
-      </div>
-      <span className={`${tone} shrink-0`}>{outcomeLabel}</span>
-    </Link>
   );
 }

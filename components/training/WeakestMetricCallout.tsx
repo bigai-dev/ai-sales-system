@@ -1,67 +1,78 @@
 import Link from "next/link";
 import type { MetricSeries } from "@/lib/queries/training-metrics";
+import { TOPIC_LABEL, type Topic } from "@/lib/constants/labels";
+import { routes } from "@/lib/constants/routes";
+import { Panel, SectionLabel } from "@/components/ui";
 
-// Maps weakest-metric labels to the rehearsal bucket the rep should practice.
-// In v1 these all point at the role-play landing; once Phase C ships the
-// /training/role-play/[bucket] routes, swap this to a concrete bucket per metric.
-const SUGGESTED_DRILL: Record<string, { bucket: string; reason: string }> = {
-  stageProgression: {
-    bucket: "next-step-clarity",
-    reason: "Practice extracting concrete commitments before the call ends.",
-  },
-  briefingAdherence: {
-    bucket: "next-step-clarity",
-    reason: "Practice landing the briefing's nextStageMove verbatim.",
-  },
-  discoveryCoverage: {
-    bucket: "discovery",
-    reason: "Practice the standard 3 discovery questions for varied prospects.",
-  },
-  objectionPreparedness: {
-    bucket: "objections",
-    reason: "Practice the four objection buckets — content, budget, venue, time.",
-  },
-};
+/**
+ * Which role-play topic helps most with each trend. Where no single topic
+ * fits, the link goes to the topic picker.
+ */
+function suggestionFor(key: string, weakestTopic: Topic | null): { href: string; label: string; reason: string } {
+  switch (key) {
+    case "discoveryCoverage":
+      return {
+        href: routes.rolePlay("content"),
+        label: TOPIC_LABEL.content,
+        reason: "Practise asking about headcount, AI experience and budget early.",
+      };
+    case "objectionPreparedness":
+      return weakestTopic
+        ? {
+            href: routes.rolePlay(weakestTopic),
+            label: TOPIC_LABEL[weakestTopic],
+            reason: "Your lowest-scoring objection topic.",
+          }
+        : {
+            href: routes.rolePlay(),
+            label: "Pick a topic",
+            reason: "Practise the objections you hear most.",
+          };
+    default:
+      return {
+        href: routes.rolePlay(),
+        label: "Pick a topic",
+        reason: "Practise asking for a clear next step before the call ends.",
+      };
+  }
+}
 
 export default function WeakestMetricCallout({
   weakest,
   hasData,
+  weakestTopic = null,
 }: {
   weakest: MetricSeries | null;
   hasData: boolean;
+  weakestTopic?: Topic | null;
 }) {
   if (!hasData) {
     return (
-      <div className="panel p-5 border-l-4" style={{ borderLeftColor: "var(--accent)" }}>
-        <div className="font-medium">No analyzed calls in the last 30 days yet.</div>
-        <div className="text-sm text-muted mt-1">
-          Once you debrief calls with a briefing attached, your trends will populate here. The
-          metrics derive from data your existing briefing → debrief flow already produces — no
-          extra LLM grading required.
-        </div>
-      </div>
+      <Panel className="border-l-4" style={{ borderLeftColor: "var(--accent)" }}>
+        <div className="text-sm font-medium">No reviewed calls in the last 30 days yet.</div>
+        <p className="mt-1 text-sm text-muted">
+          Make a call plan, take the call, then review it. Your trends build from those reviews.
+        </p>
+      </Panel>
     );
   }
-  if (!weakest || weakest.current === null) {
-    return null;
-  }
-  const suggestion = SUGGESTED_DRILL[weakest.key];
+  if (!weakest || weakest.current === null) return null;
+
+  const s = suggestionFor(weakest.key, weakestTopic);
   return (
-    <div className="panel p-5 border-l-4" style={{ borderLeftColor: "var(--warn)" }}>
-      <div className="text-xs uppercase tracking-wider text-muted">Weakest metric right now</div>
+    <Panel className="border-l-4" style={{ borderLeftColor: "var(--warning)" }}>
+      <SectionLabel>Weakest right now</SectionLabel>
       <div className="mt-1 text-lg font-semibold">
         {weakest.label} — {weakest.current}%
       </div>
-      <div className="text-sm text-muted mt-1">{weakest.shortHelp}</div>
-      {suggestion && (
-        <div className="mt-3 text-sm">
-          <span className="text-muted">Suggested role play: </span>
-          <Link href="/training/role-play" className="underline underline-offset-2">
-            {suggestion.bucket}
-          </Link>
-          <span className="text-muted"> — {suggestion.reason}</span>
-        </div>
-      )}
-    </div>
+      <p className="mt-1 text-sm text-muted">{weakest.shortHelp}</p>
+      <p className="mt-3 text-sm">
+        <span className="text-muted">Suggested role play: </span>
+        <Link href={s.href} className="underline underline-offset-2">
+          {s.label}
+        </Link>
+        <span className="text-muted"> — {s.reason}</span>
+      </p>
+    </Panel>
   );
 }

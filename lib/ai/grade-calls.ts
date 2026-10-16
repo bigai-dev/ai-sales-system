@@ -1,4 +1,5 @@
 "use server";
+import { KnownError, friendlyError } from "./errors";
 import { generateText, Output } from "ai";
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
@@ -95,7 +96,7 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
     });
     output = graderSchema.parse(res.output);
   } catch (e) {
-    return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
+    return { ok: false, error: friendlyError(e, "refresh the coaching") };
   }
 
   // Append a new run instead of replacing. The dashboard panel reads only

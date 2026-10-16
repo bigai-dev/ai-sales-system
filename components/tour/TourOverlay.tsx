@@ -428,13 +428,13 @@ function Card({
       } p-5`}
     >
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-muted font-semibold">
+        <div className="text-xs text-muted font-semibold">
           Step {index + 1} of {total}
         </div>
         <button
           type="button"
           onClick={onExit}
-          className="text-[11px] text-muted hover:text-foreground"
+          className="text-xs text-muted hover:text-foreground"
           aria-label="Exit tour"
         >
           Skip tour

@@ -85,11 +85,11 @@ export async function getDashboardKpis(range: Range): Promise<Kpi[]> {
   const closedFormatted = formatMoney(closed.wonCents);
   const caption = rangeCaption(range);
   const isQuarter = range === "quarter";
-  const chipText = range === "week" ? "this wk" : range === "month" ? "this mo" : "this Q";
+  const chipText = range === "week" ? "this week" : range === "month" ? "this month" : "this quarter";
 
   return [
     {
-      label: "Workshops in pipeline",
+      label: "Open deal value",
       value: formatMoney(pipe.cents),
       delta: isQuarter && pipe.pctOfTarget >= 70 ? { text: `▲ ${pipe.pctOfTarget}%`, up: true } : undefined,
       bar: isQuarter ? pipe.pctOfTarget : undefined,
@@ -104,19 +104,19 @@ export async function getDashboardKpis(range: Range): Promise<Kpi[]> {
       caption: `${closedFormatted} won ${caption}`,
     },
     {
-      label: "Discovery calls",
+      label: "Calls",
       value: callCount.count.toLocaleString(),
       caption: `${callCount.count} calls ${caption}`,
     },
     avg.cents > 0
       ? {
-          label: "Avg workshop value",
+          label: "Average workshop value",
           value: formatMoney(avg.cents),
           chip: { text: chipText, tone: "info" },
-          caption: "Average TCV per booked workshop",
+          caption: "Average per booked workshop",
         }
       : {
-          label: "Avg workshop value",
+          label: "Average workshop value",
           value: "—",
           caption: `No workshops booked yet ${caption}`,
         },

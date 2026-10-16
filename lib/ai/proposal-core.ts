@@ -1,3 +1,5 @@
+import { ERR } from "@/lib/constants/copy";
+import { KnownError, friendlyError } from "./errors";
 import { routes } from "@/lib/constants/routes";
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { desc, eq } from "drizzle-orm";
@@ -80,9 +82,9 @@ commentary.`;
 
 async function loadContext(clientId: string) {
   const [client] = await db.select().from(clients).where(eq(clients.id, clientId));
-  if (!client) throw new Error("Client not found");
+  if (!client) throw new KnownError("Client not found.");
   const audit = await getLatestHealthCheck(clientId);
-  if (!audit) throw new Error("Generate a readiness audit first");
+  if (!audit) throw new KnownError(ERR.needReadiness);
   const clientDeals = await db.select().from(deals).where(eq(deals.clientId, clientId));
   const openDeal = clientDeals
     .filter((d) => d.stage !== "O")

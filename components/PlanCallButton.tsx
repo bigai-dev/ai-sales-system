@@ -26,7 +26,7 @@ export default function PlanCallButton({ clientId }: { clientId: string }) {
         <form action={createCallForClient} className="space-y-4 text-sm">
           <input type="hidden" name="clientId" value={clientId} />
           <label className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-wider text-muted">
+            <span className="text-xs text-muted">
               When
             </span>
             <input
@@ -37,7 +37,7 @@ export default function PlanCallButton({ clientId }: { clientId: string }) {
               onChange={(e) => setScheduledAt(e.target.value)}
               className="bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
-            <span className="text-[11px] text-muted">
+            <span className="text-xs text-muted">
               Pick the date and time the call is scheduled for. You'll land on
               the call page where you can add notes when the call happens.
             </span>

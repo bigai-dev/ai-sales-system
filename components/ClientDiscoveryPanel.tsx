@@ -84,14 +84,14 @@ export default function ClientDiscoveryPanel({
             {justSaved && (
               <span
                 aria-live="polite"
-                className="text-[11px] font-normal text-success inline-flex items-center gap-1"
+                className="text-xs font-normal text-success inline-flex items-center gap-1"
               >
                 <CheckIcon /> Saved
               </span>
             )}
           </div>
           {editing && (
-            <div className="text-[11px] text-accent mt-0.5">
+            <div className="text-xs text-accent mt-0.5">
               Editing — click Save to persist all changes
             </div>
           )}
@@ -186,7 +186,7 @@ export default function ClientDiscoveryPanel({
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <div className="text-[10px] uppercase tracking-wider text-muted mb-1">
+    <div className="text-xs text-muted mb-1">
       {label}
     </div>
   );
@@ -343,13 +343,13 @@ function DecisionMakersField({
             key={`${dm.name}-${i}`}
             className="flex items-center gap-2 px-2 py-1 rounded hover:bg-surface-elevated/40 group"
           >
-            <span className={`chip ${STANCE_TONE[dm.stance]} text-[10px] shrink-0`}>
+            <span className={`chip ${STANCE_TONE[dm.stance]} text-xs shrink-0`}>
               {dm.stance}
             </span>
             <div className="flex-1 min-w-0">
               <div className="text-sm text-foreground truncate">{dm.name}</div>
               {dm.role && (
-                <div className="text-[11px] text-muted truncate">{dm.role}</div>
+                <div className="text-xs text-muted truncate">{dm.role}</div>
               )}
             </div>
             {editing && (
@@ -391,10 +391,10 @@ function DecisionMakersField({
                   <option value="neutral">Neutral</option>
                   <option value="blocker">Blocker</option>
                 </select>
-                <button onClick={() => setAdding(false)} className="btn-text text-[11px]">
+                <button onClick={() => setAdding(false)} className="btn-text text-xs">
                   Cancel
                 </button>
-                <button onClick={add} className="btn-ghost text-[11px]">
+                <button onClick={add} className="btn-ghost text-xs">
                   Add
                 </button>
               </div>

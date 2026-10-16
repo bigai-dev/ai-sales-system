@@ -25,7 +25,7 @@ export default function DashboardView({ kpis, stages, coaching, range }: Props) 
     <section>
       <div className="flex items-end justify-between mb-6">
         <div>
-          <div className="text-xs text-muted uppercase tracking-wider">My pipeline</div>
+          <div className="text-xs text-muted">My pipeline</div>
           <h1 className="text-2xl font-bold mt-1">
             Workshops booked — <span className="text-accent">{rangeLabel(range)}</span>
           </h1>

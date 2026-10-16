@@ -5,6 +5,8 @@ import Modal from "./Modal";
 import CopyMarkdownButton from "./CopyMarkdownButton";
 import type { ProposalDoc } from "@/lib/exporters/proposal";
 import type { Result } from "@/lib/types";
+import { Button, ErrorText } from "@/components/ui";
+import { BTN } from "@/lib/constants/copy";
 
 type GenerateResult = Result<{
   id: string;
@@ -43,7 +45,16 @@ function suggestedFilename(client: string): string {
   return `proposal-${safe || "client"}.pdf`;
 }
 
-export default function GenerateProposalButton({ clientId }: { clientId: string }) {
+export default function GenerateProposalButton({
+  clientId,
+  disabled = false,
+  disabledHint,
+}: {
+  clientId: string;
+  /** When no readiness check exists yet the button is shown but can't run. */
+  disabled?: boolean;
+  disabledHint?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const abortRef = useRef<AbortController | null>(null);
@@ -84,7 +95,7 @@ export default function GenerateProposalButton({ clientId }: { clientId: string 
       return;
     }
     if (!generation.data) {
-      setPhase({ kind: "error", message: "Empty response" });
+      setPhase({ kind: "error", message: "The AI returned nothing. Try again." });
       return;
     }
 
@@ -127,23 +138,23 @@ export default function GenerateProposalButton({ clientId }: { clientId: string 
 
   return (
     <>
-      <button onClick={run} className="btn">
-        Generate proposal
-      </button>
+      <Button onClick={run} disabled={disabled} title={disabled ? disabledHint : undefined}>
+        {BTN.generateProposal}
+      </Button>
       <Modal open={open} onClose={close} title="Workshop proposal" size="lg">
         {phase.kind === "loading" && (
-          <div className="py-12 flex flex-col items-center gap-4 text-center">
+          <div className="flex flex-col items-center gap-4 py-12 text-center">
             <div className="text-sm">
               {phase.stage === "drafting"
-                ? "Drafting proposal from the audit…"
-                : "Rendering PDF…"}
+                ? "Writing the proposal from the readiness check…"
+                : "Laying out the PDF…"}
             </div>
-            <div className="text-xs text-muted max-w-sm">
+            <div className="max-w-sm text-xs text-muted">
               {phase.stage === "drafting"
-                ? "DeepSeek is mapping audit gaps to Day-1 / Day-2 modules. ~10–25s."
-                : "Laying out A4 page with pricing table. Almost done."}
+                ? "The AI matches each gap it found to a Day 1 or Day 2 module. About 20 seconds."
+                : "Almost done."}
             </div>
-            <div className="w-32 bar-track">
+            <div className="bar-track w-32">
               <div
                 className="bar-fill"
                 style={{
@@ -151,26 +162,23 @@ export default function GenerateProposalButton({ clientId }: { clientId: string 
                 }}
               />
             </div>
-            <button onClick={cancel} className="btn-ghost mt-2">
-              Cancel
-            </button>
+            <Button variant="ghost" onClick={cancel} className="mt-2">
+              {BTN.cancel}
+            </Button>
           </div>
         )}
 
         {phase.kind === "error" && (
-          <div className="py-6 space-y-4">
-            <div className="chip chip-bad">{phase.message.slice(0, 200)}</div>
-            <div className="text-xs text-muted">
-              Tip: a readiness audit is required before a proposal can be drafted.
-              If the audit exists, retry — DeepSeek can occasionally rate-limit.
-            </div>
+          <div className="space-y-4 py-6">
+            <ErrorText>{phase.message}</ErrorText>
+            <p className="text-xs text-muted">
+              A proposal needs a readiness check first. If one exists, just try again.
+            </p>
             <div className="flex justify-end gap-2">
-              <button onClick={close} className="btn-ghost">
-                Close
-              </button>
-              <button onClick={run} className="btn">
-                Retry
-              </button>
+              <Button variant="ghost" onClick={close}>
+                {BTN.close}
+              </Button>
+              <Button onClick={run}>{BTN.tryAgain}</Button>
             </div>
           </div>
         )}
@@ -184,26 +192,26 @@ export default function GenerateProposalButton({ clientId }: { clientId: string 
             />
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex gap-1">
-                <button onClick={run} className="btn-text">
-                  Regenerate
-                </button>
+                <Button variant="text" onClick={run}>
+                  Write again
+                </Button>
                 <CopyMarkdownButton
                   markdown={phase.markdown}
-                  label="Copy markdown"
-                  copiedLabel="✓ Copied"
+                  label={BTN.copy}
+                  copiedLabel="Copied"
                   variant="text"
                 />
               </div>
               <div className="flex gap-2">
-                <button onClick={close} className="btn-ghost">
-                  Close
-                </button>
+                <Button variant="ghost" onClick={close}>
+                  {BTN.close}
+                </Button>
                 <a
                   href={phase.pdfUrl}
                   download={suggestedFilename(phase.doc.client)}
                   className="btn"
                 >
-                  Download PDF
+                  {BTN.downloadPdf}
                 </a>
               </div>
             </div>

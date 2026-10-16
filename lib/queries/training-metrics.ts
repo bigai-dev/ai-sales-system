@@ -37,28 +37,28 @@ const META: Record<
   { label: string; help: string; scale: "higher" | "band"; band?: { min: number; max: number } }
 > = {
   stageProgression: {
-    label: "Stage progression",
-    help: "Share of calls where the deal advanced past the briefing's target stage.",
+    label: "Deal moved forward",
+    help: "Share of calls after which the deal moved to the next stage.",
     scale: "higher",
   },
   briefingAdherence: {
-    label: "Briefing adherence",
-    help: "Share of calls where you landed the briefing's nextStageMove commitment.",
+    label: "Goal landed",
+    help: "Share of calls where you got the commitment the call plan aimed for.",
     scale: "higher",
   },
   discoveryCoverage: {
-    label: "Discovery coverage",
-    help: "Average % of the briefing's discovery questions you got answered.",
+    label: "Questions covered",
+    help: "Average share of the call plan's questions you got answered.",
     scale: "higher",
   },
   objectionPreparedness: {
-    label: "Objection preparedness",
-    help: "Of expected objections, share that you either pre-empted or engaged with on the call.",
+    label: "Objections handled",
+    help: "Of the objections expected, the share you pre-empted or handled on the call.",
     scale: "higher",
   },
   talkPct: {
     label: "Talk balance",
-    help: "Your share of the conversation. Target band is 30–40%.",
+    help: "Your share of the talking. Aim for 30–40%.",
     scale: "band",
     band: { min: 30, max: 40 },
   },

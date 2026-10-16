@@ -25,7 +25,7 @@ export default function PipelineByStage({ stages }: { stages: Stage[] }) {
               <div className="w-2 h-8 rounded" style={{ background: s.color }} />
               <div>
                 <div className="font-semibold text-sm">{s.name}</div>
-                <div className="text-[11px] text-muted">{s.count} opportunities</div>
+                <div className="text-xs text-muted">{s.count} opportunities</div>
               </div>
             </div>
             <div className="flex-1 mx-4 max-w-md">
@@ -38,7 +38,7 @@ export default function PipelineByStage({ stages }: { stages: Stage[] }) {
             </div>
             <div className="text-right">
               <div className="text-sm font-semibold">{s.value}</div>
-              <div className="text-[11px] text-muted">weighted {s.weighted}</div>
+              <div className="text-xs text-muted">weighted {s.weighted}</div>
             </div>
           </div>
         ))}

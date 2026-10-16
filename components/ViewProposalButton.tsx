@@ -62,7 +62,7 @@ export default function ViewProposalButton({
         size="lg"
       >
         <div className="space-y-4">
-          <div className="text-[11px] uppercase tracking-wider text-muted -mt-2">
+          <div className="text-xs text-muted -mt-2">
             Generated {dateStr}
           </div>
           <iframe

@@ -29,9 +29,9 @@ export type PlayDetail = PlayListItem & {
 };
 
 export const SOURCE_LABEL: Record<PlaySource, string> = {
-  coaching_strength: "Strength noted in coaching",
-  drill_delivered: "Role-play best response delivered live",
-  closed_won: "From a closed-won call",
+  coaching_strength: "Spotted by coaching",
+  drill_delivered: "Practised, then used on a real call",
+  closed_won: "From a deal you won",
 };
 
 export const SOURCE_TONE: Record<PlaySource, "good" | "info" | "warn"> = {

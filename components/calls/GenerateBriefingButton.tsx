@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { generateCallBriefing } from "@/lib/ai/call-briefing";
+import { Button, ErrorText } from "@/components/ui";
 
 export default function GenerateBriefingButton({
   callId,
@@ -25,16 +26,15 @@ export default function GenerateBriefingButton({
 
   return (
     <div className="flex items-center gap-2">
-      {error && <span className="chip chip-bad">{error.slice(0, 120)}</span>}
-      <button onClick={run} className="btn" disabled={loading}>
-        {loading
-          ? hasBriefing
-            ? "Regenerating…"
-            : "Drafting…"
-          : hasBriefing
-            ? "Regenerate briefing"
-            : "Prep this call"}
-      </button>
+      <ErrorText>{error}</ErrorText>
+      <Button
+        onClick={run}
+        variant={hasBriefing ? "ghost" : "primary"}
+        busy={loading}
+        busyLabel="Planning…"
+      >
+        {hasBriefing ? "Remake call plan" : "Make call plan"}
+      </Button>
     </div>
   );
 }

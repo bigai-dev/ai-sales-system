@@ -24,7 +24,7 @@ export default async function ProposalsList({
     <div className="panel p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="font-semibold">Proposals</div>
-        <div className="text-[11px] uppercase tracking-wider text-muted">
+        <div className="text-xs text-muted">
           {rows.length} saved
         </div>
       </div>
@@ -50,7 +50,7 @@ export default async function ProposalsList({
                 <div className="text-sm font-medium truncate">
                   {p.cohortSize} pax · {VENUE_LABEL[p.venue]}
                 </div>
-                <div className="text-[11px] text-muted mt-0.5">
+                <div className="text-xs text-muted mt-0.5">
                   {timeAgo(p.generatedAt)}
                 </div>
               </div>
@@ -58,7 +58,7 @@ export default async function ProposalsList({
                 <div className="text-sm font-semibold tabular-nums">
                   {formatMoneyExact(p.totalCents)}
                 </div>
-                <div className="text-[10px] uppercase tracking-wider text-muted mt-0.5">
+                <div className="text-xs text-muted mt-0.5">
                   invoiced
                 </div>
               </div>

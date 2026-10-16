@@ -1,12 +1,11 @@
-import {
-  OBJECTION_LABEL,
-  STAGE_FULL,
-  type CallBriefing,
-} from "@/lib/schemas/call-briefing";
+import { OBJECTION_LABEL, type CallBriefing } from "@/lib/schemas/call-briefing";
+import { stageLabel } from "@/lib/constants/labels";
 import GenerateBriefingButton from "./GenerateBriefingButton";
 import DryRunButton from "../DryRunButton";
 import type { CallDryRun } from "@/lib/schemas/dry-run";
+import { Panel, SectionLabel, StatusChip } from "@/components/ui";
 
+/** The AI's plan for a call: context, questions to ask, objections to expect, the goal. */
 export default function BriefingPanel({
   callId,
   briefing,
@@ -18,80 +17,59 @@ export default function BriefingPanel({
 }) {
   if (!briefing) {
     return (
-      <div className="panel p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <Panel className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="max-w-xl">
-          <div className="text-[11px] uppercase tracking-wider text-muted">
-            Pre-call briefing
-          </div>
-          <div className="font-semibold mt-1">No briefing yet</div>
-          <div className="text-sm text-muted mt-2 leading-relaxed">
-            DeepSeek will read this client&apos;s metadata, latest readiness audit, and
-            prior call debriefs to draft 2-4 discovery questions, likely
-            objections, and the next-stage move you&apos;re after. ~5-15 seconds.
-          </div>
+          <SectionLabel>Call plan</SectionLabel>
+          <p className="mt-1 text-sm leading-relaxed text-muted">
+            The AI reads this client&apos;s profile, latest readiness check and past call
+            reviews, then writes 2–4 questions to ask, the objections to expect and the
+            goal for this call. About 10 seconds.
+          </p>
         </div>
         <GenerateBriefingButton callId={callId} hasBriefing={false} />
-      </div>
+      </Panel>
     );
   }
 
   return (
-    <div className="panel p-5 space-y-5">
+    <Panel className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[11px] uppercase tracking-wider text-muted">
-            Pre-call briefing
-          </div>
-          <div className="text-sm text-foreground mt-2 leading-relaxed">
-            {briefing.context}
-          </div>
+          <SectionLabel>Call plan</SectionLabel>
+          <p className="mt-2 text-sm leading-relaxed text-foreground">{briefing.context}</p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
           <DryRunButton callId={callId} initialDryRun={dryRun} hasBriefing />
           <GenerateBriefingButton callId={callId} hasBriefing />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <div className="text-[11px] uppercase tracking-wider text-muted mb-2">
-            Discovery questions
-          </div>
+          <SectionLabel className="mb-2">Questions to ask</SectionLabel>
           <div className="space-y-2">
             {briefing.discoveryQuestions.map((q, i) => (
-              <div
-                key={i}
-                className="rounded-lg border border-border-subtle bg-surface-elevated/40 p-3"
-              >
+              <div key={i} className="rounded-lg border border-border-subtle bg-surface-elevated/40 p-3">
                 <div className="text-sm font-medium text-foreground">
                   {i + 1}. {q.question}
                 </div>
-                <div className="text-[12px] text-muted mt-1 leading-snug">
-                  Why: {q.why}
-                </div>
+                <div className="mt-1 text-xs leading-snug text-muted">Why: {q.why}</div>
               </div>
             ))}
           </div>
         </div>
 
         <div>
-          <div className="text-[11px] uppercase tracking-wider text-muted mb-2">
-            Likely objections
-          </div>
+          <SectionLabel className="mb-2">Objections to expect</SectionLabel>
           <div className="space-y-2">
             {briefing.expectedObjections.map((o, i) => (
-              <div
-                key={i}
-                className="rounded-lg border border-border-subtle bg-surface-elevated/40 p-3"
-              >
+              <div key={i} className="rounded-lg border border-border-subtle bg-surface-elevated/40 p-3">
                 <div className="flex items-center gap-2">
-                  <span className="chip chip-warn">{OBJECTION_LABEL[o.category]}</span>
-                  <span className="text-sm font-medium text-foreground">
-                    {o.objection}
-                  </span>
+                  <StatusChip tone="warn">{OBJECTION_LABEL[o.category]}</StatusChip>
+                  <span className="text-sm font-medium text-foreground">{o.objection}</span>
                 </div>
-                <div className="text-[12px] text-muted mt-2 leading-snug">
-                  → {o.response}
+                <div className="mt-2 text-xs leading-snug text-muted">
+                  Your answer: {o.response}
                 </div>
               </div>
             ))}
@@ -100,33 +78,25 @@ export default function BriefingPanel({
       </div>
 
       <div className="rounded-lg border border-border-subtle bg-accent-quiet/40 p-4">
-        <div className="text-[11px] uppercase tracking-wider text-muted">
-          Next-stage move you&apos;re after
+        <SectionLabel>Goal for this call</SectionLabel>
+        <div className="mt-1 text-sm font-semibold text-accent">
+          Move them to {stageLabel(briefing.nextStageMove.target)}
         </div>
-        <div className="mt-1 flex flex-wrap items-baseline gap-2">
-          <span className="text-sm font-semibold text-accent">
-            Move them to {STAGE_FULL[briefing.nextStageMove.target]}
-          </span>
-        </div>
-        <div className="text-sm text-foreground mt-2 leading-relaxed">
-          {briefing.nextStageMove.what}
-        </div>
+        <p className="mt-2 text-sm leading-relaxed text-foreground">{briefing.nextStageMove.what}</p>
       </div>
 
       {briefing.watchouts.length > 0 && (
         <div>
-          <div className="text-[11px] uppercase tracking-wider text-muted mb-2">
-            Watch-outs
-          </div>
-          <ul className="space-y-1">
+          <SectionLabel className="mb-2">Watch out for</SectionLabel>
+          <ul className="list-disc space-y-1 pl-5">
             {briefing.watchouts.map((w, i) => (
               <li key={i} className="text-sm text-foreground">
-                · {w}
+                {w}
               </li>
             ))}
           </ul>
         </div>
       )}
-    </div>
+    </Panel>
   );
 }

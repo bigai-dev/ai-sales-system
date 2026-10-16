@@ -28,7 +28,7 @@ export default function SnoozeButton({ taskId }: { taskId: string }) {
     <div className="relative" onClick={(e) => e.preventDefault()}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`inline-flex items-center gap-1 text-[11px] uppercase tracking-wider px-2 py-1 rounded-md border transition shrink-0 ${
+        className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition shrink-0 ${
           open
             ? "border-border bg-surface-elevated text-foreground"
             : "border-border-subtle bg-surface text-muted hover:text-foreground hover:border-border"
@@ -47,7 +47,7 @@ export default function SnoozeButton({ taskId }: { taskId: string }) {
             aria-hidden
           />
           <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-lg border border-border bg-surface-elevated shadow-xl p-1">
-            <div className="text-[10px] uppercase tracking-wider text-muted px-2 py-1.5">
+            <div className="text-xs text-muted px-2 py-1.5">
               Snooze until…
             </div>
             {PRESETS.map((p) => (

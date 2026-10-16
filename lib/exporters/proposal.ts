@@ -67,7 +67,7 @@ export function buildProposalMarkdown(doc: ProposalDoc): string {
     `${pricing.cohortSize} pax × ${formatMoney(pricing.perPaxCents)}/pax = **${formatMoneyExact(pricing.subtotalCents)}** (excl. SST)`,
   );
   lines.push(`+ 8% SST: **${formatMoneyExact(pricing.sstCents)}**`);
-  lines.push(`**Total invoiced: ${formatMoneyExact(pricing.totalCents)}**`);
+  lines.push(`**Total incl. 8% SST: ${formatMoneyExact(pricing.totalCents)}**`);
   lines.push(``);
 
   lines.push(`## Suggested follow-ups`);

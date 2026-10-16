@@ -1,4 +1,5 @@
 "use server";
+import { KnownError, friendlyError } from "./errors";
 import { routes } from "@/lib/constants/routes";
 import { generateText, Output } from "ai";
 import { eq } from "drizzle-orm";
@@ -84,14 +85,14 @@ Respond ONLY with JSON conforming to the schema. No code fences.`;
 
 async function loadDebriefContext(callId: string) {
   const [call] = await db.select().from(calls).where(eq(calls.id, callId));
-  if (!call) throw new Error("Call not found");
+  if (!call) throw new KnownError("Call not found.");
   if (!call.notes || call.notes.trim().length < 10) {
-    throw new Error("Notes are too short to analyze (need at least 10 chars)");
+    throw new KnownError("Write a few more notes first (at least 10 characters).");
   }
-  if (!call.clientId) throw new Error("Call is not scoped to a client");
+  if (!call.clientId) throw new KnownError("This call has no client.");
 
   const [client] = await db.select().from(clients).where(eq(clients.id, call.clientId));
-  if (!client) throw new Error("Client not found");
+  if (!client) throw new KnownError("Client not found.");
 
   const clientDeals = await db
     .select({
@@ -160,7 +161,7 @@ export async function generateCallDebrief(callId: string): Promise<Result<CallDe
     });
     debrief = callDebriefSchema.parse(result.output);
   } catch (e) {
-    return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
+    return { ok: false, error: friendlyError(e, "review this call") };
   }
 
   // Pull the briefing + talkPct + notes now: metrics computation needs

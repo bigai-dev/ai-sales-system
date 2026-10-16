@@ -226,7 +226,7 @@ export const SCENES: Scene[] = [
       sub: "Instead of typing notes for 20 minutes —",
       button: "Write up the call",
     },
-    outcome: "Closed-won",
+    outcome: "Won",
     summary:
       "Anitha confirmed the workshop: 18 engineers across two batches of nine (weeks of 9 & 16 June). Invoice to follow today; pre-work survey + Copilot kit-list two weeks before kickoff.",
     objection:

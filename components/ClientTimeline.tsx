@@ -30,7 +30,7 @@ export default async function ClientTimeline({ clientId }: { clientId: string })
     <div className="panel p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="font-semibold">Timeline</div>
-        <div className="text-[11px] uppercase tracking-wider text-muted">
+        <div className="text-xs text-muted">
           {events.length} event{events.length === 1 ? "" : "s"}
         </div>
       </div>
@@ -89,12 +89,12 @@ function TimelineRow({
               {event.title}
             </div>
           </div>
-          <div className="text-[11px] text-muted shrink-0 tabular-nums">
+          <div className="text-xs text-muted shrink-0 tabular-nums">
             {timeAgo(event.occurredAt)}
           </div>
         </div>
         {event.subtitle && (
-          <div className="text-[11px] text-muted mt-1 leading-snug pl-[60px]">
+          <div className="text-xs text-muted mt-1 leading-snug pl-[60px]">
             {event.subtitle}
           </div>
         )}

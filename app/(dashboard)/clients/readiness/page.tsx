@@ -1,28 +1,25 @@
-import { PAGE } from "@/lib/constants/copy";
-import { routes } from "@/lib/constants/routes";
 import Link from "next/link";
 import { desc } from "drizzle-orm";
+import { ChevronRight } from "lucide-react";
 import { db } from "@/db/client";
 import { clients, healthChecks } from "@/db/schema";
 import { DAY_MS } from "@/lib/format/time";
-import { stageLabel, type StageCode } from "@/lib/constants/labels";
+import {
+  READINESS_STATUS_LABEL,
+  READINESS_STATUS_TONE,
+  stageLabel,
+  type ReadinessStatus,
+  type StageCode,
+} from "@/lib/constants/labels";
 import { getClientStageMap } from "@/lib/queries/clients";
+import { PAGE } from "@/lib/constants/copy";
+import { routes } from "@/lib/constants/routes";
+import { PageHeader, Panel, StatusChip } from "@/components/ui";
 
-const STATUS_CHIP: Record<"Healthy" | "At risk" | "Critical", string> = {
-  Healthy: "chip-good",
-  "At risk": "chip-warn",
-  Critical: "chip-bad",
-};
+export const metadata = { title: PAGE.readinessIndex.title };
 
 // Lower number = more useful to check before the next conversation.
-const STAGE_PRIORITY: Record<StageCode, number> = {
-  C: 0,
-  N: 1,
-  A: 2,
-  P: 3,
-  S: 4,
-  O: 5,
-};
+const STAGE_PRIORITY: Record<StageCode, number> = { C: 0, N: 1, A: 2, P: 3, S: 4, O: 5 };
 
 function timeAgo(ms: number): string {
   const d = Math.floor((Date.now() - ms) / DAY_MS);
@@ -32,8 +29,6 @@ function timeAgo(ms: number): string {
   if (d < 30) return `${Math.floor(d / 7)}w ago`;
   return `${Math.floor(d / 30)}mo ago`;
 }
-
-export const metadata = { title: PAGE.readinessIndex.title };
 
 export default async function ReadinessIndexPage() {
   const [clientRows, allChecks, stageMap] = await Promise.all([
@@ -51,119 +46,79 @@ export default async function ReadinessIndexPage() {
     if (!latestByClient.has(hc.clientId)) latestByClient.set(hc.clientId, hc);
   }
 
-  // Sort: pending audits first (high-leverage stages float up), then audited.
+  // Unchecked clients first (late-stage ones at the top), then checked.
   const sorted = [...clientList].sort((a, b) => {
-    const aHasAudit = latestByClient.has(a.id) ? 1 : 0;
-    const bHasAudit = latestByClient.has(b.id) ? 1 : 0;
-    if (aHasAudit !== bHasAudit) return aHasAudit - bHasAudit;
-    const ap = STAGE_PRIORITY[a.stageCode] ?? 9;
-    const bp = STAGE_PRIORITY[b.stageCode] ?? 9;
-    return ap - bp;
+    const aHas = latestByClient.has(a.id) ? 1 : 0;
+    const bHas = latestByClient.has(b.id) ? 1 : 0;
+    if (aHas !== bHas) return aHas - bHas;
+    return (STAGE_PRIORITY[a.stageCode] ?? 9) - (STAGE_PRIORITY[b.stageCode] ?? 9);
   });
 
-  const audited = latestByClient.size;
-  const total = clientList.length;
-  const pending = total - audited;
+  const checked = latestByClient.size;
+  const pending = clientList.length - checked;
 
   return (
     <section>
-      <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
-        <div>
-          <div className="text-xs text-muted uppercase tracking-wider">Readiness</div>
-          <h1 className="text-2xl font-semibold mt-1 tracking-tight">
-            Engineering AI-coding readiness audits
-          </h1>
-          <p className="text-xs text-muted mt-2 max-w-2xl leading-relaxed">
-            Run an audit before scoping a workshop. Each grades the team across
-            Tooling, Practices, Culture, Velocity, Adoption, and Outcomes — so
-            the cohort, Day-1/Day-2 split, and follow-ups land where they move
-            the needle.
-          </p>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          <span className="chip">{total} clients</span>
-          <span className="chip chip-good">{audited} audited</span>
-          {pending > 0 && <span className="chip chip-warn">{pending} pending</span>}
-        </div>
-      </div>
+      <PageHeader
+        back={{ href: routes.clients(), label: "Clients" }}
+        title={PAGE.readinessIndex.title}
+        description={`${checked} checked · ${pending} not yet checked. ${PAGE.readinessIndex.description}`}
+      />
 
-      <div className="panel p-1.5">
-        <div className="space-y-0.5">
+      <Panel padding="none">
+        <ul className="divide-y divide-border-subtle">
           {sorted.map((c) => {
             const hc = latestByClient.get(c.id);
-            const statusKey = (hc?.status ?? "Healthy") as keyof typeof STATUS_CHIP;
-            const isHighLeverage = !hc && (c.stageCode === "N" || c.stageCode === "C");
+            const status = (hc?.status ?? "Healthy") as ReadinessStatus;
+            const checkSoon = !hc && (c.stageCode === "N" || c.stageCode === "C");
             return (
-              <Link
-                key={c.id}
-                href={routes.readiness(c.id)}
-                className="group row-hover rounded-lg px-4 py-3 flex items-center gap-4"
-              >
-                <div className="w-9 h-9 rounded bg-surface-elevated text-accent flex items-center justify-center font-mono text-[12px] font-medium shrink-0">
-                  {c.initials}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <div className="font-medium text-sm truncate">{c.name}</div>
-                    <span className="chip">{stageLabel(c.stageCode)}</span>
-                    {isHighLeverage && (
-                      <span className="chip chip-warn">audit before next touch</span>
-                    )}
+              <li key={c.id}>
+                <Link
+                  href={routes.readiness(c.id)}
+                  className="row-hover flex items-center gap-4 px-4 py-3"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-surface-elevated font-mono text-xs font-medium text-accent">
+                    {c.initials}
                   </div>
-                  <div className="text-[11px] text-muted mt-0.5 truncate">
-                    {c.industry ?? "—"}
-                    {c.size ? ` · ${c.size}` : ""}
-                    {c.devCount ? ` · ${c.devCount} engineers` : ""}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right">
-                    {hc ? (
-                      <span className={`chip ${STATUS_CHIP[statusKey]}`}>
-                        <span className="font-mono tabular-nums font-semibold">
-                          {hc.overallScore}
-                        </span>
-                        <span className="opacity-50 mx-1.5">·</span>
-                        {hc.status}
-                      </span>
-                    ) : (
-                      <span className="chip">Not generated</span>
-                    )}
-                    <div className="text-[11px] text-muted mt-1">
-                      {hc
-                        ? timeAgo(hc.generatedAt)
-                        : c.lastActivityAt
-                          ? `Active ${timeAgo(c.lastActivityAt)}`
-                          : "No activity yet"}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="truncate text-sm font-medium">{c.name}</div>
+                      <span className="text-xs text-muted">{stageLabel(c.stageCode)}</span>
+                      {checkSoon && <StatusChip tone="warn">Check before next call</StatusChip>}
+                    </div>
+                    <div className="mt-0.5 truncate text-xs text-muted">
+                      {c.industry ?? "—"}
+                      {c.size ? ` · ${c.size}` : ""}
+                      {c.devCount ? ` · ${c.devCount} engineers` : ""}
                     </div>
                   </div>
-                  <ChevronRight />
-                </div>
-              </Link>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <div className="text-right">
+                      {hc ? (
+                        <StatusChip tone={READINESS_STATUS_TONE[status]}>
+                          <span className="font-mono font-semibold tabular-nums">{hc.overallScore}</span>
+                          <span className="opacity-60">·</span>
+                          {READINESS_STATUS_LABEL[status]}
+                        </StatusChip>
+                      ) : (
+                        <StatusChip>Not checked yet</StatusChip>
+                      )}
+                      <div className="mt-1 text-xs text-muted">
+                        {hc
+                          ? timeAgo(hc.generatedAt)
+                          : c.lastActivityAt
+                            ? `Active ${timeAgo(c.lastActivityAt)}`
+                            : "No activity yet"}
+                      </div>
+                    </div>
+                    <ChevronRight size={16} className="text-quiet" aria-hidden />
+                  </div>
+                </Link>
+              </li>
             );
           })}
-        </div>
-      </div>
+        </ul>
+      </Panel>
     </section>
-  );
-}
-
-function ChevronRight() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-muted group-hover:text-accent transition-colors shrink-0"
-      aria-hidden
-    >
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
   );
 }

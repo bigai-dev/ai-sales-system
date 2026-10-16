@@ -86,12 +86,12 @@ function Column({ col }: { col: KanbanColumn }) {
         <div className="text-sm font-semibold">{col.name}</div>
         <span className="chip">{col.count}</span>
       </div>
-      <div className="text-[11px] text-muted mb-3">
+      <div className="text-xs text-muted mb-3">
         {col.description} · <span className="text-foreground">{col.total}</span>
       </div>
       <div className="space-y-3">
         {col.deals.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border-subtle p-4 text-[11px] text-muted text-center leading-relaxed">
+          <div className="rounded-xl border border-dashed border-border-subtle p-4 text-xs text-muted text-center leading-relaxed">
             No deals here yet.
             <br />
             Drag a card from another column or add a new deal.
@@ -140,7 +140,7 @@ function Card({ deal }: { deal: Deal }) {
             <div className="font-semibold text-sm truncate">{deal.company}</div>
             {deal.hot && <span className="text-orange-400 text-xs">🔥</span>}
           </div>
-          <div className="text-[11px] text-muted truncate">
+          <div className="text-xs text-muted truncate">
             {deal.contact} · {deal.role}
           </div>
         </div>
@@ -149,23 +149,23 @@ function Card({ deal }: { deal: Deal }) {
         <div>
           <div className="text-base font-semibold">{deal.value}</div>
           {typeof deal.headcount === "number" && (
-            <div className="text-[10px] text-muted">{deal.headcount} engineers</div>
+            <div className="text-xs text-muted">{deal.headcount} engineers</div>
           )}
         </div>
-        <div className="text-[11px] text-muted">{deal.daysInStage}d in stage</div>
+        <div className="text-xs text-muted">{deal.daysInStage}d in stage</div>
       </div>
-      <div className="text-[11px] text-muted mt-2 flex items-center gap-1">
+      <div className="text-xs text-muted mt-2 flex items-center gap-1">
         📞 <span>{deal.lastActivity}</span>
       </div>
       <div className="mt-2 rounded-lg border border-border-subtle bg-background p-2">
         <div className="flex items-center justify-between mb-1">
-          <div className="text-[10px] uppercase tracking-wider text-muted">AI insight</div>
+          <div className="text-xs text-muted">AI insight</div>
           {deal.id && <DealInsightButton dealId={deal.id} hasInsight={!!deal.insight} />}
         </div>
         {deal.insight ? (
-          <div className="text-[11px] text-foreground leading-snug">{deal.insight}</div>
+          <div className="text-xs text-foreground leading-snug">{deal.insight}</div>
         ) : (
-          <div className="text-[11px] text-muted italic">No insight yet — generate one.</div>
+          <div className="text-xs text-muted italic">No insight yet — generate one.</div>
         )}
       </div>
       <div className="flex flex-wrap gap-1 mt-2">
@@ -175,7 +175,7 @@ function Card({ deal }: { deal: Deal }) {
           </span>
         ))}
       </div>
-      <div className="text-[11px] text-muted mt-2 flex items-center gap-1">
+      <div className="text-xs text-muted mt-2 flex items-center gap-1">
         ⏰ <span>{deal.next}</span>
       </div>
     </div>

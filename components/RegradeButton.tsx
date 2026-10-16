@@ -10,7 +10,7 @@ export default function RegradeButton() {
 
   return (
     <div className="flex items-center gap-2">
-      {last && <span className="text-[11px] text-muted">{last}</span>}
+      {last && <span className="text-xs text-muted">{last}</span>}
       <button
         className="btn"
         disabled={pending}

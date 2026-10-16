@@ -104,7 +104,7 @@ export default function DrillForm({ bucket, initialBest }: Props) {
         <div className="font-semibold">What do you want to practice?</div>
         <div className="text-sm text-muted mt-1">
           Pick a situation and the AI plays a prospect who brings it up. You type your reply and
-          get a grade.
+          get a score.
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -133,7 +133,7 @@ export default function DrillForm({ bucket, initialBest }: Props) {
 
         <label
           htmlFor="role-play-focus"
-          className="block mt-5 text-xs uppercase tracking-wider text-muted"
+          className="block mt-5 text-xs text-muted"
         >
           Or type your own situation
         </label>
@@ -152,7 +152,7 @@ export default function DrillForm({ bucket, initialBest }: Props) {
 
         {initialBest && (
           <div className="text-xs text-muted mt-4">
-            Your best in this bucket so far is <b className="text-foreground">{initialBest.grade}</b>.
+            Your best on this topic so far is <b className="text-foreground">{initialBest.grade}</b>.
             Beat it.
           </div>
         )}
@@ -194,10 +194,10 @@ export default function DrillForm({ bucket, initialBest }: Props) {
               Practicing: <span className="text-foreground">{focus}</span>
             </div>
           )}
-          <div className="text-xs uppercase tracking-wider text-muted">Prospect says</div>
+          <div className="text-xs text-muted">Prospect says</div>
           <div className="mt-2 text-base italic">&ldquo;{scenario.scenario}&rdquo;</div>
           <div className="mt-4 border-t border-border-subtle pt-3">
-            <div className="text-xs uppercase tracking-wider text-muted">
+            <div className="text-xs text-muted">
               What good looks like
             </div>
             <ul className="mt-1 text-xs text-muted space-y-1 list-disc pl-5">
@@ -210,7 +210,7 @@ export default function DrillForm({ bucket, initialBest }: Props) {
       )}
 
       <div className="panel p-5">
-        <label className="text-xs uppercase tracking-wider text-muted">Your response</label>
+        <label className="text-xs text-muted">Your response</label>
         <textarea
           className="mt-2 w-full min-h-[120px] rounded-md border border-border-subtle bg-surface p-3 text-sm focus:outline-none focus:border-accent"
           value={response}
@@ -218,8 +218,8 @@ export default function DrillForm({ bucket, initialBest }: Props) {
           placeholder="Type how you'd actually reply on the call…"
           disabled={phase === "grading" || phase === "graded"}
         />
-        <div className="text-[11px] text-muted mt-1">
-          {response.length} chars · streaks need ≥40 chars and grade ≥30
+        <div className="text-xs text-muted mt-1">
+          {response.length} chars · write a full reply (40+ characters) for it to count toward your streak
         </div>
 
         {error && <div className="text-xs delta-down mt-2">{error}</div>}
@@ -231,7 +231,7 @@ export default function DrillForm({ bucket, initialBest }: Props) {
               onClick={submit}
               className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold"
             >
-              Grade my response
+              Score my reply
             </button>
           )}
           {phase === "grading" && (
@@ -270,22 +270,22 @@ export default function DrillForm({ bucket, initialBest }: Props) {
         <div className="panel p-5 border-l-4" style={{ borderLeftColor: gradeColor(grade.grade) }}>
           <div className="flex items-baseline justify-between gap-3">
             <div>
-              <div className="text-xs uppercase tracking-wider text-muted">Grade</div>
+              <div className="text-xs text-muted">Score</div>
               <div className="text-3xl font-semibold mt-1">{grade.grade}</div>
             </div>
             {grade.didExceedBest && (
-              <span className="chip chip-good">New best 🎉</span>
+              <span className="chip chip-good">New best</span>
             )}
           </div>
           <div className="mt-3 text-sm">{grade.feedback}</div>
           {grade.previousBest !== null && !grade.didExceedBest && (
             <div className="text-xs text-muted mt-2">
-              Your best in this bucket is <b>{grade.previousBest}</b>. Try again.
+              Your best on this topic is <b>{grade.previousBest}</b>. Try again.
             </div>
           )}
           {grade.previousBest === null && grade.didExceedBest && (
             <div className="text-xs text-muted mt-2">
-              First role play in this bucket — this is now your best.
+              First role play on this topic — this is now your best.
             </div>
           )}
         </div>
@@ -322,6 +322,6 @@ function SituationChip({
 function gradeColor(g: number): string {
   if (g >= 80) return "var(--success, #4ade80)";
   if (g >= 60) return "var(--accent)";
-  if (g >= 40) return "var(--warn, #f59e0b)";
-  return "var(--bad, #ef4444)";
+  if (g >= 40) return "var(--warning)";
+  return "var(--danger)";
 }

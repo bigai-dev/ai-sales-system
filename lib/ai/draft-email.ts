@@ -1,4 +1,5 @@
 "use server";
+import { KnownError, friendlyError } from "./errors";
 import { generateText, Output } from "ai";
 import { desc, eq } from "drizzle-orm";
 import { chat } from "./deepseek";
@@ -64,15 +65,15 @@ Respond ONLY with JSON conforming to the schema. No code fences, no commentary.`
 
 async function loadEmailContext(callId: string) {
   const [call] = await db.select().from(calls).where(eq(calls.id, callId));
-  if (!call) throw new Error("Call not found");
-  if (!call.debrief) throw new Error("Call has not been debriefed yet");
-  if (!call.clientId) throw new Error("Call is not scoped to a client");
+  if (!call) throw new KnownError("Call not found.");
+  if (!call.debrief) throw new KnownError("Review the call first.");
+  if (!call.clientId) throw new KnownError("This call has no client.");
 
   const [client] = await db
     .select()
     .from(clients)
     .where(eq(clients.id, call.clientId));
-  if (!client) throw new Error("Client not found");
+  if (!client) throw new KnownError("Client not found.");
   const clientStage = await getClientStage(call.clientId);
 
   const [latestProposal] = await db
@@ -150,6 +151,6 @@ export async function generateFollowupEmail(
     });
     return { ok: true, data: emailDraftSchema.parse(result.output) };
   } catch (e) {
-    return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
+    return { ok: false, error: friendlyError(e, "draft the email") };
   }
 }

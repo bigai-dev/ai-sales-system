@@ -2,12 +2,14 @@ import Link from "next/link";
 import { getAllPlays, type PlayListItem } from "@/lib/queries/plays";
 import PlayCard from "@/components/training/PlayCard";
 import { DRILL_BUCKETS } from "@/lib/schemas/drill";
+import { TOPIC_LABEL } from "@/lib/constants/labels";
+import { PAGE } from "@/lib/constants/copy";
+import { routes } from "@/lib/constants/routes";
+import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 
-export const metadata = {
-  title: "Playbook",
-};
+export const metadata = { title: PAGE.playbook.title };
 
-const BUCKETS: PlayListItem["bucket"][] = [...DRILL_BUCKETS, "other"];
+const TOPICS: PlayListItem["bucket"][] = [...DRILL_BUCKETS, "other"];
 
 type SearchParams = { bucket?: string; show?: string };
 
@@ -19,11 +21,11 @@ export default async function PlaybookPage({
   const sp = await searchParams;
   const all = await getAllPlays();
   const showHidden = sp.show === "all";
-  const bucketFilter = sp.bucket as PlayListItem["bucket"] | undefined;
+  const topicFilter = sp.bucket as PlayListItem["bucket"] | undefined;
 
   const filtered = all
     .filter((p) => (showHidden ? true : !p.hidden))
-    .filter((p) => (bucketFilter ? p.bucket === bucketFilter : true));
+    .filter((p) => (topicFilter ? p.bucket === topicFilter : true));
 
   const counts = new Map<PlayListItem["bucket"], number>();
   for (const p of all) {
@@ -31,59 +33,53 @@ export default async function PlaybookPage({
     counts.set(p.bucket, (counts.get(p.bucket) ?? 0) + 1);
   }
 
+  const hiddenCount = all.filter((p) => p.hidden).length;
+
   return (
     <div className="space-y-6">
-      <div>
-        <div className="text-xs text-muted">
-          <Link href="/training" className="underline underline-offset-2">
-            Training
-          </Link>
-          <span className="mx-1">/</span> Playbook
-        </div>
-        <h1 className="text-2xl font-semibold mt-1">Playbook</h1>
-        <div className="text-sm text-muted mt-1 max-w-2xl">
-          Auto-extracted from your real calls. Each play anchors a winning move to a specific
-          moment with a specific client. Pin the keepers; hide the noise.
-        </div>
-      </div>
+      <PageHeader
+        back={{ href: routes.training(), label: "Training" }}
+        title={PAGE.playbook.title}
+        description={`${PAGE.playbook.description} Pin the ones to keep; hide the rest.`}
+        actions={
+          hiddenCount > 0 ? (
+            <ButtonLink
+              href={showHidden ? routes.playbook() : `${routes.playbook()}?show=all`}
+              variant="ghost"
+              size="sm"
+            >
+              {showHidden ? "Hide hidden plays" : `Show ${hiddenCount} hidden`}
+            </ButtonLink>
+          ) : null
+        }
+      />
 
-      <div className="flex items-center gap-2 flex-wrap">
-        <FilterChip href="/training/playbook" active={!bucketFilter} label="All" count={filtered.length} />
-        {BUCKETS.map((b) => (
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterChip href={routes.playbook()} active={!topicFilter} label="All" count={filtered.length} />
+        {TOPICS.map((b) => (
           <FilterChip
             key={b}
-            href={`/training/playbook?bucket=${b}${showHidden ? "&show=all" : ""}`}
-            active={bucketFilter === b}
+            href={`${routes.playbook()}?bucket=${b}${showHidden ? "&show=all" : ""}`}
+            active={topicFilter === b}
             label={labelOf(b)}
             count={counts.get(b) ?? 0}
           />
         ))}
-        <span className="ml-auto text-xs">
-          {showHidden ? (
-            <Link href="/training/playbook" className="underline underline-offset-2">
-              Hide hidden plays
-            </Link>
-          ) : (
-            <Link href="/training/playbook?show=all" className="underline underline-offset-2">
-              Show hidden plays
-            </Link>
-          )}
-        </span>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="panel p-8 text-center">
-          <div className="text-sm text-muted">
-            No plays yet. Plays auto-extract when:
-          </div>
-          <ul className="text-sm text-muted mt-3 inline-block text-left list-disc pl-5 space-y-1">
-            <li>You debrief a call where the AI flagged your handling as a strength.</li>
-            <li>A role-play best response shows up live in your call notes.</li>
-            <li>You close a deal — every objection raised gets extracted.</li>
-          </ul>
-        </div>
+        <EmptyState
+          title="No plays yet."
+          hint={
+            <>
+              Plays are collected for you when: a call review flags something you handled
+              well; a line you practised in role play shows up on a real call; or you win a
+              deal (every objection you handled is saved).
+            </>
+          }
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {filtered.map((p) => (
             <PlayCard key={p.id} play={p} />
           ))}
@@ -107,9 +103,9 @@ function FilterChip({
   return (
     <Link
       href={href}
-      className={`text-xs px-3 py-1 rounded-full border ${
+      className={`rounded-full border px-3 py-1 text-xs ${
         active
-          ? "bg-accent text-accent-foreground border-accent"
+          ? "border-accent bg-accent text-accent-foreground"
           : "border-border-subtle text-muted hover:text-foreground"
       }`}
     >
@@ -119,5 +115,5 @@ function FilterChip({
 }
 
 function labelOf(b: PlayListItem["bucket"]): string {
-  return b[0].toUpperCase() + b.slice(1);
+  return b === "other" ? "Other" : TOPIC_LABEL[b];
 }

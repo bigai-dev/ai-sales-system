@@ -7,7 +7,7 @@ export const DRILL_BUCKET_LABEL: Record<DrillBucket, string> = {
   content: "Content",
   budget: "Budget",
   venue: "Venue",
-  time: "Time",
+  time: "Timing",
 };
 
 export const DRILL_BUCKET_HELP: Record<DrillBucket, string> = {

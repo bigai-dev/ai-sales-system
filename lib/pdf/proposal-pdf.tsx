@@ -187,7 +187,7 @@ export function ProposalPdf({ doc }: { doc: ProposalDoc }) {
               <Text style={styles.bodyMuted}>{formatMoneyExact(pricing.sstCents)}</Text>
             </View>
             <View style={styles.pricingTotal}>
-              <Text style={styles.totalLabel}>Total invoiced</Text>
+              <Text style={styles.totalLabel}>Total incl. 8% SST</Text>
               <Text style={styles.totalValue}>{formatMoneyExact(pricing.totalCents)}</Text>
             </View>
           </View>

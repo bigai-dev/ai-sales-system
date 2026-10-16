@@ -1,12 +1,10 @@
-import { TONE_CHIP } from "@/lib/constants/labels";
-import {
-  OUTCOME_LABEL,
-  OUTCOME_TONE,
-  type CallDebrief,
-} from "@/lib/schemas/call-debrief";
-import { OBJECTION_LABEL, STAGE_FULL } from "@/lib/schemas/call-briefing";
+import { OUTCOME_LABEL, OUTCOME_TONE, stageLabel } from "@/lib/constants/labels";
+import type { CallDebrief } from "@/lib/schemas/call-debrief";
+import { OBJECTION_LABEL } from "@/lib/schemas/call-briefing";
 import DraftEmailButton from "./DraftEmailButton";
+import { Panel, SectionLabel, StatusChip } from "@/components/ui";
 
+/** The AI's write-up after a call, built from the notes. */
 export default function DebriefPanel({
   callId,
   debrief,
@@ -18,37 +16,31 @@ export default function DebriefPanel({
 }) {
   if (!debrief) {
     return (
-      <div data-tour="debrief-panel" className="panel p-6">
-        <div className="text-[11px] uppercase tracking-wider text-muted">
-          Debrief
-        </div>
-        <div className="text-sm text-muted mt-2 leading-relaxed">
-          Once you&apos;ve typed enough notes above, click <strong>Analyze debrief</strong>.
-          DeepSeek will extract outcome, objections raised, commitments,
-          next-step, and a coaching observation.
-        </div>
-      </div>
+      <Panel data-tour="debrief-panel">
+        <SectionLabel>Call review</SectionLabel>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          Once you&apos;ve typed enough notes above, press <strong>Review call</strong>. The
+          AI pulls out the outcome, objections raised, commitments, the next step and one
+          coaching note.
+        </p>
+      </Panel>
     );
   }
 
-  const tone = TONE_CHIP[OUTCOME_TONE[debrief.outcome]];
-
   return (
-    <div data-tour="debrief-panel" className="panel p-5 space-y-5">
+    <Panel data-tour="debrief-panel" className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[11px] uppercase tracking-wider text-muted">
-            Debrief
-          </div>
+          <SectionLabel>Call review</SectionLabel>
           <div className="mt-2 flex items-center gap-2">
-            <span className={tone}>{OUTCOME_LABEL[debrief.outcome]}</span>
-            <span className="text-[11px] text-muted">
-              Analyzed {analyzedAt ? new Date(analyzedAt).toLocaleString("en-MY") : "—"}
+            <StatusChip tone={OUTCOME_TONE[debrief.outcome]}>
+              {OUTCOME_LABEL[debrief.outcome]}
+            </StatusChip>
+            <span className="text-xs text-muted">
+              Reviewed {analyzedAt ? new Date(analyzedAt).toLocaleString("en-MY") : "—"}
             </span>
           </div>
-          <div className="text-sm text-foreground mt-3 leading-relaxed">
-            {debrief.summary}
-          </div>
+          <p className="mt-3 text-sm leading-relaxed text-foreground">{debrief.summary}</p>
         </div>
         <div className="shrink-0">
           <DraftEmailButton callId={callId} />
@@ -57,16 +49,16 @@ export default function DebriefPanel({
 
       {debrief.objectionsRaised.length > 0 && (
         <div>
-          <div className="text-[11px] uppercase tracking-wider text-muted mb-2">
-            Objections raised
-          </div>
+          <SectionLabel className="mb-2">Objections raised</SectionLabel>
           <div className="space-y-2">
             {debrief.objectionsRaised.map((o, i) => (
               <div
                 key={i}
                 className="flex items-start gap-2 rounded-lg border border-border-subtle bg-surface-elevated/40 p-3"
               >
-                <span className="chip chip-warn shrink-0">{OBJECTION_LABEL[o.category]}</span>
+                <StatusChip tone="warn" className="shrink-0">
+                  {OBJECTION_LABEL[o.category]}
+                </StatusChip>
                 <span className="text-sm text-foreground">{o.verbatim}</span>
               </div>
             ))}
@@ -76,20 +68,16 @@ export default function DebriefPanel({
 
       {debrief.commitments.length > 0 && (
         <div>
-          <div className="text-[11px] uppercase tracking-wider text-muted mb-2">
-            Commitments
-          </div>
+          <SectionLabel className="mb-2">Commitments</SectionLabel>
           <div className="space-y-2">
             {debrief.commitments.map((c, i) => (
               <div
                 key={i}
                 className="flex items-start gap-2 rounded-lg border border-border-subtle bg-surface-elevated/40 p-3"
               >
-                <span
-                  className={`chip ${c.who === "rep" ? "chip-info" : "chip-good"} shrink-0`}
-                >
+                <StatusChip tone={c.who === "rep" ? "info" : "good"} className="shrink-0">
                   {c.who === "rep" ? "You" : "Client"}
-                </span>
+                </StatusChip>
                 <span className="text-sm text-foreground">{c.what}</span>
               </div>
             ))}
@@ -97,33 +85,23 @@ export default function DebriefPanel({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-lg border border-border-subtle bg-accent-quiet/40 p-4">
-          <div className="text-[11px] uppercase tracking-wider text-muted">
-            Next step
-          </div>
-          <div className="text-sm text-foreground mt-1 leading-relaxed">
-            {debrief.nextStep}
-          </div>
+          <SectionLabel>Next step</SectionLabel>
+          <p className="mt-1 text-sm leading-relaxed text-foreground">{debrief.nextStep}</p>
         </div>
         <div className="rounded-lg border border-border-subtle bg-surface-elevated/40 p-4">
-          <div className="text-[11px] uppercase tracking-wider text-muted">
-            Suggested stage
-          </div>
-          <div className="text-sm font-semibold text-accent mt-1">
-            {STAGE_FULL[debrief.suggestedStage]}
+          <SectionLabel>Suggested stage</SectionLabel>
+          <div className="mt-1 text-sm font-semibold text-accent">
+            {stageLabel(debrief.suggestedStage)}
           </div>
         </div>
       </div>
 
       <div className="rounded-lg border border-border-subtle bg-surface-elevated/40 p-4">
-        <div className="text-[11px] uppercase tracking-wider text-muted">
-          Coaching note
-        </div>
-        <div className="text-sm text-foreground mt-1 leading-relaxed">
-          {debrief.coachingNote}
-        </div>
+        <SectionLabel>Coaching note</SectionLabel>
+        <p className="mt-1 text-sm leading-relaxed text-foreground">{debrief.coachingNote}</p>
       </div>
-    </div>
+    </Panel>
   );
 }

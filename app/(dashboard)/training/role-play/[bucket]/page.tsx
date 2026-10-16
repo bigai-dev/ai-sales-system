@@ -1,77 +1,59 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import DrillForm from "@/components/training/DrillForm";
 import { getRecentDrills } from "@/lib/queries/drills";
 import { getCurrentBest } from "@/lib/ai/scenario-generator";
-import {
-  DRILL_BUCKETS,
-  DRILL_BUCKET_HELP,
-  DRILL_BUCKET_LABEL,
-  type DrillBucket,
-} from "@/lib/schemas/drill";
-
-export const metadata = {
-  title: "Role play",
-};
+import { DRILL_BUCKETS, DRILL_BUCKET_HELP, type DrillBucket } from "@/lib/schemas/drill";
+import { TOPIC_LABEL } from "@/lib/constants/labels";
+import { routes } from "@/lib/constants/routes";
+import { PageHeader, Panel } from "@/components/ui";
 
 function isBucket(s: string): s is DrillBucket {
   return (DRILL_BUCKETS as readonly string[]).includes(s);
 }
 
-export default async function DrillBucketPage({
+export async function generateMetadata({ params }: { params: Promise<{ bucket: string }> }) {
+  const { bucket } = await params;
+  return { title: isBucket(bucket) ? `Role play · ${TOPIC_LABEL[bucket]}` : "Role play" };
+}
+
+export default async function RolePlayTopicPage({
   params,
 }: {
   params: Promise<{ bucket: string }>;
 }) {
-  const { bucket: rawBucket } = await params;
-  if (!isBucket(rawBucket)) {
-    notFound();
-  }
-  const bucket = rawBucket;
+  const { bucket: raw } = await params;
+  if (!isBucket(raw)) notFound();
+  const bucket = raw;
 
-  const [best, recent] = await Promise.all([
-    getCurrentBest(bucket),
-    getRecentDrills(bucket, 5),
-  ]);
+  const [best, recent] = await Promise.all([getCurrentBest(bucket), getRecentDrills(bucket, 5)]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="text-xs text-muted">
-          <Link href="/training" className="underline underline-offset-2">
-            Training
-          </Link>
-          <span className="mx-1">/</span>
-          <Link href="/training/role-play" className="underline underline-offset-2">
-            Role play
-          </Link>
-          <span className="mx-1">/</span>
-          {DRILL_BUCKET_LABEL[bucket]}
-        </div>
-        <h1 className="text-2xl font-semibold mt-1">{DRILL_BUCKET_LABEL[bucket]}</h1>
-        <div className="text-sm text-muted mt-1 max-w-2xl">{DRILL_BUCKET_HELP[bucket]}</div>
-      </div>
+      <PageHeader
+        back={{ href: routes.rolePlay(), label: "Role play" }}
+        title={`Role play · ${TOPIC_LABEL[bucket]}`}
+        description={DRILL_BUCKET_HELP[bucket]}
+      />
 
       <DrillForm bucket={bucket} initialBest={best} />
 
       {recent.length > 0 && (
-        <div className="panel p-5">
-          <div className="text-xs uppercase tracking-wider text-muted mb-3">Recent role plays</div>
-          <div className="space-y-3">
+        <Panel title="Recent role plays on this topic">
+          <ul className="divide-y divide-border-subtle">
             {recent.map((d) => (
-              <div key={d.id} className="border-t first:border-t-0 border-border-subtle pt-3 first:pt-0">
+              <li key={d.id} className="py-3 first:pt-0 last:pb-0">
                 <div className="flex items-baseline justify-between gap-3">
-                  <div className="font-semibold">{d.grade}</div>
-                  <div className="text-[11px] text-muted">
-                    {new Date(d.createdAt).toLocaleString()}
+                  <div className="font-semibold tabular-nums">{d.grade}</div>
+                  <div className="text-xs text-muted">
+                    {new Date(d.createdAt).toLocaleString("en-MY")}
                   </div>
                 </div>
-                <div className="text-xs text-muted mt-1 line-clamp-2">{d.repResponse}</div>
-                <div className="text-[11px] mt-1 italic">{d.feedback}</div>
-              </div>
+                <div className="mt-1 line-clamp-2 text-xs text-muted">{d.repResponse}</div>
+                <div className="mt-1 text-xs italic">{d.feedback}</div>
+              </li>
             ))}
-          </div>
-        </div>
+          </ul>
+        </Panel>
       )}
     </div>
   );

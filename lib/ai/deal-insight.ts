@@ -1,4 +1,5 @@
 "use server";
+import { KnownError, friendlyError } from "./errors";
 import { routes } from "@/lib/constants/routes";
 import { generateText } from "ai";
 import { eq } from "drizzle-orm";
@@ -67,7 +68,7 @@ export async function generateDealInsight(dealId: string): Promise<Result<{ text
     });
     text = res.text.trim();
   } catch (e) {
-    return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
+    return { ok: false, error: friendlyError(e, "write the insight") };
   }
 
   await db

@@ -84,10 +84,10 @@ export const SEVERITY_TO_TAG: Record<
   "low" | "medium" | "high" | "critical",
   string
 > = {
-  low: "LOW",
-  medium: "MEDIUM",
-  high: "HIGH RISK",
-  critical: "CRITICAL",
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  critical: "Critical",
 };
 
 export const SEVERITY_TO_TONE: Record<
@@ -96,7 +96,7 @@ export const SEVERITY_TO_TONE: Record<
 > = {
   low: "good",
   medium: "warn",
-  high: "warn",
+  high: "bad",
   critical: "bad",
 };
 

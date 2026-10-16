@@ -1,4 +1,5 @@
 import { routes } from "@/lib/constants/routes";
+import { READINESS_STATUS_LABEL, type ReadinessStatus } from "@/lib/constants/labels";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { calls, healthChecks, proposals } from "@/db/schema";
@@ -108,7 +109,7 @@ export async function getClientTimeline(clientId: string): Promise<TimelineEvent
       id: `proposal-${p.id}`,
       kind: "proposal",
       occurredAt: p.generatedAt,
-      title: `Proposal · ${p.cohortSize} pax · ${formatMoneyExact(p.totalCents)} invoiced`,
+      title: `Proposal · ${p.cohortSize} pax · ${formatMoneyExact(p.totalCents)} incl. SST`,
       subtitle: VENUE_LABEL[p.venue],
       href: `/clients/${clientId}`,
       tone: "info",
@@ -122,7 +123,7 @@ export async function getClientTimeline(clientId: string): Promise<TimelineEvent
       id: `audit-${a.id}`,
       kind: "audit",
       occurredAt: a.generatedAt,
-      title: `Readiness audit · ${a.overallScore} · ${a.status}`,
+      title: `Readiness check · ${a.overallScore} · ${READINESS_STATUS_LABEL[a.status as ReadinessStatus] ?? a.status}`,
       subtitle: truncate(a.summary, 120),
       href: routes.readiness(clientId),
       tone,

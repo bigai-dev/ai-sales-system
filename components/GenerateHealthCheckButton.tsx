@@ -2,11 +2,13 @@
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { generateHealthCheck } from "@/lib/ai/health-check";
+import { Button, ErrorText } from "@/components/ui";
+import { BTN, BUSY } from "@/lib/constants/copy";
 
 export default function GenerateHealthCheckButton({
   clientId,
   variant = "primary",
-  label = "Generate readiness audit",
+  label = BTN.runReadiness,
 }: {
   clientId: string;
   variant?: "primary" | "ghost";
@@ -18,24 +20,22 @@ export default function GenerateHealthCheckButton({
 
   return (
     <div className="flex items-center gap-2">
-      <button
-        className={variant === "primary" ? "btn" : "btn-ghost"}
-        disabled={pending}
+      <Button
+        variant={variant}
+        busy={pending}
+        busyLabel={BUSY.running}
         onClick={() =>
           start(async () => {
             setError(null);
             const r = await generateHealthCheck(clientId);
-            if (!r.ok) {
-              setError(r.error);
-            } else {
-              router.refresh();
-            }
+            if (!r.ok) setError(r.error);
+            else router.refresh();
           })
         }
       >
-        {pending ? "Generating…" : label}
-      </button>
-      {error && <span className="chip chip-bad">{error.slice(0, 80)}</span>}
+        {label}
+      </Button>
+      <ErrorText>{error}</ErrorText>
     </div>
   );
 }

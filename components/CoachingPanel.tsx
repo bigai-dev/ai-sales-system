@@ -24,7 +24,7 @@ export default function CoachingPanel({ data }: { data: CoachingPanelData }) {
       </div>
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-4 space-y-3">
-          <div className="text-xs uppercase tracking-wider text-muted mb-1">
+          <div className="text-xs text-muted mb-1">
             Score breakdown
           </div>
           <div className="space-y-3">
@@ -42,7 +42,7 @@ export default function CoachingPanel({ data }: { data: CoachingPanelData }) {
           </div>
         </div>
         <div className="col-span-12 md:col-span-5">
-          <div className="text-xs uppercase tracking-wider text-muted mb-2">
+          <div className="text-xs text-muted mb-2">
             Top improvement opportunities
           </div>
           <div className="space-y-3">
@@ -61,7 +61,7 @@ export default function CoachingPanel({ data }: { data: CoachingPanelData }) {
           </div>
         </div>
         <div className="col-span-12 md:col-span-3">
-          <div className="text-xs uppercase tracking-wider text-muted mb-2">
+          <div className="text-xs text-muted mb-2">
             What&apos;s working
           </div>
           <div className="space-y-2 text-sm">

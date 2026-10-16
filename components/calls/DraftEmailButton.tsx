@@ -4,6 +4,8 @@ import Modal from "../Modal";
 import CopyMarkdownButton from "../CopyMarkdownButton";
 import { generateFollowupEmail } from "@/lib/ai/draft-email";
 import type { EmailDraft } from "@/lib/schemas/email-draft";
+import { Button, ErrorText, Field, Input, Textarea } from "@/components/ui";
+import { BTN } from "@/lib/constants/copy";
 
 type Phase =
   | { kind: "idle" }
@@ -22,7 +24,7 @@ export default function DraftEmailButton({ callId }: { callId: string }) {
     startTransition(async () => {
       const r = await generateFollowupEmail(callId);
       if (r.ok && r.data) setPhase({ kind: "ready", draft: r.data });
-      else if (r.ok) setPhase({ kind: "error", message: "Empty response" });
+      else if (r.ok) setPhase({ kind: "error", message: "The AI returned nothing. Try again." });
       else setPhase({ kind: "error", message: r.error });
     });
   }
@@ -33,97 +35,82 @@ export default function DraftEmailButton({ callId }: { callId: string }) {
 
   return (
     <>
-      <button onClick={run} className="btn-ghost">
-        Draft email
-      </button>
+      <Button variant="ghost" onClick={run}>
+        {BTN.draftEmail}
+      </Button>
       <Modal open={open} onClose={close} title="Follow-up email" size="lg">
         {phase.kind === "loading" && (
-          <div className="py-12 flex flex-col items-center gap-4 text-center">
-            <div className="text-sm">Drafting from your debrief…</div>
-            <div className="text-xs text-muted max-w-sm">
-              DeepSeek is referencing the prospect&apos;s exact words and the next-step
-              you committed to. ~5–10s.
+          <div className="flex flex-col items-center gap-4 py-12 text-center">
+            <div className="text-sm">Drafting from your call review…</div>
+            <div className="max-w-sm text-xs text-muted">
+              The AI uses the client&apos;s own words and the next step you agreed. About 10
+              seconds.
             </div>
-            <div className="w-32 bar-track">
+            <div className="bar-track w-32">
               <div className="bar-fill" style={{ transform: "scaleX(0.7)" }} />
             </div>
           </div>
         )}
 
         {phase.kind === "error" && (
-          <div className="py-6 space-y-4">
-            <div className="chip chip-bad">{phase.message.slice(0, 200)}</div>
-            <div className="text-xs text-muted">
-              Tip: a debrief is required before drafting an email. If the call has
-              been debriefed, retry — DeepSeek can occasionally rate-limit.
-            </div>
+          <div className="space-y-4 py-6">
+            <ErrorText>{phase.message}</ErrorText>
+            <p className="text-xs text-muted">
+              The call needs a review before an email can be drafted. If it has one, just try
+              again.
+            </p>
             <div className="flex justify-end gap-2">
-              <button onClick={close} className="btn-ghost">
-                Close
-              </button>
-              <button onClick={run} className="btn">
-                Retry
-              </button>
+              <Button variant="ghost" onClick={close}>
+                {BTN.close}
+              </Button>
+              <Button onClick={run}>{BTN.tryAgain}</Button>
             </div>
           </div>
         )}
 
         {phase.kind === "ready" && (
           <div className="space-y-4">
-            <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted mb-1">
-                Subject
-              </div>
+            <Field label="Subject">
               <div className="flex gap-2">
-                <input
-                  readOnly
-                  value={phase.draft.subject}
-                  onFocus={(e) => e.currentTarget.select()}
-                  className="flex-1 bg-surface border border-border-subtle rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
-                />
+                <Input readOnly value={phase.draft.subject} onFocus={(e) => e.currentTarget.select()} />
                 <CopyMarkdownButton
                   markdown={phase.draft.subject}
-                  label="Copy subject"
-                  copiedLabel="✓ Copied"
+                  label="Copy"
+                  copiedLabel="Copied"
                   variant="ghost"
                 />
               </div>
-            </div>
+            </Field>
 
-            <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted mb-1">
-                Body
-              </div>
-              <textarea
+            <Field label="Email">
+              <Textarea
                 readOnly
                 value={phase.draft.body}
                 onFocus={(e) => e.currentTarget.select()}
                 rows={16}
-                className="w-full bg-surface border border-border-subtle rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40 leading-relaxed font-mono resize-y"
+                className="resize-y font-mono leading-relaxed"
               />
-            </div>
+            </Field>
 
             {phase.draft.attachmentNote && (
-              <div className="text-[11px] text-muted leading-snug">
-                <span className="text-foreground font-medium">Suggested attachment:</span>{" "}
+              <p className="text-xs leading-snug text-muted">
+                <span className="font-medium text-foreground">Attach:</span>{" "}
                 {phase.draft.attachmentNote}
-              </div>
+              </p>
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex gap-1">
-                <button onClick={run} className="btn-text">
-                  Regenerate
-                </button>
-              </div>
+              <Button variant="text" onClick={run}>
+                Draft again
+              </Button>
               <div className="flex gap-2">
-                <button onClick={close} className="btn-ghost">
-                  Close
-                </button>
+                <Button variant="ghost" onClick={close}>
+                  {BTN.close}
+                </Button>
                 <CopyMarkdownButton
                   markdown={`Subject: ${phase.draft.subject}\n\n${phase.draft.body}`}
                   label="Copy email"
-                  copiedLabel="✓ Copied to clipboard"
+                  copiedLabel="Copied"
                   variant="primary"
                 />
               </div>

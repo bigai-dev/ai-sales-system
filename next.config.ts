@@ -28,6 +28,8 @@ const nextConfig: NextConfig = {
         destination: "/clients/:id/readiness",
         permanent: true,
       },
+      // Trends merged into the Training page.
+      { source: "/training/trends", destination: "/training", permanent: true },
     ];
   },
 

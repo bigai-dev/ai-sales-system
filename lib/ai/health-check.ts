@@ -1,4 +1,5 @@
 "use server";
+import { KnownError, friendlyError } from "./errors";
 import { routes } from "@/lib/constants/routes";
 import { generateText, Output } from "ai";
 import { eq } from "drizzle-orm";
@@ -61,7 +62,7 @@ No commentary.`;
 
 async function loadContext(clientId: string) {
   const [client] = await db.select().from(clients).where(eq(clients.id, clientId));
-  if (!client) throw new Error("Client not found");
+  if (!client) throw new KnownError("Client not found.");
   const clientDeals = await db.select().from(deals).where(eq(deals.clientId, clientId));
   return scrubObject({
     client: {
@@ -123,7 +124,7 @@ export async function generateHealthCheck(clientId: string): Promise<{
     });
     output = healthCheckSchema.parse(result.output);
   } catch (e) {
-    return { ok: false, error: `LLM call failed: ${(e as Error).message}` };
+    return { ok: false, error: friendlyError(e, "run the readiness check") };
   }
 
   // Persist as a single transaction

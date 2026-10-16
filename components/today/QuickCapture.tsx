@@ -44,7 +44,7 @@ export default function QuickCapture() {
         type="datetime-local"
         value={dueAt}
         onChange={(e) => setDueAt(e.target.value)}
-        className="bg-surface-elevated border border-border-subtle rounded-md px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-accent/40"
+        className="bg-surface-elevated border border-border-subtle rounded-md px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent/40"
         title="Due date (optional)"
       />
       <button

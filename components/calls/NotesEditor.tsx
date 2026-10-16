@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { generateCallDebrief, saveCallNotes } from "@/lib/ai/call-debrief";
+import { Button, ErrorText, Panel, SectionLabel, Textarea } from "@/components/ui";
+import { BTN } from "@/lib/constants/copy";
 
-const MIN_FOR_ANALYSIS = 30;
+const MIN_FOR_REVIEW = 30;
 
 export default function NotesEditor({
   callId,
@@ -14,8 +16,8 @@ export default function NotesEditor({
   hasDebrief: boolean;
 }) {
   const [notes, setNotes] = useState(initialNotes);
-  const [savedAt, setSavedAt] = useState<number | null>(initialNotes ? Date.now() : null);
-  const [analyzing, setAnalyzing] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -35,9 +37,9 @@ export default function NotesEditor({
     };
   }, [notes, callId, initialNotes]);
 
-  async function analyze() {
+  async function review() {
     setError(null);
-    setAnalyzing(true);
+    setReviewing(true);
     // Flush any pending save first.
     if (notes !== initialNotes) {
       await saveCallNotes(callId, notes);
@@ -45,69 +47,56 @@ export default function NotesEditor({
     }
     startTransition(async () => {
       const r = await generateCallDebrief(callId);
-      setAnalyzing(false);
+      setReviewing(false);
       if (!r.ok) setError(r.error);
     });
   }
 
-  const tooShort = notes.trim().length < MIN_FOR_ANALYSIS;
+  const tooShort = notes.trim().length < MIN_FOR_REVIEW;
 
   return (
-    <div className="panel p-5 space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="font-semibold">Call notes</div>
-          <div className="text-xs text-muted">
-            Type as you go (or paste from your notepad). Auto-saves every second.
-          </div>
-        </div>
-        <span className="text-[11px] text-muted">
-          {savedAt ? `Saved ${timeAgo(savedAt)}` : "Not saved"}
+    <Panel className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <SectionLabel hint="Type as you go or paste from your notepad. Saves by itself.">
+          Notes
+        </SectionLabel>
+        <span className="shrink-0 text-xs text-muted">
+          {savedAt ? `Saved ${timeAgo(savedAt)}` : initialNotes ? "Saved" : "Not saved yet"}
         </span>
       </div>
 
-      <textarea
+      <Textarea
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         rows={10}
-        placeholder={`What did the prospect say? What did you commit to? Use your own shorthand — e.g.
-- 12 devs, mid-level AI familiarity (most use Copilot, none use Cursor)
-- Budget OK if scoped to one cohort first
+        placeholder={`What did they say? What did you commit to? Shorthand is fine, e.g.
+- 12 devs, most use Copilot, none use Cursor
+- Budget OK if we start with one cohort
 - Worried about training during sprint week
-- Asked to send proposal by Friday`}
-        className="w-full bg-surface-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40 resize-y font-mono leading-relaxed"
+- Send proposal by Friday`}
+        className="resize-y font-mono leading-relaxed"
       />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="text-[11px] text-muted">
-          {notes.trim().length} chars
-          {tooShort && (
-            <span className="ml-2 text-warning">
-              · Need {MIN_FOR_ANALYSIS}+ to analyze
-            </span>
-          )}
+        <div className="text-xs text-muted">
+          {tooShort
+            ? `Write at least ${MIN_FOR_REVIEW} characters to review this call.`
+            : `${notes.trim().length} characters`}
         </div>
         <div className="flex items-center gap-2">
-          {error && <span className="chip chip-bad">{error.slice(0, 120)}</span>}
-          <button
-            onClick={analyze}
-            className="btn"
-            disabled={tooShort || analyzing}
-            title={
-              tooShort
-                ? `Need ${MIN_FOR_ANALYSIS}+ characters of notes`
-                : "Run DeepSeek analysis on these notes"
-            }
+          <ErrorText>{error}</ErrorText>
+          <Button
+            onClick={review}
+            disabled={tooShort}
+            busy={reviewing}
+            busyLabel="Reviewing…"
+            variant={hasDebrief ? "ghost" : "primary"}
           >
-            {analyzing
-              ? "Analyzing…"
-              : hasDebrief
-                ? "Re-analyze"
-                : "Analyze debrief"}
-          </button>
+            {hasDebrief ? "Review again" : BTN.reviewCall}
+          </Button>
         </div>
       </div>
-    </div>
+    </Panel>
   );
 }
 

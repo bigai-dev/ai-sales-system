@@ -187,19 +187,26 @@ export async function generateDryRunPack(args: {
         .join("\n")}`
     : "";
 
-  try {
-    const res = await generateText({
-      model: chat,
-      output: Output.object({ schema: dryRunPackSchema }),
-      system: DRY_RUN_SYSTEM,
-      prompt: `Client: ${clientName}${industry ? ` (${industry})` : ""}${size ? ` · ${size}` : ""}${employees ? ` · ${employees} employees` : ""}${devCount ? ` · ${devCount} devs` : ""}\n\nBriefing summary:\n${JSON.stringify(briefingSummary, null, 2)}${exemplarHint}\n\nGenerate the 3-moment dry-run pack now.`,
-      maxOutputTokens: 900,
-    });
-    const parsed = dryRunPackSchema.parse(res.output);
-    return { ok: true, data: parsed };
-  } catch (e) {
-    return { ok: false, error: `Dry-run pack generator failed: ${(e as Error).message}` };
+  // Same two-attempt pattern as the topic role play: the model occasionally
+  // overruns the length limits and fails validation; a re-sample usually clears it.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await generateText({
+        model: chat,
+        output: Output.object({ schema: dryRunPackSchema }),
+        system: DRY_RUN_SYSTEM,
+        prompt: `Client: ${clientName}${industry ? ` (${industry})` : ""}${size ? ` · ${size}` : ""}${employees ? ` · ${employees} employees` : ""}${devCount ? ` · ${devCount} devs` : ""}\n\nBriefing summary:\n${JSON.stringify(briefingSummary, null, 2)}${exemplarHint}\n\nGenerate the 3-moment dry-run pack now.`,
+        maxOutputTokens: 900,
+      });
+      return { ok: true, data: dryRunPackSchema.parse(res.output) };
+    } catch (e) {
+      console.warn(`Role-play pack attempt ${attempt}/2 failed: ${(e as Error).message}`);
+    }
   }
+  return {
+    ok: false,
+    error: "The AI couldn't write the role play twice in a row. Try again in a moment.",
+  };
 }
 
 // Re-export for use in drill UI submit flow.

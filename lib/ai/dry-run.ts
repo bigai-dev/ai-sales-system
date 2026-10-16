@@ -1,4 +1,5 @@
 "use server";
+import { ERR } from "@/lib/constants/copy";
 
 import { generateText } from "ai";
 import { eq } from "drizzle-orm";
@@ -26,9 +27,9 @@ export async function startDryRun(callId: string): Promise<Result<CallDryRun>> {
     .where(eq(calls.id, callId));
   if (!call) return { ok: false, error: "Call not found." };
   if (!call.briefing) {
-    return { ok: false, error: "Generate a briefing first — Dry Run reads from it." };
+    return { ok: false, error: ERR.needCallPlan };
   }
-  if (!call.clientId) return { ok: false, error: "Call is not scoped to a client." };
+  if (!call.clientId) return { ok: false, error: "This call has no client." };
 
   const [client] = await db
     .select({
@@ -82,10 +83,12 @@ export async function gradeDryRun(args: {
     .select({ dryRun: calls.dryRun })
     .from(calls)
     .where(eq(calls.id, callId));
-  if (!call?.dryRun) return { ok: false, error: "No dry run in progress." };
+  if (!call?.dryRun) return { ok: false, error: "No role play started for this call yet." };
 
   const draft = call.dryRun;
-  const responseByMoment = new Map(responses.map((r) => [r.momentId, r.repResponse.trim()]));
+  const responseByMoment = new Map(
+    responses.map((r) => [r.momentId, r.repResponse.trim().slice(0, 2000)]),
+  );
 
   // Grade all 3 in parallel.
   const graded = await Promise.all(

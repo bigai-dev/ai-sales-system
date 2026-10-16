@@ -18,7 +18,7 @@ export default function KpiCard({ kpi }: { kpi: Kpi }) {
           <div className="bar-fill" style={{ width: `${kpi.bar}%` }} />
         </div>
       )}
-      <div className="text-[11px] text-muted mt-2">{kpi.caption}</div>
+      <div className="text-xs text-muted mt-2">{kpi.caption}</div>
     </div>
   );
 }

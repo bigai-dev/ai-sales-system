@@ -1,18 +1,37 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import HealthCheckView from "@/components/views/HealthCheckView";
+import ReadinessView from "@/components/views/ReadinessView";
 import GenerateHealthCheckButton from "@/components/GenerateHealthCheckButton";
 import ProposalsList from "@/components/ProposalsList";
+import { PageHeader, Panel } from "@/components/ui";
 import { getClientById } from "@/lib/queries/clients";
 import { getLatestHealthCheck } from "@/lib/queries/health";
+import { AREA_LABEL } from "@/lib/constants/labels";
+import { PAGE } from "@/lib/constants/copy";
+import { routes } from "@/lib/constants/routes";
 
 type Params = { id: string };
 
-export default async function ClientHealthCheckPage({
+export async function generateMetadata({
   params,
 }: {
   params: Promise<Params>;
-}) {
+}): Promise<Metadata> {
+  const { id } = await params;
+  const client = await getClientById(id);
+  return { title: client ? `${PAGE.readiness.title} · ${client.name}` : PAGE.readiness.title };
+}
+
+const AREA_HINT: Record<keyof typeof AREA_LABEL, string> = {
+  tooling: "Which AI coding tools the team already uses",
+  practices: "Code review habits, prompt hygiene, safety rails",
+  culture: "How leadership feels about AI and risk",
+  velocity: "How fast work moves today",
+  adoption: "How many engineers use AI tools daily",
+  outcomes: "Quality, speed to feature, team satisfaction",
+};
+
+export default async function ClientReadinessPage({ params }: { params: Promise<Params> }) {
   const { id } = await params;
   const client = await getClientById(id);
   if (!client) notFound();
@@ -20,68 +39,37 @@ export default async function ClientHealthCheckPage({
   const data = await getLatestHealthCheck(id);
 
   if (!data) {
-    const dimensions = [
-      { name: "Tooling", hint: "Editor + agent stack maturity (Cursor, Claude Code, MCP)" },
-      { name: "Practices", hint: "PR review, prompt hygiene, agent guardrails" },
-      { name: "Culture", hint: "Leadership posture toward AI, blast-radius tolerance" },
-      { name: "Velocity", hint: "Cycle time, PRs/dev/wk, deploy frequency" },
-      { name: "Adoption", hint: "% of engineers using AI tools daily, license utilization" },
-      { name: "Outcomes", hint: "Defect rate, time-to-feature, dev satisfaction" },
-    ];
     return (
       <section>
-        <Link href={`/clients/${id}`} className="text-xs text-muted hover:text-foreground">
-          ← Back to client
-        </Link>
-        <div className="mt-4 panel p-8">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-8">
-            <div className="max-w-xl">
-              <div className="text-xs text-muted uppercase tracking-wider">
-                Engineering readiness audit
-              </div>
-              <h1 className="text-2xl font-semibold tracking-tight mt-1">
-                No audit yet for <span className="text-accent">{client.name}</span>
-              </h1>
-              <p className="text-sm text-muted mt-3 leading-relaxed">
-                DeepSeek will grade {client.name} on the six dimensions below, then
-                recommend cohort size, content split, and follow-ups for the 2-day
-                workshop. Takes ~10–20 seconds.
-              </p>
-            </div>
-            <div className="shrink-0">
-              <GenerateHealthCheckButton clientId={id} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {dimensions.map((d, i) => (
-              <div
-                key={d.name}
-                className="rounded-lg border border-border-subtle bg-surface-elevated/40 px-4 py-3"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="font-medium text-sm">{d.name}</div>
-                  <div className="font-mono text-xs text-muted tabular-nums">
-                    {String(i + 1).padStart(2, "0")}
-                  </div>
-                </div>
-                <div className="text-[11px] text-muted mt-1 leading-snug">{d.hint}</div>
+        <PageHeader
+          back={{ href: routes.client(id), label: client.name }}
+          title={PAGE.readiness.title}
+          description={`No readiness check yet for ${client.name}.`}
+          actions={<GenerateHealthCheckButton clientId={id} />}
+        />
+        <Panel>
+          <p className="max-w-xl text-sm leading-relaxed text-muted">
+            The AI scores {client.name}&apos;s team on the six areas below, then suggests
+            cohort size, content split and follow-ups for the 2-day workshop. Takes about
+            15 seconds.
+          </p>
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+            {(Object.keys(AREA_LABEL) as (keyof typeof AREA_LABEL)[]).map((k) => (
+              <div key={k} className="rounded-lg border border-border-subtle px-4 py-3">
+                <div className="text-sm font-medium">{AREA_LABEL[k]}</div>
+                <div className="mt-1 text-xs leading-snug text-muted">{AREA_HINT[k]}</div>
               </div>
             ))}
           </div>
-        </div>
+        </Panel>
       </section>
     );
   }
 
   return (
-    <>
-      <Link href={`/clients/${id}`} className="text-xs text-muted hover:text-foreground">
-        ← Back to client
-      </Link>
-      <div className="mt-4 space-y-4">
-        <HealthCheckView data={data} clientId={id} />
-        <ProposalsList clientId={id} clientName={client.name} />
-      </div>
-    </>
+    <div className="space-y-4">
+      <ReadinessView data={data} clientId={id} />
+      <ProposalsList clientId={id} clientName={client.name} />
+    </div>
   );
 }

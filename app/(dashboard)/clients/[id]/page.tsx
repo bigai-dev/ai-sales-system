@@ -32,7 +32,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
       </Link>
       <div className="flex items-end justify-between mt-2 mb-6">
         <div>
-          <div className="text-xs text-muted uppercase tracking-wider">Client</div>
+          <div className="text-xs text-muted">Client</div>
           <h1 className="text-2xl font-bold mt-1">
             <span className="text-accent">{client.name}</span>
           </h1>
@@ -46,17 +46,17 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
           </div>
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             {client.source && (
-              <span className="chip chip-info text-[10px]">
+              <span className="chip chip-info text-xs">
                 {SOURCE_LABEL[client.source as keyof typeof SOURCE_LABEL] ?? client.source}
               </span>
             )}
             {client.budgetSignal && (
-              <span className="chip text-[10px]" title="Budget signal">
+              <span className="chip text-xs" title="Budget signal">
                 💰 {client.budgetSignal}
               </span>
             )}
             {client.timelineSignal && (
-              <span className="chip text-[10px]" title="Timeline signal">
+              <span className="chip text-xs" title="Timeline signal">
                 📅 {client.timelineSignal}
               </span>
             )}
@@ -89,7 +89,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
         <div className="panel kpi">
           <div className="l">Open deals</div>
           <div className="v mt-1">{clientDeals.length}</div>
-          <div className="text-[11px] text-muted mt-2">{formatMoney(totalCents)} total</div>
+          <div className="text-xs text-muted mt-2">{formatMoney(totalCents)} total</div>
         </div>
       </div>
 
@@ -150,7 +150,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
                   <div className="text-sm font-medium">
                     {stageLabel(d.stage)}
                   </div>
-                  <div className="text-[11px] text-muted">
+                  <div className="text-xs text-muted">
                     {d.lastActivity ?? "—"}
                   </div>
                 </div>
@@ -158,7 +158,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
                   <div className="text-sm font-semibold">{formatMoney(d.valueCents)}</div>
                   {d.stage === "O" ? (
                     <>
-                      <div className="text-[11px] text-muted leading-tight">
+                      <div className="text-xs text-muted leading-tight">
                         + 8% SST {formatMoney(sstSen(d.valueCents))}
                         <div className="text-foreground">
                           Invoiced {formatMoney(d.valueCents + sstSen(d.valueCents))}
@@ -185,7 +185,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
 function ProfileRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border-subtle bg-surface px-3 py-2">
-      <div className="text-[10px] uppercase tracking-wider text-muted">{label}</div>
+      <div className="text-xs text-muted">{label}</div>
       <div className="text-sm font-medium mt-0.5">{value}</div>
     </div>
   );

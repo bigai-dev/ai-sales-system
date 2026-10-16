@@ -96,7 +96,7 @@ export default function AddDealDialog({ clients }: { clients: ClientOption[] }) 
       <Modal open={open} onClose={() => setOpen(false)} title="New workshop deal">
         <form action={onSubmit} className="space-y-3 text-sm">
           <label className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-wider text-muted">Client</span>
+            <span className="text-xs text-muted">Client</span>
             <select
               name="clientId"
               required
@@ -125,7 +125,7 @@ export default function AddDealDialog({ clients }: { clients: ClientOption[] }) 
             <Field label="Delivery date" name="deliveryDate" type="date" />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-wider text-muted">Next step</span>
+            <span className="text-xs text-muted">Next step</span>
             <div className="grid grid-cols-2 gap-2">
               <select
                 value={nextStepAction}
@@ -155,7 +155,7 @@ export default function AddDealDialog({ clients }: { clients: ClientOption[] }) 
               />
             )}
             {composeNextStep(nextStepAction, nextStepDate, nextStepOther) && (
-              <div className="mt-1 text-[11px] text-muted">
+              <div className="mt-1 text-xs text-muted">
                 Preview:{" "}
                 <span className="text-foreground">
                   {composeNextStep(nextStepAction, nextStepDate, nextStepOther)}
@@ -202,7 +202,7 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[10px] uppercase tracking-wider text-muted">{label}</span>
+      <span className="text-xs text-muted">{label}</span>
       <input
         name={name}
         type={type}
@@ -227,7 +227,7 @@ function SelectField({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[10px] uppercase tracking-wider text-muted">{label}</span>
+      <span className="text-xs text-muted">{label}</span>
       <select
         name={name}
         defaultValue={defaultValue}

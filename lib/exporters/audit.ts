@@ -1,4 +1,5 @@
 import type { LatestHealthCheck } from "@/lib/queries/health";
+import { READINESS_STATUS_LABEL, type ReadinessStatus } from "@/lib/constants/labels";
 
 export function buildAuditMarkdown(audit: LatestHealthCheck): string {
   const lines: string[] = [];
@@ -8,12 +9,14 @@ export function buildAuditMarkdown(audit: LatestHealthCheck): string {
     day: "numeric",
   });
 
-  lines.push(`# Engineering readiness audit — ${audit.client}`);
+  lines.push(`# Readiness check — ${audit.client}`);
   lines.push(`_Generated ${date}_`);
   if (audit.meta) lines.push(`_${audit.meta}_`);
   lines.push(``);
 
-  lines.push(`## Overall: ${audit.overall.score}/100 — ${audit.overall.status}`);
+  lines.push(
+    `## Overall: ${audit.overall.score}/100 — ${READINESS_STATUS_LABEL[audit.overall.status as ReadinessStatus] ?? audit.overall.status}`,
+  );
   lines.push(audit.summary);
   lines.push(``);
 
@@ -22,9 +25,11 @@ export function buildAuditMarkdown(audit: LatestHealthCheck): string {
     lines.push(``);
   }
 
-  lines.push(`## Health by dimension`);
+  lines.push(`## By area`);
   for (const d of audit.dimensions) {
-    lines.push(`### ${d.name} — ${d.score}/100 (${d.status})`);
+    lines.push(
+      `### ${d.name} — ${d.score}/100 (${READINESS_STATUS_LABEL[d.status as ReadinessStatus] ?? d.status})`,
+    );
     lines.push(d.summary);
     if (d.metrics.length > 0) {
       lines.push(``);
@@ -37,7 +42,7 @@ export function buildAuditMarkdown(audit: LatestHealthCheck): string {
   }
 
   if (audit.risks.length > 0) {
-    lines.push(`## Risks & issues`);
+    lines.push(`## Risks`);
     for (const r of audit.risks) {
       lines.push(`### [${r.tag}] ${r.title}`);
       lines.push(r.detail);
@@ -46,7 +51,7 @@ export function buildAuditMarkdown(audit: LatestHealthCheck): string {
   }
 
   if (audit.actions.length > 0) {
-    lines.push(`## Recommended actions`);
+    lines.push(`## Next steps`);
     for (const a of audit.actions) {
       lines.push(`### ${a.title} _(${a.impact})_`);
       lines.push(a.detail);
