@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { togglePinPlay, toggleHidePlay } from "@/lib/ai/play-actions";
 import { TOPIC_LABEL } from "@/lib/constants/labels";
-import { SOURCE_LABEL, SOURCE_TONE, type PlayListItem } from "@/lib/schemas/play";
+import { SOURCE_LABEL, type PlayListItem } from "@/lib/schemas/play";
 import { Button, Panel, SectionLabel, StatusChip } from "@/components/ui";
 import { routes } from "@/lib/constants/routes";
 
@@ -62,7 +62,6 @@ export default function PlayCard({ play }: { play: PlayListItem }) {
           {play.clientName ? `Call with ${play.clientName}` : "From a call"} ·{" "}
           {new Date(play.createdAt).toLocaleDateString("en-MY")}
         </span>
-        <span className="sr-only">Tone: {SOURCE_TONE[play.source]}</span>
       </div>
     </Panel>
   );
