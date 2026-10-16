@@ -1,78 +1,40 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+import { Moon, Sun } from "lucide-react";
 
-type Theme = "light" | "dark";
+// The page's <html class="dark"> is the source of truth (set before paint by
+// public/theme-init.js). This hook mirrors it into React without any effect.
+function subscribe(onChange: () => void) {
+  const obs = new MutationObserver(onChange);
+  obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => obs.disconnect();
+}
+const isDarkNow = () => document.documentElement.classList.contains("dark");
+const serverSnapshot = () => false;
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme | null>(null);
-
-  useEffect(() => {
-    const stored = (localStorage.getItem("theme") as Theme | null) ?? "light";
-    setTheme(stored);
-    document.documentElement.classList.toggle("dark", stored === "dark");
-  }, []);
+  const dark = useSyncExternalStore(subscribe, isDarkNow, serverSnapshot);
 
   function toggle() {
-    if (!theme) return;
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.classList.toggle("dark", next === "dark");
+    const next = !dark;
+    document.documentElement.classList.toggle("dark", next);
     try {
-      localStorage.setItem("theme", next);
-    } catch {}
+      localStorage.setItem("theme", next ? "dark" : "light");
+    } catch {
+      // Storage blocked; the choice just won't be remembered.
+    }
   }
 
+  const label = dark ? "Switch to light mode" : "Switch to dark mode";
   return (
     <button
       type="button"
       onClick={toggle}
-      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      className="w-9 h-9 rounded-md flex items-center justify-center text-muted hover:text-foreground hover:bg-surface-elevated transition"
+      aria-label={label}
+      title={label}
+      className="flex h-9 w-9 items-center justify-center rounded-md text-muted transition hover:bg-surface-elevated hover:text-foreground"
     >
-      {theme === "light" ? <MoonIcon /> : <SunIcon />}
+      {dark ? <Sun size={17} aria-hidden /> : <Moon size={17} aria-hidden />}
     </button>
-  );
-}
-
-function SunIcon() {
-  return (
-    <svg
-      width="17"
-      height="17"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2" />
-      <path d="M12 20v2" />
-      <path d="m4.93 4.93 1.41 1.41" />
-      <path d="m17.66 17.66 1.41 1.41" />
-      <path d="M2 12h2" />
-      <path d="M20 12h2" />
-      <path d="m6.34 17.66-1.41 1.41" />
-      <path d="m19.07 4.93-1.41 1.41" />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg
-      width="17"
-      height="17"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-    </svg>
   );
 }

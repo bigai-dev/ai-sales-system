@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Scratch folders written by editor/AI tooling, not part of the app.
+    ".remember/**",
+    ".impeccable/**",
+    ".playwright-mcp/**",
   ]),
 ]);
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geist = Geist({
@@ -31,7 +32,8 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <script src="/theme-init.js" />
+        {/* Applies the saved dark/light choice before anything paints, so there is no flash. */}
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
       </head>
       <body className="min-h-screen" suppressHydrationWarning>
         {children}
