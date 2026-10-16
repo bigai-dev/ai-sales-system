@@ -17,6 +17,7 @@
     "coaching:clear": "tsx scripts/clear-coaching.ts",
     "trends:refresh": "tsx scripts/seed-trend-calls.ts",
     "trends:clear": "tsx scripts/seed-trend-calls.ts --remove",
+    "plays:collect": "tsx scripts/collect-plays.ts",
     "ai:ping": "tsx scripts/ping-deepseek.ts"
   },
   "dependencies": {
