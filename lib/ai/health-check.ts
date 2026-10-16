@@ -198,6 +198,9 @@ export async function generateHealthCheck(clientId: string): Promise<{
     );
   }
 
+  // The client's readiness score follows its latest check.
+  await db.update(clients).set({ health: output.overallScore, lastActivityAt: Date.now() }).where(eq(clients.id, clientId));
+  revalidateTag("clients", "default");
   revalidateTag("health-checks", "default");
   revalidatePath(routes.readinessIndex());
   revalidatePath(routes.readiness(clientId));

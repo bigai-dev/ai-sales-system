@@ -1,20 +1,36 @@
-import { routes } from "@/lib/constants/routes";
-import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { eq, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { clients, deals, calls } from "@/db/schema";
+import { clients, deals } from "@/db/schema";
 import { formatMoney, sstSen } from "@/db/lib/money";
 import ProposalsList from "@/components/ProposalsList";
 import CallsList from "@/components/CallsList";
 import ClientTimeline from "@/components/ClientTimeline";
 import InvoiceButton from "@/components/InvoiceButton";
+import AddDealDialog from "@/components/AddDealDialog";
+import DealRowActions from "@/components/clients/DealRowActions";
 import ClientDiscoveryPanel, { type Discovery } from "@/components/ClientDiscoveryPanel";
 import PlanCallButton from "@/components/PlanCallButton";
-import { OUTCOME_LABEL, OUTCOME_TONE } from "@/lib/schemas/call-debrief";
-import { SOURCE_LABEL, deriveClientStage, stageLabel } from "@/lib/constants/labels";
+import {
+  READINESS_STATUS_LABEL,
+  READINESS_STATUS_TONE,
+  deriveClientStage,
+  readinessStatusFromScore,
+  stageLabel,
+  type StageCode,
+} from "@/lib/constants/labels";
+import { BTN } from "@/lib/constants/copy";
+import { routes } from "@/lib/constants/routes";
+import { ButtonLink, PageHeader, Panel, StatusChip } from "@/components/ui";
 
 type Params = { id: string };
+
+export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  const { id } = await params;
+  const [client] = await db.select({ name: clients.name }).from(clients).where(eq(clients.id, id));
+  return { title: client?.name ?? "Client" };
+}
 
 export default async function ClientDetailPage({ params }: { params: Promise<Params> }) {
   const { id } = await params;
@@ -22,55 +38,35 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
   if (!client) notFound();
 
   const clientDeals = await db.select().from(deals).where(eq(deals.clientId, id));
-  const totalCents = clientDeals.reduce((s, d) => s + d.valueCents, 0);
   const clientStage = stageLabel(deriveClientStage(clientDeals));
+  const readiness = readinessStatusFromScore(client.health);
+
+  const description = [
+    client.contactName,
+    client.contactRole,
+    client.industry,
+    client.size,
+    client.employees ? `${client.employees.toLocaleString()} staff` : null,
+    client.devCount ? `${client.devCount} engineers` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <section>
-      <Link href="/clients" className="text-xs text-muted hover:text-foreground">
-        ← Back to clients
-      </Link>
-      <div className="flex items-end justify-between mt-2 mb-6">
-        <div>
-          <div className="text-xs text-muted">Client</div>
-          <h1 className="text-2xl font-bold mt-1">
-            <span className="text-accent">{client.name}</span>
-          </h1>
-          <div className="text-xs text-muted mt-1">
-            {client.contactName}
-            {client.contactRole ? ` · ${client.contactRole}` : ""}
-            {client.industry ? ` · ${client.industry}` : ""}
-            {client.size ? ` · ${client.size}` : ""}
-            {client.employees ? ` · ${client.employees.toLocaleString()} emp` : ""}
-            {client.devCount ? ` · ${client.devCount} engineers` : ""}
-          </div>
-          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            {client.source && (
-              <span className="chip chip-info text-xs">
-                {SOURCE_LABEL[client.source as keyof typeof SOURCE_LABEL] ?? client.source}
-              </span>
-            )}
-            {client.budgetSignal && (
-              <span className="chip text-xs" title="Budget signal">
-                💰 {client.budgetSignal}
-              </span>
-            )}
-            {client.timelineSignal && (
-              <span className="chip text-xs" title="Timeline signal">
-                📅 {client.timelineSignal}
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <PlanCallButton clientId={id} />
-          <Link href={routes.readiness(id)} className="btn">
-            Generate readiness audit
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        back={{ href: routes.clients(), label: "Clients" }}
+        title={client.name}
+        description={description}
+        actions={
+          <>
+            <PlanCallButton clientId={id} />
+            <ButtonLink href={routes.readiness(id)}>{BTN.runReadiness}</ButtonLink>
+          </>
+        }
+      />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="panel kpi">
           <div className="l">Workshop value</div>
           <div className="v mt-1">{formatMoney(client.arrCents)}</div>
@@ -80,28 +76,27 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
           <div className="v mt-1 text-base">{clientStage}</div>
         </div>
         <div className="panel kpi">
-          <div className="l">AI readiness</div>
-          <div className="v mt-1">{client.health}</div>
+          <div className="l">Readiness score</div>
+          <div className="mt-1 flex items-baseline gap-2">
+            <div className="v">{client.health}</div>
+            <StatusChip tone={READINESS_STATUS_TONE[readiness]}>
+              {READINESS_STATUS_LABEL[readiness]}
+            </StatusChip>
+          </div>
           <div className="bar-track mt-3">
             <div className="bar-fill" style={{ width: `${client.health}%` }} />
           </div>
         </div>
-        <div className="panel kpi">
-          <div className="l">Open deals</div>
-          <div className="v mt-1">{clientDeals.length}</div>
-          <div className="text-xs text-muted mt-2">{formatMoney(totalCents)} total</div>
-        </div>
       </div>
 
-      <div data-tour="client-discovery" className="mb-6">
+      <div data-tour="client-discovery" className="mb-4">
         <ClientDiscoveryPanel
           clientId={id}
           initial={{
             goals: client.goals ?? null,
             painPoints: client.painPoints ?? null,
             currentStack: (client.currentStack as string[] | null) ?? [],
-            decisionMakers:
-              (client.decisionMakers as Discovery["decisionMakers"]) ?? [],
+            decisionMakers: (client.decisionMakers as Discovery["decisionMakers"]) ?? [],
             budgetSignal: client.budgetSignal ?? null,
             timelineSignal: client.timelineSignal ?? null,
             source: client.source ?? null,
@@ -110,83 +105,51 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
         />
       </div>
 
-      <div data-tour="client-timeline" className="mb-4">
+      <Panel
+        data-tour="deals-panel"
+        title="Deals"
+        aside={<AddDealDialog clients={[{ id, name: client.name }]} />}
+        className="mb-4"
+      >
+        {clientDeals.length === 0 ? (
+          <p className="text-sm text-muted">No deals yet for this client.</p>
+        ) : (
+          <ul className="divide-y divide-border-subtle">
+            {clientDeals.map((d) => {
+              const won = d.stage === "O";
+              return (
+                <li
+                  key={d.id}
+                  className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium tabular-nums">{formatMoney(d.valueCents)}</div>
+                    <div className="mt-0.5 text-xs text-muted">
+                      {won
+                        ? `Total incl. 8% SST ${formatMoney(d.valueCents + sstSen(d.valueCents))}`
+                        : `${d.probability}% chance`}
+                      {d.lastActivity ? ` · ${d.lastActivity}` : ""}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {won && <InvoiceButton dealId={d.id} invoiceNumber={d.invoiceNumber} />}
+                    <DealRowActions dealId={d.id} stage={d.stage as StageCode} />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Panel>
+
+      <div className="mb-4">
         <ClientTimeline clientId={id} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <CallsList clientId={id} />
         <ProposalsList clientId={id} clientName={client.name} />
       </div>
-
-      <div className="grid grid-cols-12 gap-4">
-        <div className="panel p-5 col-span-12 md:col-span-7">
-          <div className="font-semibold mb-3">Engineering profile</div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <ProfileRow label="Industry" value={client.industry ?? "—"} />
-            <ProfileRow label="Size" value={client.size ?? "—"} />
-            <ProfileRow
-              label="Total employees"
-              value={client.employees ? client.employees.toLocaleString() : "—"}
-            />
-            <ProfileRow
-              label="Engineers"
-              value={client.devCount ? String(client.devCount) : "—"}
-            />
-          </div>
-        </div>
-        <div data-tour="deals-panel" className="panel p-5 col-span-12 md:col-span-5">
-          <div className="font-semibold mb-3">Deals</div>
-          {clientDeals.length === 0 && (
-            <div className="text-sm text-muted">No deals yet for this client.</div>
-          )}
-          <div className="space-y-2">
-            {clientDeals.map((d) => (
-              <div
-                key={d.id}
-                className="rounded-xl border border-border-subtle bg-surface p-3 flex items-center justify-between gap-3"
-              >
-                <div className="min-w-0">
-                  <div className="text-sm font-medium">
-                    {stageLabel(d.stage)}
-                  </div>
-                  <div className="text-xs text-muted">
-                    {d.lastActivity ?? "—"}
-                  </div>
-                </div>
-                <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
-                  <div className="text-sm font-semibold">{formatMoney(d.valueCents)}</div>
-                  {d.stage === "O" ? (
-                    <>
-                      <div className="text-xs text-muted leading-tight">
-                        + 8% SST {formatMoney(sstSen(d.valueCents))}
-                        <div className="text-foreground">
-                          Invoiced {formatMoney(d.valueCents + sstSen(d.valueCents))}
-                        </div>
-                      </div>
-                      <InvoiceButton
-                        dealId={d.id}
-                        invoiceNumber={d.invoiceNumber}
-                      />
-                    </>
-                  ) : (
-                    <div className="text-xs text-muted">{d.probability}% chance</div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </section>
-  );
-}
-
-function ProfileRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-border-subtle bg-surface px-3 py-2">
-      <div className="text-xs text-muted">{label}</div>
-      <div className="text-sm font-medium mt-0.5">{value}</div>
-    </div>
   );
 }

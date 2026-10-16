@@ -80,7 +80,7 @@ export default function ClientDiscoveryPanel({
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="font-semibold flex items-center gap-2">
-            What the client wants
+            Discovery
             {justSaved && (
               <span
                 aria-live="polite"
@@ -90,12 +90,7 @@ export default function ClientDiscoveryPanel({
               </span>
             )}
           </div>
-          {editing && (
-            <div className="text-xs text-accent mt-0.5">
-              Editing — click Save to persist all changes
-            </div>
-          )}
-        </div>
+                  </div>
         <div className="flex gap-2">
           {editing ? (
             <>
@@ -135,7 +130,7 @@ export default function ClientDiscoveryPanel({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <TagsField
-          label="Current stack"
+          label="Tools they use"
           placeholder="Add a tool or framework, then Enter"
           value={draft.currentStack}
           editing={editing}
@@ -150,7 +145,7 @@ export default function ClientDiscoveryPanel({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <TextField
-          label="Budget signal"
+          label="Budget"
           placeholder="e.g. RM 50–80K range; can stretch with board approval"
           value={draft.budgetSignal}
           editing={editing}
@@ -158,7 +153,7 @@ export default function ClientDiscoveryPanel({
           onChange={(v) => patch("budgetSignal", v)}
         />
         <TextField
-          label="Timeline signal"
+          label="Timing"
           placeholder="e.g. before MOH audit cycle in August"
           value={draft.timelineSignal}
           editing={editing}
@@ -173,7 +168,7 @@ export default function ClientDiscoveryPanel({
       </div>
 
       <TextField
-        label="General notes"
+        label="Notes"
         placeholder="Anything else worth remembering"
         value={draft.notes}
         editing={editing}
@@ -216,7 +211,7 @@ function TextField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={rows}
-          className="w-full bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted placeholder:italic focus:outline-none focus:ring-2 focus:ring-accent/40 hover:border-border resize-y leading-relaxed"
+          className="input resize-y leading-relaxed"
         />
       ) : (
         <div className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm min-h-[60px]">
@@ -225,7 +220,7 @@ function TextField({
               {value}
             </span>
           ) : (
-            <span className="text-muted italic">— not set</span>
+            <span className="text-muted italic">Not set</span>
           )}
         </div>
       )}
@@ -264,7 +259,7 @@ function TagsField({
       <SectionHeader label={label} />
       <div className="rounded-lg border border-border-subtle bg-surface px-3 py-2 min-h-[60px]">
         {value.length === 0 && !editing && (
-          <div className="text-sm text-muted italic">— not set</div>
+          <div className="text-sm text-muted italic">Not set</div>
         )}
         <div className="flex flex-wrap gap-1.5 items-center">
           {value.map((t, i) => (
@@ -294,7 +289,7 @@ function TagsField({
                   add();
                 }
               }}
-              placeholder={value.length === 0 ? placeholder : "+ add"}
+              placeholder={value.length === 0 ? placeholder : "Add"}
               className="flex-1 min-w-[100px] bg-transparent border-0 text-sm text-foreground placeholder:text-muted focus:outline-none"
             />
           )}
@@ -333,10 +328,10 @@ function DecisionMakersField({
 
   return (
     <div>
-      <SectionHeader label="Decision-makers" />
+      <SectionHeader label="Decision makers" />
       <div className="rounded-lg border border-border-subtle bg-surface p-2 space-y-1.5 min-h-[60px]">
         {value.length === 0 && !editing && (
-          <div className="text-sm text-muted italic px-2 py-1">— not set</div>
+          <div className="text-sm text-muted italic px-2 py-1">Not set</div>
         )}
         {value.map((dm, i) => (
           <div
@@ -371,21 +366,21 @@ function DecisionMakersField({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Name"
-                  className="bg-surface-elevated border border-border-subtle rounded px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent/40"
+                  className="input py-1"
                   autoFocus
                 />
                 <input
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   placeholder="Role (e.g. CTO)"
-                  className="bg-surface-elevated border border-border-subtle rounded px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent/40"
+                  className="input py-1"
                 />
               </div>
               <div className="flex items-center gap-1.5">
                 <select
                   value={stance}
                   onChange={(e) => setStance(e.target.value as DecisionMaker["stance"])}
-                  className="bg-surface-elevated border border-border-subtle rounded px-2 py-1 text-sm text-foreground flex-1 focus:outline-none focus:ring-1 focus:ring-accent/40"
+                  className="input flex-1 py-1"
                 >
                   <option value="champion">Champion</option>
                   <option value="neutral">Neutral</option>
@@ -404,7 +399,7 @@ function DecisionMakersField({
               onClick={() => setAdding(true)}
               className="w-full text-left text-sm text-muted hover:text-foreground px-2 py-1 rounded transition"
             >
-              + add a person
+              Add a person
             </button>
           ))}
       </div>
@@ -428,9 +423,9 @@ function SourceField({
         <select
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
+          className="input"
         >
-          <option value="">— Pick a source —</option>
+          <option value="">Choose…</option>
           {Object.entries(SOURCE_LABEL).map(([k, label]) => (
             <option key={k} value={k}>
               {label}
@@ -444,7 +439,7 @@ function SourceField({
               {SOURCE_LABEL[value as keyof typeof SOURCE_LABEL] ?? value}
             </span>
           ) : (
-            <span className="text-muted italic">— not set</span>
+            <span className="text-muted italic">Not set</span>
           )}
         </div>
       )}

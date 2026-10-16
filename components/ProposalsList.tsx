@@ -1,16 +1,15 @@
-import { routes } from "@/lib/constants/routes";
-import Link from "next/link";
 import { formatMoneyExact } from "@/db/lib/money";
 import { VENUE_LABEL } from "@/lib/schemas/proposal";
 import { getProposalsByClient } from "@/lib/queries/proposals";
+import { getLatestHealthCheck } from "@/lib/queries/health";
 import { timeAgo } from "@/lib/format/time";
+import { safeFilename } from "@/lib/format/filename";
 import ViewProposalButton from "./ViewProposalButton";
+import GenerateProposalButton from "./GenerateProposalButton";
+import { Panel } from "@/components/ui";
+import { ERR } from "@/lib/constants/copy";
 
-function safeFilename(client: string): string {
-  const safe = client.replace(/[^a-z0-9]+/gi, "_").replace(/^_|_$/g, "");
-  return `proposal-${safe || "client"}.pdf`;
-}
-
+/** Saved proposals for one client, with the button to write a new one. */
 export default async function ProposalsList({
   clientId,
   clientName,
@@ -18,69 +17,62 @@ export default async function ProposalsList({
   clientId: string;
   clientName: string;
 }) {
-  const rows = await getProposalsByClient(clientId);
+  const [rows, readiness] = await Promise.all([
+    getProposalsByClient(clientId),
+    getLatestHealthCheck(clientId),
+  ]);
+  const hasReadiness = !!readiness;
 
   return (
-    <div className="panel p-5">
-      <div className="flex items-center justify-between mb-3">
-        <div className="font-semibold">Proposals</div>
-        <div className="text-xs text-muted">
-          {rows.length} saved
-        </div>
-      </div>
-
+    <Panel
+      title="Proposals"
+      aside={
+        <GenerateProposalButton
+          clientId={clientId}
+          disabled={!hasReadiness}
+          disabledHint={ERR.needReadiness}
+        />
+      }
+    >
       {rows.length === 0 ? (
-        <div className="text-sm text-muted">
-          No proposals yet.{" "}
-          <Link
-            href={routes.readiness(clientId)}
-            className="text-accent hover:underline"
-          >
-            Generate one from the readiness audit →
-          </Link>
-        </div>
+        <p className="text-sm text-muted">
+          {hasReadiness
+            ? "No proposals yet. The AI writes one from the readiness check."
+            : "No proposals yet. Run a readiness check first; the proposal is written from it."}
+        </p>
       ) : (
         <div className="divide-y divide-border-subtle">
           {rows.map((p) => (
             <div
               key={p.id}
-              className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 items-center py-3 first:pt-0 last:pb-0"
+              className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 py-3 first:pt-0 last:pb-0"
             >
               <div className="min-w-0">
-                <div className="text-sm font-medium truncate">
+                <div className="truncate text-sm font-medium">
                   {p.cohortSize} pax · {VENUE_LABEL[p.venue]}
                 </div>
-                <div className="text-xs text-muted mt-0.5">
-                  {timeAgo(p.generatedAt)}
-                </div>
+                <div className="mt-0.5 text-xs text-muted">{timeAgo(p.generatedAt)}</div>
               </div>
               <div className="text-right">
                 <div className="text-sm font-semibold tabular-nums">
                   {formatMoneyExact(p.totalCents)}
                 </div>
-                <div className="text-xs text-muted mt-0.5">
-                  invoiced
-                </div>
+                <div className="mt-0.5 text-xs text-muted">incl. SST</div>
               </div>
-              <div className="col-span-2 flex items-center justify-end gap-1 -mt-1">
+              <div className="col-span-2 -mt-1 flex items-center justify-end gap-1">
                 <a
                   href={`/api/proposal/pdf?id=${encodeURIComponent(p.id)}`}
                   download={safeFilename(clientName)}
-                  className="btn-text"
-                  title="Download without opening"
+                  className="btn-text btn-sm"
                 >
                   Download
                 </a>
-                <ViewProposalButton
-                  id={p.id}
-                  clientName={clientName}
-                  generatedAt={p.generatedAt}
-                />
+                <ViewProposalButton id={p.id} clientName={clientName} generatedAt={p.generatedAt} />
               </div>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </Panel>
   );
 }

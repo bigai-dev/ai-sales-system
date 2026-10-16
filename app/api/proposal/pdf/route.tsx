@@ -1,4 +1,5 @@
 import { renderToBuffer } from "@react-pdf/renderer";
+import { safeFilename } from "@/lib/format/filename";
 import { ProposalPdf } from "@/lib/pdf/proposal-pdf";
 import type { ProposalDoc } from "@/lib/exporters/proposal";
 import { getProposalDoc } from "@/lib/queries/proposals";
@@ -18,10 +19,6 @@ function isProposalDoc(v: unknown): v is ProposalDoc {
   );
 }
 
-function safeFilename(name: string): string {
-  return name.replace(/[^a-z0-9]+/gi, "_").replace(/^_|_$/g, "") || "client";
-}
-
 async function pdfResponse(doc: ProposalDoc) {
   let buffer: Buffer;
   try {
@@ -35,7 +32,7 @@ async function pdfResponse(doc: ProposalDoc) {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="proposal-${safeFilename(doc.client)}.pdf"`,
+      "Content-Disposition": `inline; filename="${safeFilename(doc.client)}"`,
       "Cache-Control": "no-store",
     },
   });

@@ -1,4 +1,5 @@
 import { renderToBuffer } from "@react-pdf/renderer";
+import { safeSlug } from "@/lib/format/filename";
 import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
@@ -11,10 +12,6 @@ export const runtime = "nodejs";
 export const maxDuration = 30;
 
 const PER_PAX_SEN = 350_000; // RM 3,500
-
-function safeFilename(name: string): string {
-  return name.replace(/[^a-z0-9-]+/gi, "_").replace(/^_|_$/g, "") || "invoice";
-}
 
 async function resolveCohortSize(
   dealId: string,
@@ -111,7 +108,7 @@ export async function GET(req: Request) {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${safeFilename(invoiceNumber)}.pdf"`,
+      "Content-Disposition": `inline; filename="${safeSlug(invoiceNumber) || "invoice"}.pdf"`,
       "Cache-Control": "no-store",
     },
   });

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { TONE_CHIP } from "@/lib/constants/labels";
 import {
   getClientTimeline,
   type TimelineEvent,
@@ -7,12 +6,13 @@ import {
   type TimelineEventTone,
 } from "@/lib/queries/timeline";
 import { timeAgo } from "@/lib/format/time";
+import { Panel, StatusChip } from "@/components/ui";
 
 const KIND_LABEL: Record<TimelineEventKind, string> = {
   call_planned: "Call",
   call_completed: "Call",
   proposal: "Proposal",
-  audit: "Audit",
+  audit: "Readiness",
 };
 
 const TONE_DOT: Record<TimelineEventTone, string> = {
@@ -23,29 +23,29 @@ const TONE_DOT: Record<TimelineEventTone, string> = {
   neutral: "var(--quiet)",
 };
 
+/** Every call, proposal and readiness check for one client, newest first. */
 export default async function ClientTimeline({ clientId }: { clientId: string }) {
   const events = await getClientTimeline(clientId);
 
   return (
-    <div className="panel p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="font-semibold">Timeline</div>
-        <div className="text-xs text-muted">
+    <Panel
+      data-tour="client-timeline"
+      title="Timeline"
+      aside={
+        <span className="text-xs text-muted">
           {events.length} event{events.length === 1 ? "" : "s"}
-        </div>
-      </div>
-
+        </span>
+      }
+    >
       {events.length === 0 ? (
-        <div className="text-sm text-muted">
-          No activity yet — plan a call or generate a readiness audit to start
-          the timeline.
-        </div>
+        <p className="text-sm text-muted">
+          Nothing yet. Plan a call or run a readiness check to start the timeline.
+        </p>
       ) : (
         <ol className="relative pl-5">
-          {/* Vertical rail */}
           <div
             aria-hidden
-            className="absolute top-1 bottom-1 left-[5px] w-px"
+            className="absolute bottom-1 left-[5px] top-1 w-px"
             style={{ background: "var(--border-subtle)" }}
           />
           {events.map((e, i) => (
@@ -53,50 +53,32 @@ export default async function ClientTimeline({ clientId }: { clientId: string })
           ))}
         </ol>
       )}
-    </div>
+    </Panel>
   );
 }
 
-function TimelineRow({
-  event,
-  isLast,
-}: {
-  event: TimelineEvent;
-  isLast: boolean;
-}) {
+function TimelineRow({ event, isLast }: { event: TimelineEvent; isLast: boolean }) {
   return (
     <li className={`relative ${isLast ? "" : "pb-4"}`}>
       <span
         aria-hidden
-        className="absolute left-[-15px] top-2 w-[11px] h-[11px] rounded-full"
-        style={{
-          background: TONE_DOT[event.tone],
-          boxShadow: "0 0 0 3px var(--surface)",
-        }}
+        className="absolute left-[-15px] top-2 h-[11px] w-[11px] rounded-full"
+        style={{ background: TONE_DOT[event.tone], boxShadow: "0 0 0 3px var(--surface)" }}
       />
-      <Link
-        href={event.href}
-        className="group block row-hover -mx-2 px-2 py-1.5 rounded-md"
-      >
+      <Link href={event.href} className="group row-hover -mx-2 block rounded-md px-2 py-1.5">
         <div className="flex items-baseline justify-between gap-3">
-          <div className="min-w-0 flex items-baseline gap-2">
-            <span
-              className={`${TONE_CHIP[event.tone]} shrink-0`}
-            >
+          <div className="flex min-w-0 items-baseline gap-2">
+            <StatusChip tone={event.tone} className="shrink-0">
               {KIND_LABEL[event.kind]}
-            </span>
-            <div className="text-sm font-medium text-foreground truncate group-hover:text-accent transition-colors">
+            </StatusChip>
+            <div className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-accent">
               {event.title}
             </div>
           </div>
-          <div className="text-xs text-muted shrink-0 tabular-nums">
-            {timeAgo(event.occurredAt)}
-          </div>
+          <div className="shrink-0 text-xs tabular-nums text-muted">{timeAgo(event.occurredAt)}</div>
         </div>
         {event.subtitle && (
-          <div className="text-xs text-muted mt-1 leading-snug pl-[60px]">
-            {event.subtitle}
-          </div>
+          <div className="mt-1 pl-[60px] text-xs leading-snug text-muted">{event.subtitle}</div>
         )}
       </Link>
     </li>
