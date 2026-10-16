@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { chat } from "./deepseek";
 import { scrubObject } from "./scrub";
+import { deriveClientStage, stageForPrompt, stageLegend } from "@/lib/constants/labels";
 import { extractDiscovery, DISCOVERY_PRIMER } from "./client-discovery";
 import { DAY_MS } from "@/lib/format/time";
 import { db } from "@/db/client";
@@ -109,7 +110,7 @@ async function loadContext(clientId: string) {
       size: client.size,
       employees: client.employees,
       devCount: client.devCount,
-      stage: client.stage,
+      stage: stageForPrompt(deriveClientStage(clientDeals)),
     },
     discovery: extractDiscovery(client),
     audit: {
@@ -127,7 +128,7 @@ async function loadContext(clientId: string) {
     },
     openDeal: openDeal
       ? {
-          stage: openDeal.stage,
+          stage: stageForPrompt(openDeal.stage),
           headcount: openDeal.headcount,
           deliveryDate: openDeal.deliveryDate,
           tags: openDeal.tags,

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { chat } from "./deepseek";
 import { scrubObject } from "./scrub";
+import { deriveClientStage, stageForPrompt, stageLegend } from "@/lib/constants/labels";
 import { db } from "@/db/client";
 import {
   clients,
@@ -69,13 +70,13 @@ async function loadContext(clientId: string) {
       industry: client.industry,
       size: client.size,
       employees: client.employees,
-      stage: client.stage,
+      stage: stageForPrompt(deriveClientStage(clientDeals)),
       arrCents: client.arrCents,
       health: client.health,
       products: client.products,
     },
     deals: clientDeals.map((d) => ({
-      stage: d.stage,
+      stage: stageForPrompt(d.stage),
       valueCents: d.valueCents,
       probability: d.probability,
       hot: d.hot,

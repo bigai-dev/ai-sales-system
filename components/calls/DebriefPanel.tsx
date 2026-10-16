@@ -108,10 +108,10 @@ export default function DebriefPanel({
         </div>
         <div className="rounded-lg border border-border-subtle bg-surface-elevated/40 p-4">
           <div className="text-[11px] uppercase tracking-wider text-muted">
-            Suggested SPANCO move
+            Suggested stage
           </div>
           <div className="text-sm font-semibold text-accent mt-1">
-            → {debrief.suggestedStage} · {STAGE_FULL[debrief.suggestedStage]}
+            {STAGE_FULL[debrief.suggestedStage]}
           </div>
         </div>
       </div>

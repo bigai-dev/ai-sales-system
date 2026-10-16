@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { chat } from "./deepseek";
 import { scrub, scrubObject } from "./scrub";
+import { deriveClientStage, stageForPrompt, stageLegend } from "@/lib/constants/labels";
 import { extractDiscovery, DISCOVERY_PRIMER } from "./client-discovery";
 import { computeCallMetrics } from "./call-metrics";
 import { extractPlays } from "./extract-plays";
@@ -19,7 +20,7 @@ const SYSTEM_PROMPT = `You are analyzing a sales-call debrief written by a
 Malaysian solo founder selling 2-day vibe-coding workshops (RM 3,500/pax + 8% SST).
 
 You will be given:
-- the client's metadata + current SPANCO stage
+- the client's details + current deal stage (stages in order: ${stageLegend()})
 - the rep's raw notes from the call (free-form text, may be terse)
 
 Extract structured data from the notes. Be conservative: do NOT invent things
@@ -41,7 +42,8 @@ Objection categorization (content / budget / venue / time / other):
 - time = scheduling, duration, day of week
 
 For suggestedStage, take the client's current stage as input and recommend
-either same stage (no movement) or the next forward stage (S→P→A→N→C→O). Do not
+either same stage (no movement) or the next forward stage (S→P→A→N→C→O, i.e.
+New lead → Qualified → Discovery → Proposal → Negotiation → Won). Do not
 recommend skipping stages.
 
 For coachingNote, find ONE specific behavior to call out — a strength to repeat
@@ -126,11 +128,11 @@ async function loadDebriefContext(callId: string) {
         size: client.size,
         employees: client.employees,
         devCount: client.devCount,
-        currentStage: client.stage,
+        currentStage: stageForPrompt(deriveClientStage(clientDeals)),
       },
       discovery: extractDiscovery(client),
       briefing: briefingForContext,
-      openDealStage: openDeal?.stage ?? null,
+      openDealStage: openDeal ? stageForPrompt(openDeal.stage) : null,
       openDealHeadcount: openDeal?.headcount ?? null,
       today: new Date().toISOString().slice(0, 10),
     }),

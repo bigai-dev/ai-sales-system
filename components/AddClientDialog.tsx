@@ -3,8 +3,9 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import { createClient } from "@/app/(dashboard)/clients/actions";
+import { Button, ErrorText, Field, Input, Select } from "@/components/ui";
+import { BUSY } from "@/lib/constants/copy";
 
-const STAGES = ["Lead", "Qualified", "Discovery", "Proposal", "Negotiation", "Closed-won"] as const;
 const SIZES = ["SMB", "Mid-market", "Enterprise"] as const;
 
 export default function AddClientDialog() {
@@ -25,8 +26,6 @@ export default function AddClientDialog() {
         employees: Number(formData.get("employees")) || undefined,
         devCount: Number(formData.get("devCount")) || undefined,
         arr: String(formData.get("arr") ?? "") || undefined,
-        stage: (formData.get("stage") as (typeof STAGES)[number]) || "Lead",
-        health: Number(formData.get("health")) || 50,
       });
       if (result.ok) {
         setOpen(false);
@@ -39,96 +38,59 @@ export default function AddClientDialog() {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="btn">
-        + Add client
-      </button>
+      <Button onClick={() => setOpen(true)}>Add client</Button>
       <Modal open={open} onClose={() => setOpen(false)} title="Add client">
         <form action={onSubmit} className="space-y-3 text-sm">
-          <Field label="Company name" name="name" required />
+          <Field label="Company name">
+            <Input name="name" required />
+          </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Contact name" name="contactName" required />
-            <Field label="Contact role" name="contactRole" placeholder="e.g. VP Engineering" />
+            <Field label="Contact name">
+              <Input name="contactName" required />
+            </Field>
+            <Field label="Contact role">
+              <Input name="contactRole" placeholder="e.g. Head of Engineering" />
+            </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Industry" name="industry" placeholder="e.g. SaaS, Fintech" />
-            <Select label="Size" name="size" options={SIZES} />
+            <Field label="Industry">
+              <Input name="industry" placeholder="e.g. Logistics, Fintech" />
+            </Field>
+            <Field label="Company size">
+              <Select name="size" defaultValue="Mid-market">
+                {SIZES.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </Select>
+            </Field>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Total employees" name="employees" type="number" />
-            <Field label="Engineers" name="devCount" type="number" placeholder="28" />
-            <Field label="Workshop value (excl. SST)" name="arr" placeholder="RM 70K" />
+            <Field label="Total staff">
+              <Input name="employees" type="number" min={0} />
+            </Field>
+            <Field label="Engineers">
+              <Input name="devCount" type="number" min={0} placeholder="28" />
+            </Field>
+            <Field label="Workshop value" hint="Before SST">
+              <Input name="arr" placeholder="RM 70K" />
+            </Field>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Select label="Stage" name="stage" options={STAGES} />
-            <Field label="Account health" name="health" type="number" defaultValue="60" />
-          </div>
-          {error && <div className="text-xs chip-bad chip">{error}</div>}
-          <div className="flex gap-2 justify-end pt-2">
-            <button type="button" onClick={() => setOpen(false)} className="btn-ghost">
+          <p className="text-xs text-muted">
+            The client starts as a new lead. Its stage follows its deals from there.
+          </p>
+          <ErrorText>{error}</ErrorText>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
               Cancel
-            </button>
-            <button type="submit" className="btn" disabled={pending}>
-              {pending ? "Adding…" : "Add client"}
-            </button>
+            </Button>
+            <Button type="submit" busy={pending} busyLabel={BUSY.adding}>
+              Add client
+            </Button>
           </div>
         </form>
       </Modal>
     </>
-  );
-}
-
-function Field({
-  label,
-  name,
-  required,
-  type = "text",
-  placeholder,
-  defaultValue,
-}: {
-  label: string;
-  name: string;
-  required?: boolean;
-  type?: string;
-  placeholder?: string;
-  defaultValue?: string;
-}) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-[10px] uppercase tracking-wider text-muted">{label}</span>
-      <input
-        name={name}
-        type={type}
-        required={required}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        className="bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
-      />
-    </label>
-  );
-}
-
-function Select({
-  label,
-  name,
-  options,
-}: {
-  label: string;
-  name: string;
-  options: readonly string[];
-}) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-[10px] uppercase tracking-wider text-muted">{label}</span>
-      <select
-        name={name}
-        className="bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
-      >
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }

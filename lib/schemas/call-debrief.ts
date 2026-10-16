@@ -52,7 +52,7 @@ export const callDebriefSchema = z.object({
   suggestedStage: z
     .enum(["S", "P", "A", "N", "C", "O"])
     .describe(
-      "Suggested SPANCO stage to move the deal to. Same stage as before is OK if no movement happened.",
+      "Stage code to move the deal to. Same stage as before is OK if no movement happened.",
     ),
   coachingNote: z
     .string()

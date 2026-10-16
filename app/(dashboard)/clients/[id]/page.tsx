@@ -11,7 +11,7 @@ import InvoiceButton from "@/components/InvoiceButton";
 import ClientDiscoveryPanel, { type Discovery } from "@/components/ClientDiscoveryPanel";
 import PlanCallButton from "@/components/PlanCallButton";
 import { OUTCOME_LABEL, OUTCOME_TONE } from "@/lib/schemas/call-debrief";
-import { SOURCE_LABEL, STAGE_NAME } from "@/lib/constants/labels";
+import { SOURCE_LABEL, deriveClientStage, stageLabel } from "@/lib/constants/labels";
 
 type Params = { id: string };
 
@@ -22,6 +22,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
 
   const clientDeals = await db.select().from(deals).where(eq(deals.clientId, id));
   const totalCents = clientDeals.reduce((s, d) => s + d.valueCents, 0);
+  const clientStage = stageLabel(deriveClientStage(clientDeals));
 
   return (
     <section>
@@ -75,7 +76,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
         </div>
         <div className="panel kpi">
           <div className="l">Stage</div>
-          <div className="v mt-1 text-base">{client.stage}</div>
+          <div className="v mt-1 text-base">{clientStage}</div>
         </div>
         <div className="panel kpi">
           <div className="l">AI readiness</div>
@@ -146,7 +147,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
               >
                 <div className="min-w-0">
                   <div className="text-sm font-medium">
-                    {d.stage} — {STAGE_NAME[d.stage as "S" | "P" | "A" | "N" | "C" | "O"] ?? "—"}
+                    {stageLabel(d.stage)}
                   </div>
                   <div className="text-[11px] text-muted">
                     {d.lastActivity ?? "—"}
@@ -168,7 +169,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
                       />
                     </>
                   ) : (
-                    <div className="text-[11px] text-muted">{d.probability}% prob</div>
+                    <div className="text-xs text-muted">{d.probability}% chance</div>
                   )}
                 </div>
               </div>

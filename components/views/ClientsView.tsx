@@ -3,8 +3,9 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Client } from "@/lib/types/ui";
 import AddClientDialog from "../AddClientDialog";
+import { STAGE, STAGE_CODES } from "@/lib/constants/labels";
 
-const STAGES = ["All", "Lead", "Qualified", "Discovery", "Proposal", "Negotiation", "Closed-won"];
+const STAGES = ["All", ...STAGE_CODES.map((c) => STAGE[c].label)];
 const INDUSTRIES = [
   "All",
   "SaaS",

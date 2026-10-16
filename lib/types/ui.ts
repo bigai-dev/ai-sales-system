@@ -2,8 +2,8 @@
 // in db/seed-data.ts.
 
 import type { ReactNode } from "react";
-import type { ClientSize, ClientStage, DecisionMaker } from "@/lib/types/client";
-import type { ClientSource } from "@/lib/constants/labels";
+import type { ClientSize, DecisionMaker } from "@/lib/types/client";
+import type { ClientSource, StageCode } from "@/lib/constants/labels";
 
 export type Kpi = {
   label: string;
@@ -65,7 +65,9 @@ export type Client = {
   name: string;
   contact: string;
   contactRole?: string;
-  stage: ClientStage;
+  /** Plain-English stage word, derived from the client's deals. */
+  stage: string;
+  stageCode?: StageCode;
   industry: string;
   size: ClientSize;
   employees: number;

@@ -6,7 +6,7 @@ export const callBriefingSchema = z.object({
     .min(20)
     .max(400)
     .describe(
-      "1-2 sentence summary of where this client is in the pipeline and what just happened. Reference SPANCO stage and recent activity.",
+      "1-2 sentence summary of where this client is in the sales process and what just happened. Use the stage's plain-English name (never the letter code) and recent activity.",
     ),
   discoveryQuestions: z
     .array(

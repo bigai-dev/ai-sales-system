@@ -83,9 +83,7 @@ function Column({ col }: { col: KanbanColumn }) {
       className={`rounded-xl border border-border-subtle bg-background p-3 min-w-65 transition-colors ${isOver ? "border-accent" : ""}`}
     >
       <div className="flex items-center justify-between mb-1">
-        <div className="text-sm font-semibold">
-          {col.code} — {col.name}
-        </div>
+        <div className="text-sm font-semibold">{col.name}</div>
         <span className="chip">{col.count}</span>
       </div>
       <div className="text-[11px] text-muted mb-3">

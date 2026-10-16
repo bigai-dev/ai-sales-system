@@ -99,6 +99,18 @@ export function deriveClientStage(
   return anyWon ? WON_STAGE : "S";
 }
 
+/** `{ code, label }` pair for AI prompts, so the model sees both. */
+export function stageForPrompt(code: StageCode | string) {
+  return { code, label: stageLabel(code) };
+}
+
+/** One-line legend for AI prompts: "S = New lead (identified…); P = …". */
+export function stageLegend(): string {
+  return STAGE_CODES.map((c) => `${c} = ${STAGE[c].label} (${STAGE[c].description})`).join(
+    "; ",
+  );
+}
+
 /** @deprecated use STAGE[code].label / stageLabel(). */
 export const STAGE_NAME: Record<StageCode, string> = Object.fromEntries(
   STAGE_CODES.map((c) => [c, STAGE[c].label]),

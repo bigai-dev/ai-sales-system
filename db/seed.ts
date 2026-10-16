@@ -51,7 +51,8 @@ async function seedClients_() {
         employees: c.employees,
         devCount: c.devCount,
         arrCents: parseMoney(c.arr),
-        stage: c.stage,
+        // The stage column is legacy; the app derives stage from deals.
+        stage: c.stage as typeof clients.$inferInsert.stage,
         health: c.health,
         products: c.products,
         gradient: c.gradient,

@@ -3,6 +3,8 @@ import { generateText, Output } from "ai";
 import { desc, eq } from "drizzle-orm";
 import { chat } from "./deepseek";
 import { scrubObject } from "./scrub";
+import { stageForPrompt, stageLegend } from "@/lib/constants/labels";
+import { getClientStage } from "@/lib/queries/clients";
 import { extractDiscovery, DISCOVERY_PRIMER } from "./client-discovery";
 import { DAY_MS } from "@/lib/format/time";
 import { db } from "@/db/client";
@@ -16,8 +18,8 @@ const SYSTEM_PROMPT = `You are drafting a sales follow-up email on behalf of a
 Malaysian solo founder selling 2-day vibe-coding workshops (RM 3,500/pax + 8% SST).
 
 You will be given:
-- the call's debrief (outcome, summary, objections raised, commitments, next-step, suggested SPANCO move)
-- the client's metadata + current SPANCO stage
+- the call's debrief (outcome, summary, objections raised, commitments, next-step, suggested stage)
+- the client's details + current deal stage (stages in order: ${stageLegend()})
 - the latest proposal for this client (if one exists)
 - short summaries of recent prior calls for continuity
 
@@ -71,6 +73,7 @@ async function loadEmailContext(callId: string) {
     .from(clients)
     .where(eq(clients.id, call.clientId));
   if (!client) throw new Error("Client not found");
+  const clientStage = await getClientStage(call.clientId);
 
   const [latestProposal] = await db
     .select({
@@ -104,7 +107,7 @@ async function loadEmailContext(callId: string) {
       name: client.name,
       contactName: client.contactName,
       contactRole: client.contactRole,
-      currentStage: client.stage,
+      currentStage: stageForPrompt(clientStage),
     },
     discovery: extractDiscovery(client),
     callTiming: {

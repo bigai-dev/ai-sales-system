@@ -92,7 +92,7 @@ export async function extractPlays(input: ExtractInput): Promise<number> {
         repResponseExcerpt: bestResponseExcerpt({
           notes,
           debrief,
-          fallbackHint: `Closed-won response on ${obj.category}.`,
+          fallbackHint: `Winning response on ${obj.category}.`,
         }),
         outcome: debrief.outcome,
         source: "closed_won",

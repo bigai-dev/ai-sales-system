@@ -3,6 +3,8 @@ import { desc } from "drizzle-orm";
 import { db } from "@/db/client";
 import { clients, healthChecks } from "@/db/schema";
 import { DAY_MS } from "@/lib/format/time";
+import { stageLabel, type StageCode } from "@/lib/constants/labels";
+import { getClientStageMap } from "@/lib/queries/clients";
 
 const STATUS_CHIP: Record<"Healthy" | "At risk" | "Critical", string> = {
   Healthy: "chip-good",
@@ -10,14 +12,14 @@ const STATUS_CHIP: Record<"Healthy" | "At risk" | "Critical", string> = {
   Critical: "chip-bad",
 };
 
-// Lower number = more leverage to audit before sending the next sales touch.
-const STAGE_PRIORITY: Record<string, number> = {
-  Negotiation: 0,
-  Proposal: 1,
-  Discovery: 2,
-  Qualified: 3,
-  Lead: 4,
-  "Closed-won": 5,
+// Lower number = more useful to check before the next conversation.
+const STAGE_PRIORITY: Record<StageCode, number> = {
+  C: 0,
+  N: 1,
+  A: 2,
+  P: 3,
+  S: 4,
+  O: 5,
 };
 
 function timeAgo(ms: number): string {
@@ -30,10 +32,15 @@ function timeAgo(ms: number): string {
 }
 
 export default async function ReadinessIndexPage() {
-  const [clientList, allChecks] = await Promise.all([
+  const [clientRows, allChecks, stageMap] = await Promise.all([
     db.select().from(clients).orderBy(desc(clients.lastActivityAt)),
     db.select().from(healthChecks).orderBy(desc(healthChecks.generatedAt)),
+    getClientStageMap(),
   ]);
+  const clientList = clientRows.map((c) => ({
+    ...c,
+    stageCode: stageMap.get(c.id) ?? ("S" as StageCode),
+  }));
 
   const latestByClient = new Map<string, (typeof allChecks)[number]>();
   for (const hc of allChecks) {
@@ -45,8 +52,8 @@ export default async function ReadinessIndexPage() {
     const aHasAudit = latestByClient.has(a.id) ? 1 : 0;
     const bHasAudit = latestByClient.has(b.id) ? 1 : 0;
     if (aHasAudit !== bHasAudit) return aHasAudit - bHasAudit;
-    const ap = STAGE_PRIORITY[a.stage] ?? 9;
-    const bp = STAGE_PRIORITY[b.stage] ?? 9;
+    const ap = STAGE_PRIORITY[a.stageCode] ?? 9;
+    const bp = STAGE_PRIORITY[b.stageCode] ?? 9;
     return ap - bp;
   });
 
@@ -81,8 +88,7 @@ export default async function ReadinessIndexPage() {
           {sorted.map((c) => {
             const hc = latestByClient.get(c.id);
             const statusKey = (hc?.status ?? "Healthy") as keyof typeof STATUS_CHIP;
-            const isHighLeverage =
-              !hc && (c.stage === "Negotiation" || c.stage === "Proposal");
+            const isHighLeverage = !hc && (c.stageCode === "N" || c.stageCode === "C");
             return (
               <Link
                 key={c.id}
@@ -95,7 +101,7 @@ export default async function ReadinessIndexPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <div className="font-medium text-sm truncate">{c.name}</div>
-                    <span className="chip">{c.stage}</span>
+                    <span className="chip">{stageLabel(c.stageCode)}</span>
                     {isHighLeverage && (
                       <span className="chip chip-warn">audit before next touch</span>
                     )}

@@ -9,7 +9,7 @@ import {
   scratchNotes,
 } from "@/db/schema";
 import { formatMoney } from "@/db/lib/money";
-import { STAGE_NAME } from "@/lib/constants/labels";
+import { STAGE, stageLabel, type StageCode } from "@/lib/constants/labels";
 import { DAY_MS } from "@/lib/format/time";
 
 export type TaskKind =
@@ -58,17 +58,10 @@ function urgencyOf(targetMs: number, now: number): TaskUrgency {
   return "soon";
 }
 
-const STAGE_STUCK_THRESHOLD_MS: Record<string, number> = {
-  A: 5 * DAY_MS,
-  N: 7 * DAY_MS,
-  C: 5 * DAY_MS,
-};
-
-const STAGE_SUGGESTION: Record<string, string> = {
-  A: "Generate a proposal to advance to Negotiation",
-  N: "Schedule a decision call to close",
-  C: "Confirm contract details and move to Order",
-};
+function stuckThresholdMs(stage: string): number | undefined {
+  const days = STAGE[stage as StageCode]?.stuckAfterDays;
+  return days ? days * DAY_MS : undefined;
+}
 
 const URGENCY_BOOST: Record<TaskUrgency, TaskUrgency> = {
   overdue: "overdue",
@@ -328,8 +321,8 @@ export async function getTodayInbox(): Promise<TodayInbox> {
 
   // -------- Deals stuck in stage --------
   for (const d of allDeals) {
-    const threshold = STAGE_STUCK_THRESHOLD_MS[d.stage];
-    if (!threshold) continue; // S, P, O ignored
+    const threshold = stuckThresholdMs(d.stage);
+    if (!threshold) continue; // New lead, Qualified and Won are never "stuck"
     const stuckMs = now - d.daysInStageStartsAt;
     if (stuckMs <= threshold) continue;
 
@@ -338,9 +331,9 @@ export async function getTodayInbox(): Promise<TodayInbox> {
       id: `stuck-${d.id}`,
       kind: "move_deal",
       urgency: stuckMs > 2 * threshold ? "overdue" : "this_week",
-      title: `Stuck in ${STAGE_NAME[d.stage as "A" | "N" | "C"] ?? d.stage} (${d.stage})`,
-      subtitle: `${d.clientName ?? "—"} · ${days} day${days === 1 ? "" : "s"}`,
-      suggestion: STAGE_SUGGESTION[d.stage] ?? null,
+      title: `No movement for ${days} day${days === 1 ? "" : "s"}`,
+      subtitle: `${d.clientName ?? "—"} · ${stageLabel(d.stage)}`,
+      suggestion: STAGE[d.stage as StageCode]?.stuckSuggestion ?? null,
       clientName: d.clientName,
       href: d.clientId ? `/clients/${d.clientId}` : "/pipeline",
       eventAt: d.daysInStageStartsAt,

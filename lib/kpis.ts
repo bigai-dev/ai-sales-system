@@ -95,7 +95,7 @@ export async function getDashboardKpis(range: Range): Promise<Kpi[]> {
       bar: isQuarter ? pipe.pctOfTarget : undefined,
       caption: isQuarter
         ? `${pipe.pctOfTarget}% of ${formatMoney(QUARTER_TARGET_CENTS)} quarterly target`
-        : `Open across all SPANCO stages`,
+        : `Open across all stages`,
     },
     {
       label: "Workshops booked",

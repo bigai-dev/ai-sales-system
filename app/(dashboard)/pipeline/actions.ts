@@ -5,7 +5,8 @@ import { db } from "@/db/client";
 import { deals } from "@/db/schema";
 import { parseMoney } from "@/db/lib/money";
 import type { Result } from "@/lib/types";
-import type { SpancoCode } from "@/lib/constants/labels";
+import { STAGE, type SpancoCode } from "@/lib/constants/labels";
+import { ERR } from "@/lib/constants/copy";
 import { getCurrentRepId } from "@/lib/queries/reps";
 
 // NOTE: do not re-export `SpancoCode` from this file. Next.js's server-actions
@@ -24,10 +25,6 @@ function revalidateDealRoutes(): void {
   revalidatePath("/today");
   revalidatePath("/clients", "layout");
 }
-
-const STAGE_PROBABILITY: Record<SpancoCode, number> = {
-  S: 10, P: 25, A: 40, N: 60, C: 80, O: 100,
-};
 
 export async function moveDealStage(
   dealId: string,
@@ -52,7 +49,7 @@ export async function moveDealStage(
     .returning({ id: deals.id });
 
   if (updated.length === 0) {
-    return { ok: false, error: "stale" };
+    return { ok: false, error: ERR.dealMoved };
   }
 
   revalidateDealRoutes();
@@ -87,7 +84,7 @@ export async function createDeal(input: NewDealInput): Promise<Result<{ id: stri
       ownerRepId: repId,
       stage,
       valueCents,
-      probability: STAGE_PROBABILITY[stage],
+      probability: STAGE[stage].chance,
       hot: !!input.hot,
       insight: input.insight ?? null,
       tags: input.tags ?? [],
@@ -111,7 +108,7 @@ export async function updateDeal(id: string, patch: DealPatch): Promise<Result> 
   const set: Partial<typeof deals.$inferInsert> = { lastActivityAt: Date.now() };
   if (patch.stage !== undefined) {
     set.stage = patch.stage;
-    set.probability = STAGE_PROBABILITY[patch.stage];
+    set.probability = STAGE[patch.stage].chance;
     set.daysInStageStartsAt = Date.now();
     if (patch.stage === "O") set.closedAt = Date.now();
   }

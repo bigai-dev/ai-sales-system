@@ -105,7 +105,7 @@ export default function BriefingPanel({
         </div>
         <div className="mt-1 flex flex-wrap items-baseline gap-2">
           <span className="text-sm font-semibold text-accent">
-            Land them in {briefing.nextStageMove.target} — {STAGE_FULL[briefing.nextStageMove.target]}
+            Move them to {STAGE_FULL[briefing.nextStageMove.target]}
           </span>
         </div>
         <div className="text-sm text-foreground mt-2 leading-relaxed">

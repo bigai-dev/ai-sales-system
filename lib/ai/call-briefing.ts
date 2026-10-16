@@ -4,6 +4,7 @@ import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { chat } from "./deepseek";
 import { scrubObject } from "./scrub";
+import { deriveClientStage, stageForPrompt, stageLegend } from "@/lib/constants/labels";
 import { extractDiscovery, DISCOVERY_PRIMER } from "./client-discovery";
 import { db } from "@/db/client";
 import { clients, deals, calls } from "@/db/schema";
@@ -22,8 +23,8 @@ Workshop SOP — the rep MUST cover three discovery questions:
 2. What is their AI knowledge level?
 3. What is their budget?
 
-SPANCO stages: S=Suspect, P=Prospect (interested), A=Analysis (discovery captured),
-N=Negotiation (proposal sent), C=Conclusion (verbal yes), O=Order (paid).
+Deal stages, in order (use the plain-English name in prose, the code only in
+schema fields): ${stageLegend()}.
 
 Common objections fall into four buckets: content, budget, venue, time.
 
@@ -40,11 +41,11 @@ short-notice risks (decision-makers may not be on the call, prep time limited
 for the prospect, etc.). If it's large, more strategic watchouts apply.
 
 For expectedObjections, predict 1-3 most likely from the audit + stage:
-- Stage S/P → mostly content/time objections
-- Stage A → mostly budget objections
-- Stage N → mostly venue/time logistics
+- New lead / Qualified → mostly content/time objections
+- Discovery → mostly budget objections
+- Proposal → mostly venue/time logistics
 
-The nextStageMove must be one stage ahead of the client's current SPANCO stage
+The nextStageMove must be one stage ahead of the client's current stage
 (or same stage if it's stuck). 'what' is the verbatim commitment to extract.
 
 ${DISCOVERY_PRIMER}
@@ -91,7 +92,7 @@ async function loadCallContext(callId: string) {
         size: client.size,
         employees: client.employees,
         devCount: client.devCount,
-        stage: client.stage,
+        stage: stageForPrompt(deriveClientStage(clientDeals)),
       },
       discovery: extractDiscovery(client),
       callSchedule: {
@@ -117,7 +118,7 @@ async function loadCallContext(callId: string) {
         : null,
       openDeal: openDeal
         ? {
-            stage: openDeal.stage,
+            stage: stageForPrompt(openDeal.stage),
             headcount: openDeal.headcount,
             tags: openDeal.tags,
             nextStep: openDeal.nextStep,

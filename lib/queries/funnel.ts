@@ -1,63 +1,53 @@
 import { unstable_cache } from "next/cache";
 import { sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { clients } from "@/db/schema";
+import { deals } from "@/db/schema";
 import { formatMoney } from "@/db/lib/money";
 import type { Stage } from "@/lib/types/ui";
+import { STAGE, STAGE_CODES, type StageCode } from "@/lib/constants/labels";
 
-// Funnel column colors: cool muted → warm accent as the deal progresses.
-// Aligned with the OKLCH theme tokens (muted → accent).
-const STAGE_META = [
-  { name: "Lead", color: "#6b6660" },
-  { name: "Qualified", color: "#8a847b" },
-  { name: "Discovery", color: "#a8a39a" },
-  { name: "Proposal", color: "#c8a87f" },
-  { name: "Negotiation", color: "#e0a866" },
-  { name: "Closed-won", color: "#f7a85d" },
-] as const;
+// Bar colour per stage: quiet grey → full accent as the deal progresses.
+// Expressed with theme tokens so light and dark both look right.
+const STAGE_COLOR: Record<StageCode, string> = {
+  S: "var(--quiet)",
+  P: "var(--muted)",
+  A: "color-mix(in oklch, var(--accent) 40%, var(--muted))",
+  N: "color-mix(in oklch, var(--accent) 60%, var(--muted))",
+  C: "color-mix(in oklch, var(--accent) 80%, var(--muted))",
+  O: "var(--accent)",
+};
 
+/** Deals grouped by stage, with plain and chance-weighted totals. */
 export const getDashboardFunnel = unstable_cache(
   async (): Promise<Stage[]> => {
     const rows = await db
       .select({
-        stage: clients.stage,
+        stage: deals.stage,
         count: sql<number>`count(*)`,
-        valueCents: sql<number>`coalesce(sum(${clients.arrCents}),0)`,
+        valueCents: sql<number>`coalesce(sum(${deals.valueCents}),0)`,
       })
-      .from(clients)
-      .groupBy(clients.stage);
+      .from(deals)
+      .groupBy(deals.stage);
 
     const byStage = new Map(rows.map((r) => [r.stage, r]));
-    const counts = STAGE_META.map((m) => Number(byStage.get(m.name)?.count ?? 0));
+    const counts = STAGE_CODES.map((c) => Number(byStage.get(c)?.count ?? 0));
     const max = Math.max(1, ...counts);
 
-    return STAGE_META.map((m, i) => {
-      const r = byStage.get(m.name);
+    return STAGE_CODES.map((code, i) => {
+      const r = byStage.get(code);
       const count = Number(r?.count ?? 0);
       const valueCents = Number(r?.valueCents ?? 0);
-      const weighted = Math.round(valueCents * stageProbability(m.name));
+      const weighted = Math.round((valueCents * STAGE[code].chance) / 100);
       return {
-        name: m.name === "Closed-won" ? "Closing" : m.name,
+        name: STAGE[code].label,
         count,
         pct: Math.round((counts[i] / max) * 100),
-        color: m.color,
+        color: STAGE_COLOR[code],
         value: formatMoney(valueCents),
         weighted: formatMoney(weighted),
       };
     });
   },
   ["dashboard-funnel"],
-  { tags: ["dashboard-kpis", "clients"], revalidate: 300 },
+  { tags: ["dashboard-kpis", "pipeline"], revalidate: 300 },
 );
-
-function stageProbability(s: string): number {
-  switch (s) {
-    case "Lead": return 0.1;
-    case "Qualified": return 0.2;
-    case "Discovery": return 0.3;
-    case "Proposal": return 0.5;
-    case "Negotiation": return 0.7;
-    case "Closed-won": return 1.0;
-    default: return 0.1;
-  }
-}

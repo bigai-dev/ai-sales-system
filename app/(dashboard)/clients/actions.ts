@@ -5,7 +5,7 @@ import { db } from "@/db/client";
 import { clients } from "@/db/schema";
 import { parseMoney } from "@/db/lib/money";
 import type { Result } from "@/lib/types";
-import type { DecisionMaker, ClientSize, ClientStage } from "@/lib/types/client";
+import type { DecisionMaker, ClientSize } from "@/lib/types/client";
 
 // NOTE: do not re-export `DecisionMaker` (or any type) from this file.
 // Next.js's server-actions loader treats every export in a `"use server"`
@@ -31,7 +31,7 @@ export type NewClientInput = {
   employees?: number;
   devCount?: number;
   arr?: string; // "RM 70K" — workshop value (excl. SST)
-  stage?: typeof clients.$inferInsert.stage;
+  // Stage is no longer set here: a client's stage is derived from its deals.
   health?: number;
   products?: string[];
 };
@@ -55,7 +55,6 @@ export async function createClient(input: NewClientInput): Promise<Result<{ id: 
       employees: input.employees ?? null,
       devCount: input.devCount ?? null,
       arrCents: input.arr ? parseMoney(input.arr) : 0,
-      stage: input.stage ?? "Lead",
       health: input.health ?? 50,
       products: input.products ?? [],
       gradient: "",
@@ -84,7 +83,6 @@ export async function updateClient(id: string, patch: ClientPatch): Promise<Resu
   if (patch.size !== undefined) set.size = patch.size;
   if (patch.employees !== undefined) set.employees = patch.employees;
   if (patch.arr !== undefined) set.arrCents = parseMoney(patch.arr);
-  if (patch.stage !== undefined) set.stage = patch.stage;
   if (patch.health !== undefined) set.health = patch.health;
   if (patch.products !== undefined) set.products = patch.products;
   set.lastActivityAt = Date.now();
