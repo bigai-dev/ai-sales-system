@@ -87,25 +87,5 @@ export const callDebriefSchema = z.object({
 
 export type CallDebrief = z.infer<typeof callDebriefSchema>;
 
-export const OUTCOME_LABEL: Record<CallDebrief["outcome"], string> = {
-  connected: "Connected",
-  no_answer: "No answer",
-  voicemail: "Voicemail",
-  rescheduled: "Rescheduled",
-  follow_up: "Needs follow-up",
-  closed_won: "Closed-won",
-  closed_lost: "Closed-lost",
-};
-
-export const OUTCOME_TONE: Record<
-  CallDebrief["outcome"],
-  "good" | "warn" | "bad" | "info"
-> = {
-  connected: "info",
-  no_answer: "warn",
-  voicemail: "warn",
-  rescheduled: "warn",
-  follow_up: "info",
-  closed_won: "good",
-  closed_lost: "bad",
-};
+// Outcome words and colours live with every other label.
+export { OUTCOME_LABEL, OUTCOME_TONE } from "@/lib/constants/labels";

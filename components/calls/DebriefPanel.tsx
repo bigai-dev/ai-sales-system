@@ -1,3 +1,4 @@
+import { TONE_CHIP } from "@/lib/constants/labels";
 import {
   OUTCOME_LABEL,
   OUTCOME_TONE,
@@ -5,13 +6,6 @@ import {
 } from "@/lib/schemas/call-debrief";
 import { OBJECTION_LABEL, STAGE_FULL } from "@/lib/schemas/call-briefing";
 import DraftEmailButton from "./DraftEmailButton";
-
-const TONE_CHIP: Record<"good" | "warn" | "bad" | "info", string> = {
-  good: "chip-good",
-  warn: "chip-warn",
-  bad: "chip-bad",
-  info: "chip-info",
-};
 
 export default function DebriefPanel({
   callId,
@@ -47,7 +41,7 @@ export default function DebriefPanel({
             Debrief
           </div>
           <div className="mt-2 flex items-center gap-2">
-            <span className={`chip ${tone}`}>{OUTCOME_LABEL[debrief.outcome]}</span>
+            <span className={tone}>{OUTCOME_LABEL[debrief.outcome]}</span>
             <span className="text-[11px] text-muted">
               Analyzed {analyzedAt ? new Date(analyzedAt).toLocaleString("en-MY") : "—"}
             </span>

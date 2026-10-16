@@ -3,17 +3,10 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import { createDeal } from "@/app/(dashboard)/pipeline/actions";
-import type { SpancoCode } from "@/lib/constants/labels";
+import { STAGE, STAGE_CODES, type SpancoCode } from "@/lib/constants/labels";
 import { DAY_MS } from "@/lib/format/time";
 
-const STAGES: { code: SpancoCode; name: string }[] = [
-  { code: "S", name: "Suspect" },
-  { code: "P", name: "Prospect" },
-  { code: "A", name: "Analysis" },
-  { code: "N", name: "Negotiation" },
-  { code: "C", name: "Conclusion" },
-  { code: "O", name: "Order" },
-];
+const STAGES = STAGE_CODES.map((code) => ({ code, name: STAGE[code].label }));
 
 const NEXT_STEP_OPTIONS: { value: string; label: string }[] = [
   { value: "discovery_call", label: "Discovery call" },

@@ -13,13 +13,6 @@ import PlanCallButton from "@/components/PlanCallButton";
 import { OUTCOME_LABEL, OUTCOME_TONE } from "@/lib/schemas/call-debrief";
 import { SOURCE_LABEL, STAGE_NAME } from "@/lib/constants/labels";
 
-const TONE_CHIP: Record<"good" | "warn" | "bad" | "info", string> = {
-  good: "chip-good",
-  warn: "chip-warn",
-  bad: "chip-bad",
-  info: "chip-info",
-};
-
 type Params = { id: string };
 
 export default async function ClientDetailPage({ params }: { params: Promise<Params> }) {

@@ -73,14 +73,5 @@ export const OBJECTION_LABEL: Record<
   other: "Other",
 };
 
-export const STAGE_FULL: Record<
-  CallBriefing["nextStageMove"]["target"],
-  string
-> = {
-  S: "Suspect",
-  P: "Prospect",
-  A: "Analysis",
-  N: "Negotiation",
-  C: "Conclusion",
-  O: "Order",
-};
+/** @deprecated use stageLabel() from lib/constants/labels. */
+export { STAGE_NAME as STAGE_FULL } from "@/lib/constants/labels";

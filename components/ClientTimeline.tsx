@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TONE_CHIP } from "@/lib/constants/labels";
 import {
   getClientTimeline,
   type TimelineEvent,
@@ -20,14 +21,6 @@ const TONE_DOT: Record<TimelineEventTone, string> = {
   bad: "var(--danger)",
   info: "var(--accent)",
   neutral: "var(--quiet)",
-};
-
-const TONE_CHIP: Record<TimelineEventTone, string> = {
-  good: "chip-good",
-  warn: "chip-warn",
-  bad: "chip-bad",
-  info: "chip-info",
-  neutral: "chip",
 };
 
 export default async function ClientTimeline({ clientId }: { clientId: string }) {
@@ -88,7 +81,7 @@ function TimelineRow({
         <div className="flex items-baseline justify-between gap-3">
           <div className="min-w-0 flex items-baseline gap-2">
             <span
-              className={`chip ${TONE_CHIP[event.tone]} shrink-0 text-[10px] uppercase tracking-wider`}
+              className={`${TONE_CHIP[event.tone]} shrink-0`}
             >
               {KIND_LABEL[event.kind]}
             </span>

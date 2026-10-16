@@ -1,15 +1,9 @@
 import Link from "next/link";
+import { TONE_CHIP } from "@/lib/constants/labels";
 import { getCallsByClient } from "@/lib/queries/calls";
 import { OUTCOME_LABEL, OUTCOME_TONE } from "@/lib/schemas/call-debrief";
 import { timeAgo } from "@/lib/format/time";
 import { STATUS_LABEL, type CallStatus } from "@/lib/constants/labels";
-
-const TONE_CHIP: Record<"good" | "warn" | "bad" | "info", string> = {
-  good: "chip-good",
-  warn: "chip-warn",
-  bad: "chip-bad",
-  info: "chip-info",
-};
 
 
 export default async function CallsList({ clientId }: { clientId: string }) {
@@ -55,7 +49,7 @@ export default async function CallsList({ clientId }: { clientId: string }) {
                     </div>
                   )}
                 </div>
-                <span className={`chip ${tone} shrink-0`}>{label}</span>
+                <span className={`${tone} shrink-0`}>{label}</span>
               </Link>
             );
           })}

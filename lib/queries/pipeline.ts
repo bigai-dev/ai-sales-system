@@ -5,15 +5,13 @@ import { clients, deals } from "@/db/schema";
 import { formatMoney } from "@/db/lib/money";
 import type { KanbanColumn, Deal as DealCard } from "@/lib/types/ui";
 import { DAY_MS } from "@/lib/format/time";
+import { STAGE, STAGE_CODES } from "@/lib/constants/labels";
 
-const STAGE_META: { code: "S" | "P" | "A" | "N" | "C" | "O"; name: string; description: string }[] = [
-  { code: "S", name: "Suspect", description: "Identified target, not yet contacted" },
-  { code: "P", name: "Prospect", description: "Replied / showed interest, no meeting yet" },
-  { code: "A", name: "Analysis", description: "Discovery call done — headcount + AI level + budget captured" },
-  { code: "N", name: "Negotiation", description: "Proposal sent — content / venue / dates being aligned" },
-  { code: "C", name: "Conclusion", description: "Verbal yes — awaiting payment to lock the date" },
-  { code: "O", name: "Order", description: "Invoice paid · workshop date locked" },
-];
+const STAGE_META = STAGE_CODES.map((code) => ({
+  code,
+  name: STAGE[code].label,
+  description: STAGE[code].description,
+}));
 
 function daysSince(ts: number): number {
   return Math.max(0, Math.floor((Date.now() - ts) / DAY_MS));

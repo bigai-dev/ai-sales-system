@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/*
+  Type scale (keep it this small):
+    page title      text-2xl font-semibold      → PageHeader only
+    section title   text-sm  font-semibold      → SectionLabel
+    body            text-sm
+    secondary       text-xs text-muted
+  Nothing smaller than text-xs. No `uppercase`. Numbers use tabular-nums.
+*/
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -83,10 +92,13 @@ body {
     color: var(--foreground);
   }
   .kpi .l {
-    @apply text-[11px] uppercase tracking-wider text-muted;
+    @apply text-xs font-medium text-muted;
   }
   .chip {
-    @apply inline-block rounded-full border border-border-subtle bg-chip-bg px-2 py-[3px] text-[11px] leading-none text-foreground;
+    @apply inline-flex items-center gap-1 rounded-full border border-border-subtle bg-chip-bg px-2 py-[3px] text-xs leading-none text-foreground;
+  }
+  .chip-neutral {
+    /* same as plain .chip; exists so tone maps can be exhaustive */
   }
   .chip-good {
     border-color: color-mix(in oklch, var(--success) 35%, transparent);
@@ -108,24 +120,38 @@ body {
     background: color-mix(in oklch, var(--info) 12%, transparent);
     color: var(--info);
   }
+  /* Buttons: one size, sentence case. `.btn-sm` tightens padding. */
+  .btn,
+  .btn-ghost,
+  .btn-danger,
+  .btn-text,
+  .btn-text-danger {
+    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-semibold leading-5 transition;
+  }
+  .btn-sm {
+    @apply px-2.5 py-1.5 text-xs;
+  }
   .btn {
-    @apply rounded-md bg-accent px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.06em] text-accent-foreground transition;
+    @apply bg-accent text-accent-foreground;
   }
   .btn:hover {
     background: color-mix(in oklch, var(--accent) 90%, white);
   }
-  .btn:disabled {
+  .btn:disabled,
+  .btn-ghost:disabled,
+  .btn-danger:disabled,
+  .btn-text:disabled,
+  .btn-text-danger:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
   .btn-ghost {
-    @apply rounded-md border border-border bg-transparent px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-foreground transition;
+    @apply border border-border bg-transparent text-foreground;
   }
   .btn-ghost:hover {
     background: var(--surface-elevated);
   }
   .btn-danger {
-    @apply rounded-md px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.06em] transition;
     background: var(--danger);
     color: oklch(1 0 0);
   }
@@ -133,18 +159,51 @@ body {
     background: color-mix(in oklch, var(--danger) 88%, white);
   }
   .btn-text {
-    @apply rounded-md px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted transition;
+    @apply px-2 text-muted;
   }
   .btn-text:hover {
     color: var(--foreground);
     background: color-mix(in oklch, var(--surface-elevated) 60%, transparent);
   }
   .btn-text-danger {
-    @apply rounded-md px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] transition;
+    @apply px-2;
     color: var(--danger);
   }
   .btn-text-danger:hover {
     background: color-mix(in oklch, var(--danger) 14%, transparent);
+  }
+
+  /* Form controls */
+  .input {
+    @apply w-full rounded-lg border border-border-subtle bg-background px-3 py-2 text-sm text-foreground transition;
+  }
+  .input::placeholder {
+    color: var(--quiet);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 25%, transparent);
+  }
+  .input:disabled {
+    opacity: 0.6;
+  }
+  .label {
+    @apply text-xs font-medium text-muted;
+  }
+
+  /* Sidebar links: quiet by default, a thin accent bar when active. */
+  .nav-item {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted transition;
+  }
+  .nav-item:hover {
+    color: var(--foreground);
+    background: color-mix(in oklch, var(--surface-elevated) 70%, transparent);
+  }
+  .nav-item.active {
+    color: var(--foreground);
+    background: var(--surface-elevated);
+    box-shadow: inset 2px 0 0 var(--accent);
   }
   .nav-btn {
     @apply rounded-md px-3 py-2 text-sm font-medium text-muted transition;
@@ -156,11 +215,15 @@ body {
     background: var(--surface-elevated);
     color: var(--foreground);
   }
+
+  .skeleton {
+    @apply animate-pulse rounded-md bg-surface-elevated;
+  }
   .switch {
     @apply inline-flex gap-1 rounded-md border border-border bg-surface p-1;
   }
   .switch button {
-    @apply rounded px-3 py-1.5 text-[12px] font-medium text-muted transition;
+    @apply rounded px-3 py-1.5 text-xs font-medium text-muted transition;
   }
   .switch button.on {
     background: var(--accent);
