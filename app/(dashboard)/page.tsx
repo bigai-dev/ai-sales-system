@@ -87,7 +87,7 @@ export default async function TodayPage() {
           hint={
             <>
               Add a note above for later, or open <Link href={routes.deals()} className="underline">Deals</Link> to
-              see what's moving.
+              see what&apos;s moving.
             </>
           }
         />

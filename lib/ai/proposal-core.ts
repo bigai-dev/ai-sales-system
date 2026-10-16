@@ -1,12 +1,12 @@
 import { ERR } from "@/lib/constants/copy";
-import { KnownError, friendlyError } from "./errors";
+import { KnownError } from "./errors";
 import { routes } from "@/lib/constants/routes";
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { desc, eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { chat } from "./deepseek";
 import { scrubObject } from "./scrub";
-import { deriveClientStage, stageForPrompt, stageLegend } from "@/lib/constants/labels";
+import { deriveClientStage, stageForPrompt } from "@/lib/constants/labels";
 import { extractDiscovery, DISCOVERY_PRIMER } from "./client-discovery";
 import { DAY_MS } from "@/lib/format/time";
 import { db } from "@/db/client";

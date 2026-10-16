@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { chat } from "./deepseek";
 import { scrubObject } from "./scrub";
-import { deriveClientStage, stageForPrompt, stageLegend } from "@/lib/constants/labels";
+import { deriveClientStage, stageForPrompt } from "@/lib/constants/labels";
 import { db } from "@/db/client";
 import {
   clients,

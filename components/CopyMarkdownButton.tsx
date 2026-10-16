@@ -4,7 +4,7 @@ import { useState } from "react";
 export default function CopyMarkdownButton({
   markdown,
   label = "Export",
-  copiedLabel = "✓ Copied",
+  copiedLabel = "Copied",
   variant = "ghost",
 }: {
   markdown: string;

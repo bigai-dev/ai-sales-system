@@ -43,10 +43,14 @@ export default function CallActivityChart({ weeks }: { weeks: WeeklyCalls[] }) {
   const [colors, setColors] = useState<Colors | null>(null);
 
   useEffect(() => {
-    setColors(readColors());
+    // Read after paint so the first render (a grey placeholder) matches the server.
+    const frame = requestAnimationFrame(() => setColors(readColors()));
     const obs = new MutationObserver(() => setColors(readColors()));
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
+    return () => {
+      cancelAnimationFrame(frame);
+      obs.disconnect();
+    };
   }, []);
 
   if (!colors) return <div style={{ height: 240 }} className="skeleton" />;

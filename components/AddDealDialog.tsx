@@ -170,7 +170,7 @@ export default function AddDealDialog({ clients }: { clients: ClientOption[] }) 
           />
           <label className="chip cursor-pointer inline-flex items-center gap-2">
             <input type="checkbox" name="hot" className="accent-accent" />
-            🔥 Mark as hot
+            Mark as hot
           </label>
           {error && <div className="text-xs chip-bad chip">{error}</div>}
           <div className="flex gap-2 justify-end pt-2">

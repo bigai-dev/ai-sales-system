@@ -116,6 +116,8 @@ export const deals = sqliteTable(
 );
 
 // ---------- script_templates ----------
+// UNUSED: planned "live call" feature that was never built. Nothing reads or
+// writes this table; kept only so existing databases need no migration yet.
 export const scriptTemplates = sqliteTable("script_templates", {
   id: id(),
   name: text("name").notNull(),
@@ -188,6 +190,7 @@ export const calls = sqliteTable(
 );
 
 // ---------- call_turns ----------
+// UNUSED: see scriptTemplates. Nothing writes call turns.
 export const callTurns = sqliteTable(
   "call_turns",
   {
@@ -207,6 +210,7 @@ export const callTurns = sqliteTable(
 );
 
 // ---------- call_tips (live AI coach output) ----------
+// UNUSED: see scriptTemplates. Nothing writes call tips.
 export const callTips = sqliteTable(
   "call_tips",
   {

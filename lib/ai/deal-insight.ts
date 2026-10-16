@@ -1,5 +1,5 @@
 "use server";
-import { KnownError, friendlyError } from "./errors";
+import { friendlyError } from "./errors";
 import { routes } from "@/lib/constants/routes";
 import { generateText } from "ai";
 import { eq } from "drizzle-orm";

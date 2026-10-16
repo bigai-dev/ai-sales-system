@@ -12,67 +12,34 @@ This file shows the **most recent fix only**. It is rewritten with each new fix 
 
 ---
 
-## Trends page filled with sample calls
+## The clean-up: one set of words, one look, a simpler menu
 
-**Date:** 2026-10-13
-**Files:** `scripts/seed-trend-calls.ts` (new), `package.json` (two new commands). No app code changed.
+**Date:** 2026-10-16
+**Files:** most of `app/` and `components/`, plus `lib/constants/` (new `copy.ts` and `routes.ts`, bigger `labels.ts`), `next.config.ts`, `README.md`. Saved as eight checkpoints (`git log`), one per phase.
 
-**What:** Added 14 sample calls to the database, spread over the past month, so **Training → Trends** shows all five charts instead of "No data yet". Nine calls sit in the older part of the month and five in the last week, written so the page tells a story: talking less, covering more discovery questions, landing the planned next step more often — with **Stage progression (60%)** left as the weakest number.
+**What:**
 
-**Why:** Trends only counts calls that were planned, held and reviewed **in the last 30 days**, and its big headline numbers only use **the last 7 days**. The newest reviewed call in the database was from 13 August, so nothing was in range and the page had been blank since mid-September at the latest. Role plays do not feed this page at all — it is built from calls only.
+1. **One set of words everywhere.** Deal stages are now New lead → Qualified → Discovery → Proposal → Negotiation → Won (no more S/P/A/N/C/O letters, "Suspect", "Order" or "Closed-won" on screen). A client's stage now follows its deals instead of being a separate field. The readiness feature is called **Readiness check** in every place (menu, buttons, client page, timeline, copied text, PDF). "Briefing" is **Call plan**, "Debrief" is **Call review**, "Dry run" is **Role-play this call**, "bucket" is **topic**, "grade" is **score**. Developer words (LLM, DeepSeek, TCV, pp, SPANCO, rate-limit, "Unscoped call", "LLM call failed: …") no longer appear; AI errors read like "Couldn't plan this call. Try again."
+2. **A simpler menu.** Today is now the home page (`/`). The menu is Today · Dashboard · Clients · Deals · Calls, then Training · Role play · Playbook. Readiness checks live under Clients (`/clients/readiness`). Trends merged into the Training page. The two demo buttons that sat on every page moved into one small **Demo** menu at the bottom of the sidebar (Guided tour, Present full screen). The top bar is gone, so every page has one title instead of two.
+3. **One look.** Buttons are sentence case (no more small ALL-CAPS text anywhere), one card style, one page header, one text-input style, one empty-state box, one error style, no emoji. Icons come from a small icon set instead of hand-drawn ones. The sidebar's active item is a quiet bar instead of a solid orange pill.
+4. **Simpler pages.** Client page: three numbers instead of four, no duplicate "Engineering profile" box, deals listed with a stage picker and a delete button, proposals can be written from the client page. Readiness page: one summary panel, six area cards, a risks list, next steps. Dashboard: the calls chart now shows real planned/completed calls per week (it was fixed sample numbers), the stage funnel is built from deals and links to the board, and the coaching box can finally find your reviewed calls. Today: Snooze/Done are always visible (they used to appear only on hover, so touch screens couldn't reach them). Calls: you can plan a call from the Calls page by picking a client.
+5. **Loading and error screens.** Pages show grey placeholders while loading, and a friendly "Something went wrong · Try again" box if a page breaks.
 
-**How to check:** Open `/training/trends`. Five charts, each with a percentage and a change figure, and "Computed from 14 calls in the last 30 days" at the bottom. `/training` shows three of the same charts. Checked in the browser on 2026-10-13.
-
-**What else the sample calls touch:**
-
-- **Calls list** and the pages of the ten sample customers used: the 14 calls appear there. Open any one to see its plan, notes and review.
-- **Dashboard:** the "calls" count goes up by the sample calls in range.
-- **Today page:** unchanged, on purpose. The sample calls create no follow-up tasks.
-- **Product tour (Demo mode):** still lands on Bumimax, but its "AI debrief" step now opens the new sample call **Second cohort · Bumimax** instead of the 13 August call, because the tour always opens the most recently reviewed call.
-- No existing call, customer or deal was edited. GoBeli got no sample calls so its "chase proposal" task on Today stays.
-
-**It wears off:** this is a rolling window. In about a week the big percentages go back to "—", and in about a month the charts are empty again, unless real calls are reviewed in the meantime. To re-date the sample calls to today, run `npm run trends:refresh` in this folder (safe to repeat — it replaces its own 14 calls and nothing else). To remove them completely: `npm run trends:clear`.
-
-**Code effect:** One new script. It builds each call's plan and review, checks them against the same rules the app uses, and lets the app's own scoring function work out the numbers — so opening a sample call shows details that match its chart points. Every sample call's id starts with `demo_trend_`, which is how refresh and clear find them.
-
-**Known quirk (not changed):** Talk balance shows its change in red ("-13pp") even though dropping into the 30–40% target is an improvement. The page colours any drop red.
-
-**Vercel effect:** No code to deploy for the page itself. The sample calls live in the database, so if the live site uses the same database as this computer, they show there too.
-
----
-
-*Earlier the same day:*
-
-## "Drills" renamed to "Role play", and you now choose what to practice
-
-**Date:** 2026-10-13
-**Files:** `components/training/DrillForm.tsx`, `lib/ai/scenario-generator.ts`, `lib/schemas/drill.ts`, the pages under `app/(dashboard)/training/`, `components/Sidebar.tsx`, `next.config.ts`, plus small wording changes in the playbook, dashboard and Movie Mode files.
-
-**What:** Two things.
-
-1. **Renamed.** Everything a person can see that said "Drill" now says "Role play" — the side menu, page titles, buttons, the streak messages, the playbook labels and the Movie Mode demo slide. The page address changed too: `/training/drills` is now `/training/role-play`. Old links and bookmarks still work; they forward to the new address.
-2. **You choose what to practice.** Before a role play starts you now get a "What do you want to practice?" step with three ways to choose:
-   - tap a ready-made situation (four per topic, e.g. "Asking for a discount", "Two days is too long"),
-   - type your own situation in your own words, or
-   - leave it on **Surprise me**, which behaves exactly like before.
-
-   After each round there are two buttons: **Another one like this** (same situation, fresh customer line) and **Choose something else** (back to the picker).
-
-**Why:** "Drill" is not a word Malaysian sales teams use; "role play" is. "Training" was the other candidate but it is already the name of the whole section, so the menu would have read Training → Training. And before this change the AI picked the customer objection at random inside a topic, so there was no way to rehearse the one objection you actually expected on your next call. The big **Drill now** button on the Training page also jumped straight into your weakest topic without asking.
+**Why:** The app had the same thing named up to eight different ways, two different stage lists shown side by side, and no shared building blocks, so every page looked and read slightly differently. Twenty-odd small bugs were fixed along the way (see the commit messages).
 
 **How to check:**
 
-1. Open `/training`. The top-right button now says **Start role play** and takes you to the topic list instead of straight into a topic. The streak box still has its one-click shortcut (**Practice Budget**, or whichever topic is weakest).
-2. Click **Role play** in the side menu, open **Budget**, tap **Asking for a discount**, press **Start role play**. The customer line should be someone asking for a discount, with "Practicing: Asking for a discount" shown above it.
-3. Press **Choose something else**, type your own situation (for example "They want to pay only after the workshop is finished") and press Enter. The customer line should follow what you typed.
-4. Visit the old address `/training/drills` — it should land on `/training/role-play`.
+1. Open `/`. It's Today. The menu on the left has 5 + 3 items and a **Demo** button at the bottom.
+2. Open `/deals`. Columns read New lead … Won. Drag a card; the client's page shows the new stage.
+3. Open any client. Three numbers, Discovery, Deals (with a stage picker), Timeline, Calls, Proposals. Press **Run readiness check**, then **Generate proposal** from the client page.
+4. Open a call. Panels are **Call plan**, **Notes**, **Call review**. The **Role-play this call** button sits in the call plan.
+5. Old addresses still work: `/today`, `/pipeline`, `/health-check`, `/clients/<id>/health-check`, `/training/trends` all forward.
+6. Demo → Guided tour runs end to end; Demo → Present full screen opens the slideshow.
 
-All four were checked in the browser on 2026-10-13. No role play was graded during testing, so no scores, streaks or history were touched.
+Checked in the browser on 2026-10-16 in light mode. Not checked: dark mode on every page, and the AI features themselves were not run (they cost tokens), only their wording and error paths.
 
-**Code effect:** Wording and one new input. The chosen situation is passed to the AI as extra guidance for that one scenario; it is trimmed to 200 characters and run through the same privacy scrubber (emails, phone numbers, IC numbers) used elsewhere before it leaves the machine. Nothing new is saved and the database is unchanged — the internal table and code names still say "drill", which nobody sees. One small bonus fix: if the AI fails to produce a scenario, the reason is now shown on the picker; before, the screen silently went back to the start button.
+**Code effect:** All user-facing words live in `lib/constants/labels.ts` and `lib/constants/copy.ts`; all page addresses in `lib/constants/routes.ts`. Shared screen pieces live in `components/ui/`. The database is unchanged: stage codes, statuses and the `health_checks` tables are the same; three never-used tables (`script_templates`, `call_turns`, `call_tips`) are marked as unused in `db/schema.ts` so they can be dropped in one migration later. `lucide-react` (icons) was added. Pre-existing lint notes in `ThemeToggle`, `TourOverlay`, `app/layout.tsx` and `public/theme-init.js` were left as they were.
 
-**Not changed (your call):** the four topics are still called "buckets" in a few sentences ("Weakest bucket right now", "Your best in this bucket"). That is the same kind of insider word as "drill" and could become "topic" in one pass.
+**Dashboard numbers changed on purpose:** "Deals by stage" now adds up deals, not client values, so the totals differ from before and match the Deals board.
 
-**Still open from the previous entry (13 Aug):** the **Dry run** button on a call page builds its scenarios with the same AI but without the length limits and retry that fixed **Start drill**, so it is probably still failing more often than it should. Not changed here.
-
-**Vercel effect:** Nothing goes live until this is pushed. When it is, it works immediately — no database or settings changes. The forwarding of the old `/training/drills` address is part of the site settings file and applies on the same deploy. AI cost per role play is unchanged.
+**Vercel effect:** Nothing goes live until this is pushed. No database or settings changes are needed. The old-address forwarding lives in `next.config.ts` and applies on the same deploy.

@@ -1,8 +1,8 @@
 "use server";
-import { KnownError, friendlyError } from "./errors";
+import { friendlyError } from "./errors";
 import { generateText, Output } from "ai";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { createId } from "@paralleldrive/cuid2";
 import { reasoner } from "./deepseek";
 import { scrubObject } from "./scrub";
