@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { generateDrillScenario } from "@/lib/ai/scenario-generator";
 import { gradeAndSaveDrill } from "@/lib/ai/response-grader";
-import type { DrillBucket } from "@/lib/schemas/drill";
-import type { ScenarioOutput } from "@/lib/schemas/drill";
+import {
+  DRILL_BUCKET_SITUATIONS,
+  DRILL_FOCUS_MAX_CHARS,
+  type DrillBucket,
+  type ScenarioOutput,
+} from "@/lib/schemas/drill";
 
 type GradeResult = {
   grade: number;
@@ -19,6 +23,10 @@ type Props = {
 };
 
 export default function DrillForm({ bucket, initialBest }: Props) {
+  // What the rep chose to practice: a ready-made situation, their own words,
+  // or neither ("Surprise me"). Typed text wins over a picked situation.
+  const [preset, setPreset] = useState<string | null>(null);
+  const [custom, setCustom] = useState("");
   const [scenario, setScenario] = useState<ScenarioOutput | null>(null);
   const [response, setResponse] = useState("");
   const [grade, setGrade] = useState<GradeResult | null>(null);
@@ -28,13 +36,15 @@ export default function DrillForm({ bucket, initialBest }: Props) {
     "idle",
   );
 
+  const focus = custom.trim() || preset || "";
+
   function loadScenario() {
     setError(null);
     setGrade(null);
     setResponse("");
     setPhase("scenario");
     startTransition(async () => {
-      const r = await generateDrillScenario(bucket);
+      const r = await generateDrillScenario(bucket, focus);
       if (!r.ok) {
         setError(r.error);
         setPhase("idle");
@@ -79,25 +89,82 @@ export default function DrillForm({ bucket, initialBest }: Props) {
     loadScenario();
   }
 
+  // Back to the picker, keeping the last choice selected.
+  function chooseAgain() {
+    setScenario(null);
+    setResponse("");
+    setGrade(null);
+    setError(null);
+    setPhase("idle");
+  }
+
   if (phase === "idle") {
     return (
-      <div className="panel p-6 text-center">
-        <div className="text-sm text-muted">
-          Ready to drill the <span className="font-semibold text-foreground">{bucket}</span>{" "}
-          bucket?
+      <div className="panel p-6">
+        <div className="font-semibold">What do you want to practice?</div>
+        <div className="text-sm text-muted mt-1">
+          Pick a situation and the AI plays a prospect who brings it up. You type your reply and
+          get a grade.
         </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <SituationChip
+            active={!custom.trim() && preset === null}
+            onClick={() => {
+              setPreset(null);
+              setCustom("");
+            }}
+          >
+            Surprise me
+          </SituationChip>
+          {DRILL_BUCKET_SITUATIONS[bucket].map((s) => (
+            <SituationChip
+              key={s}
+              active={!custom.trim() && preset === s}
+              onClick={() => {
+                setPreset(s);
+                setCustom("");
+              }}
+            >
+              {s}
+            </SituationChip>
+          ))}
+        </div>
+
+        <label
+          htmlFor="role-play-focus"
+          className="block mt-5 text-xs uppercase tracking-wider text-muted"
+        >
+          Or type your own situation
+        </label>
+        <input
+          id="role-play-focus"
+          type="text"
+          value={custom}
+          onChange={(e) => setCustom(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") loadScenario();
+          }}
+          maxLength={DRILL_FOCUS_MAX_CHARS}
+          placeholder="e.g. They say another trainer quoted half our price"
+          className="mt-2 w-full rounded-md border border-border-subtle bg-surface p-3 text-sm focus:outline-none focus:border-accent"
+        />
+
         {initialBest && (
-          <div className="text-xs text-muted mt-2">
+          <div className="text-xs text-muted mt-4">
             Your best in this bucket so far is <b className="text-foreground">{initialBest.grade}</b>.
             Beat it.
           </div>
         )}
+
+        {error && <div className="text-xs delta-down mt-3">{error}</div>}
+
         <button
           type="button"
           onClick={loadScenario}
           className="mt-4 px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold"
         >
-          Start drill
+          Start role play
         </button>
       </div>
     );
@@ -105,7 +172,16 @@ export default function DrillForm({ bucket, initialBest }: Props) {
 
   if (phase === "scenario") {
     return (
-      <div className="panel p-6 text-sm text-muted">Generating a scenario…</div>
+      <div className="panel p-6 text-sm text-muted">
+        {focus ? (
+          <>
+            Setting up a role play on{" "}
+            <span className="text-foreground">&ldquo;{focus}&rdquo;</span>…
+          </>
+        ) : (
+          "Setting up a role play…"
+        )}
+      </div>
     );
   }
 
@@ -113,6 +189,11 @@ export default function DrillForm({ bucket, initialBest }: Props) {
     <div className="space-y-4">
       {scenario && (
         <div className="panel p-5">
+          {focus && (
+            <div className="text-xs text-muted mb-3">
+              Practicing: <span className="text-foreground">{focus}</span>
+            </div>
+          )}
           <div className="text-xs uppercase tracking-wider text-muted">Prospect says</div>
           <div className="mt-2 text-base italic">&ldquo;{scenario.scenario}&rdquo;</div>
           <div className="mt-4 border-t border-border-subtle pt-3">
@@ -143,7 +224,7 @@ export default function DrillForm({ bucket, initialBest }: Props) {
 
         {error && <div className="text-xs delta-down mt-2">{error}</div>}
 
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2 flex-wrap">
           {phase === "writing" && (
             <button
               type="button"
@@ -169,7 +250,17 @@ export default function DrillForm({ bucket, initialBest }: Props) {
               disabled={pending}
               className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold"
             >
-              Drill another scenario
+              {focus ? "Another one like this" : "Try another one"}
+            </button>
+          )}
+          {(phase === "writing" || phase === "graded") && (
+            <button
+              type="button"
+              onClick={chooseAgain}
+              disabled={pending}
+              className="px-4 py-2 rounded-lg border border-border-subtle text-sm font-semibold hover:bg-surface-elevated"
+            >
+              Choose something else
             </button>
           )}
         </div>
@@ -194,12 +285,37 @@ export default function DrillForm({ bucket, initialBest }: Props) {
           )}
           {grade.previousBest === null && grade.didExceedBest && (
             <div className="text-xs text-muted mt-2">
-              First drill in this bucket — this is now your best.
+              First role play in this bucket — this is now your best.
             </div>
           )}
         </div>
       )}
     </div>
+  );
+}
+
+function SituationChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`text-sm px-3 py-1.5 rounded-full border transition ${
+        active
+          ? "bg-accent text-accent-foreground border-accent"
+          : "border-border-subtle text-muted hover:text-foreground"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 

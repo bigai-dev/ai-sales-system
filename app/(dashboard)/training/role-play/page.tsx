@@ -7,7 +7,7 @@ import {
 import { DRILL_BUCKET_LABEL } from "@/lib/schemas/drill";
 
 export const metadata = {
-  title: "Training drills",
+  title: "Role play",
 };
 
 const STREAK_FIRE = "\u{1F525}"; // 🔥
@@ -27,12 +27,12 @@ export default async function DrillsHub() {
             <Link href="/training" className="underline underline-offset-2">
               Training
             </Link>
-            <span className="mx-1">/</span> Drills
+            <span className="mx-1">/</span> Role play
           </div>
-          <h1 className="text-2xl font-semibold mt-1">Drills</h1>
-          <div className="text-sm text-muted mt-1">
-            Pick a bucket and drill an objection scenario. Your best response per bucket gets
-            remembered as the bar to beat.
+          <h1 className="text-2xl font-semibold mt-1">Role play</h1>
+          <div className="text-sm text-muted mt-1 max-w-2xl">
+            Choose what you want to practice. The AI plays the prospect, you type your reply,
+            and it grades you. Your best response per bucket gets remembered as the bar to beat.
           </div>
         </div>
         <div className="text-right">
@@ -41,8 +41,8 @@ export default async function DrillsHub() {
           </div>
           <div className="text-xs text-muted">
             {streak.drilledToday
-              ? "Today's drill done — back tomorrow."
-              : "Drill once today to keep the streak alive."}
+              ? "Today's role play done — back tomorrow."
+              : "Do one role play today to keep the streak alive."}
           </div>
         </div>
       </div>
@@ -52,10 +52,10 @@ export default async function DrillsHub() {
           <div className="flex items-end justify-between mb-3">
             <div>
               <div className="text-xs uppercase tracking-wider text-muted">
-                Recent drills
+                Recent role plays
               </div>
               <div className="text-sm text-muted mt-1">
-                Every drill counts toward your activity. Streak needs ≥40 chars
+                Every role play counts toward your activity. Streak needs ≥40 chars
                 and grade ≥30.
               </div>
             </div>
@@ -66,7 +66,7 @@ export default async function DrillsHub() {
               return (
                 <Link
                   key={d.id}
-                  href={`/training/drills/${d.bucket}`}
+                  href={`/training/role-play/${d.bucket}`}
                   className="block border-t first:border-t-0 border-border-subtle pt-3 first:pt-0 row-hover -mx-2 px-2 rounded-md"
                 >
                   <div className="flex items-baseline justify-between gap-3">
@@ -110,14 +110,14 @@ export default async function DrillsHub() {
         {summaries.map((s) => (
           <Link
             key={s.bucket}
-            href={`/training/drills/${s.bucket}`}
+            href={`/training/role-play/${s.bucket}`}
             className="panel p-5 hover:border-accent transition group"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="text-xs uppercase tracking-wider text-muted">{s.label}</div>
                 <div className="font-semibold mt-1 group-hover:text-accent transition">
-                  {s.drillsCount === 0 ? "Drill for the first time" : "Drill again"}
+                  {s.drillsCount === 0 ? "Try it for the first time" : "Practice again"}
                 </div>
               </div>
               {s.best && (
@@ -134,7 +134,7 @@ export default async function DrillsHub() {
               </div>
             )}
             <div className="mt-3 text-[11px] text-muted">
-              {s.drillsCount} drill{s.drillsCount === 1 ? "" : "s"} so far
+              {s.drillsCount} role play{s.drillsCount === 1 ? "" : "s"} so far
             </div>
           </Link>
         ))}

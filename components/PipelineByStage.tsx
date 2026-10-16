@@ -7,7 +7,7 @@ export default function PipelineByStage({ stages }: { stages: Stage[] }) {
         <div>
           <div className="font-semibold">Pipeline by stage</div>
           <div className="text-xs text-muted">
-            Opportunities × value · click a stage to drill in
+            Opportunities × value · click a stage to see details
           </div>
         </div>
         <div className="flex gap-2">

@@ -30,8 +30,8 @@ const NAV_TRAINING: NavItem[] = [
     icon: <PlaybookIcon />,
   },
   {
-    label: "Drills",
-    href: "/training/drills",
+    label: "Role play",
+    href: "/training/role-play",
     icon: <DrillsIcon />,
   },
   { label: "Trends", href: "/training/trends", icon: <TrainingIcon /> },
@@ -45,7 +45,7 @@ function isActive(pathname: string, href: string) {
   if (href === "/health-check") return onHealthCheck;
   if (onHealthCheck) return false;
   // /training is the section landing — it should highlight only on exact
-  // match so the deeper Trends/Drills/Playbook items can claim active state
+  // match so the deeper Trends/Role play/Playbook items can claim active state
   // when the user is on those routes.
   if (href === "/training") return pathname === "/training";
   return pathname === href || pathname.startsWith(href + "/");
@@ -338,7 +338,7 @@ function OverviewIcon() {
 }
 
 function DrillsIcon() {
-  // Target — drills are about hitting the target.
+  // Target — role plays are about hitting the target.
   return (
     <svg
       width="18"

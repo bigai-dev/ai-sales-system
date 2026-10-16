@@ -23,8 +23,8 @@ export default async function TrainingLanding() {
   const featured = metrics.series.slice(0, 3);
 
   const drillCtaHref = streak.weakestBucket
-    ? `/training/drills/${streak.weakestBucket}`
-    : "/training/drills";
+    ? `/training/role-play/${streak.weakestBucket}`
+    : "/training/role-play";
 
   return (
     <div className="space-y-6">
@@ -32,7 +32,7 @@ export default async function TrainingLanding() {
         <div>
           <h1 className="text-2xl font-semibold">Training</h1>
           <div className="text-sm text-muted mt-1">
-            Trends from your real calls + drills you can do in two minutes.
+            Trends from your real calls + role plays you can do in two minutes.
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -43,10 +43,10 @@ export default async function TrainingLanding() {
             See trends
           </Link>
           <Link
-            href={drillCtaHref}
+            href="/training/role-play"
             className="px-3 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold"
           >
-            Drill now
+            Start role play
           </Link>
         </div>
       </div>
@@ -58,10 +58,10 @@ export default async function TrainingLanding() {
           </div>
           <div className="text-sm text-muted mt-1">
             {streak.drilledToday
-              ? "Today's drill done — back tomorrow."
+              ? "Today's role play done — back tomorrow."
               : streak.weakestBucket
-                ? `Weakest bucket right now: ${DRILL_BUCKET_LABEL[streak.weakestBucket]}. Drill once today to keep the streak alive.`
-                : "Drill once today to keep the streak alive."}
+                ? `Weakest bucket right now: ${DRILL_BUCKET_LABEL[streak.weakestBucket]}. Do one role play today to keep the streak alive.`
+                : "Do one role play today to keep the streak alive."}
           </div>
         </div>
         <Link
@@ -69,8 +69,8 @@ export default async function TrainingLanding() {
           className="px-3 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold whitespace-nowrap"
         >
           {streak.weakestBucket
-            ? `Drill ${DRILL_BUCKET_LABEL[streak.weakestBucket]}`
-            : "Pick a bucket"}
+            ? `Practice ${DRILL_BUCKET_LABEL[streak.weakestBucket]}`
+            : "Choose what to practice"}
         </Link>
       </div>
 

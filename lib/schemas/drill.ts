@@ -21,9 +21,42 @@ export const DRILL_BUCKET_HELP: Record<DrillBucket, string> = {
     "Scheduling — duration, day of week, ERP migration prep, end-of-quarter pressure.",
 };
 
+// Ready-made situations the rep can pick before a role play starts, so they
+// practice a specific objection instead of whatever the AI happens to pick.
+// Each one is a slice of the bucket's help text above.
+export const DRILL_BUCKET_SITUATIONS: Record<DrillBucket, readonly string[]> = {
+  content: [
+    "Too basic for my developers",
+    "Not relevant to our industry",
+    "Worried about being tied to one AI tool",
+    "Will the team actually use it after the workshop?",
+  ],
+  budget: [
+    "RM 3,500 per person is too expensive",
+    "Asking for a discount",
+    "Needs the boss to approve first",
+    "PO process takes too long",
+  ],
+  venue: [
+    "Wants it at their own office",
+    "Wants it online instead of in person",
+    "Travel cost for outstation staff",
+    "Wants to record the session",
+  ],
+  time: [
+    "Two days is too long",
+    "Can't release the team on weekdays",
+    "Busy with an ERP migration",
+    "Quarter-end, asks to come back later",
+  ],
+};
+
+// Cap on a situation the rep types in themselves.
+export const DRILL_FOCUS_MAX_CHARS = 200;
+
 // Output of the scenario-generator. The same shape powers both standalone
-// drills (`/training/drills/[bucket]`) and one-shot dry-run moments — only
-// the input context differs.
+// role plays (`/training/role-play/[bucket]`) and one-shot dry-run moments —
+// only the input context differs.
 export const scenarioOutputSchema = z.object({
   scenario: z
     .string()

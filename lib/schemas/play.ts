@@ -30,7 +30,7 @@ export type PlayDetail = PlayListItem & {
 
 export const SOURCE_LABEL: Record<PlaySource, string> = {
   coaching_strength: "Strength noted in coaching",
-  drill_delivered: "Drill best-response delivered live",
+  drill_delivered: "Role-play best response delivered live",
   closed_won: "From a closed-won call",
 };
 

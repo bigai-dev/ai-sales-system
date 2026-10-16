@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { MetricSeries } from "@/lib/queries/training-metrics";
 
-// Maps weakest-metric labels to the rehearsal bucket the rep should drill.
-// In v1 these all point at the drill library landing; once Phase C ships the
-// /training/drills/[bucket] routes, swap this to a concrete bucket per metric.
+// Maps weakest-metric labels to the rehearsal bucket the rep should practice.
+// In v1 these all point at the role-play landing; once Phase C ships the
+// /training/role-play/[bucket] routes, swap this to a concrete bucket per metric.
 const SUGGESTED_DRILL: Record<string, { bucket: string; reason: string }> = {
   stageProgression: {
     bucket: "next-step-clarity",
@@ -11,15 +11,15 @@ const SUGGESTED_DRILL: Record<string, { bucket: string; reason: string }> = {
   },
   briefingAdherence: {
     bucket: "next-step-clarity",
-    reason: "Drill on landing the briefing's nextStageMove verbatim.",
+    reason: "Practice landing the briefing's nextStageMove verbatim.",
   },
   discoveryCoverage: {
     bucket: "discovery",
-    reason: "Drill the standard 3 discovery questions for varied prospects.",
+    reason: "Practice the standard 3 discovery questions for varied prospects.",
   },
   objectionPreparedness: {
     bucket: "objections",
-    reason: "Drill the four objection buckets — content, budget, venue, time.",
+    reason: "Practice the four objection buckets — content, budget, venue, time.",
   },
 };
 
@@ -55,8 +55,8 @@ export default function WeakestMetricCallout({
       <div className="text-sm text-muted mt-1">{weakest.shortHelp}</div>
       {suggestion && (
         <div className="mt-3 text-sm">
-          <span className="text-muted">Suggested drill: </span>
-          <Link href="/training/drills" className="underline underline-offset-2">
+          <span className="text-muted">Suggested role play: </span>
+          <Link href="/training/role-play" className="underline underline-offset-2">
             {suggestion.bucket}
           </Link>
           <span className="text-muted"> — {suggestion.reason}</span>

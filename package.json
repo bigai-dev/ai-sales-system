@@ -15,6 +15,8 @@
     "db:seed": "tsx db/seed.ts",
     "db:reset": "tsx db/reset.ts && npm run db:push && npm run db:seed",
     "coaching:clear": "tsx scripts/clear-coaching.ts",
+    "trends:refresh": "tsx scripts/seed-trend-calls.ts",
+    "trends:clear": "tsx scripts/seed-trend-calls.ts --remove",
     "ai:ping": "tsx scripts/ping-deepseek.ts"
   },
   "dependencies": {

@@ -78,7 +78,7 @@ export default async function PlaybookPage({
           </div>
           <ul className="text-sm text-muted mt-3 inline-block text-left list-disc pl-5 space-y-1">
             <li>You debrief a call where the AI flagged your handling as a strength.</li>
-            <li>A drill best-response shows up live in your call notes.</li>
+            <li>A role-play best response shows up live in your call notes.</li>
             <li>You close a deal — every objection raised gets extracted.</li>
           </ul>
         </div>

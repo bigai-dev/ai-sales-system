@@ -257,7 +257,7 @@ export const SCENES: Scene[] = [
       button: "Generate the proposal",
     },
     cohort:
-      "18 engineers, mostly Copilot-aware but no structured review habit. Two batches of nine keeps the migration staffed and each room small enough for hands-on drills.",
+      "18 engineers, mostly Copilot-aware but no structured review habit. Two batches of nine keeps the migration staffed and each room small enough for hands-on practice.",
     day1: {
       theme: "Day 1 — AI-assisted code review: the baseline",
       modules: [

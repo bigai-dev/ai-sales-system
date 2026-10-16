@@ -141,7 +141,7 @@ export async function extractPlays(input: ExtractInput): Promise<number> {
           bucket,
           scenario: matching
             ? matching.verbatim
-            : `${bucket} objection — drill best-response delivered live.`,
+            : `${bucket} objection — role-play best response delivered live.`,
           repResponseExcerpt: best.repResponse.slice(0, 280),
           outcome: debrief.outcome,
           source: "drill_delivered",

@@ -96,8 +96,8 @@ export async function gradeAndSaveDrill(args: {
   }
 
   revalidatePath("/training");
-  revalidatePath("/training/drills");
-  revalidatePath(`/training/drills/${bucket}`);
+  revalidatePath("/training/role-play");
+  revalidatePath(`/training/role-play/${bucket}`);
   revalidateTag("training-trends", "default");
 
   return {

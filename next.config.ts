@@ -7,6 +7,18 @@ const nextConfig: NextConfig = {
   // resolution at runtime.
   serverExternalPackages: ["@react-pdf/renderer"],
 
+  // "Drills" was renamed to "Role play" — keep old links and bookmarks working.
+  async redirects() {
+    return [
+      { source: "/training/drills", destination: "/training/role-play", permanent: true },
+      {
+        source: "/training/drills/:bucket",
+        destination: "/training/role-play/:bucket",
+        permanent: true,
+      },
+    ];
+  },
+
   experimental: {
     // Turbopack's on-disk dev cache can go stale after restarts and serve
     // random 404s (known Next 16 issue). In-memory only is fine for dev.

@@ -11,7 +11,7 @@ import {
 } from "@/lib/schemas/drill";
 
 export const metadata = {
-  title: "Drill",
+  title: "Role play",
 };
 
 function isBucket(s: string): s is DrillBucket {
@@ -42,8 +42,8 @@ export default async function DrillBucketPage({
             Training
           </Link>
           <span className="mx-1">/</span>
-          <Link href="/training/drills" className="underline underline-offset-2">
-            Drills
+          <Link href="/training/role-play" className="underline underline-offset-2">
+            Role play
           </Link>
           <span className="mx-1">/</span>
           {DRILL_BUCKET_LABEL[bucket]}
@@ -56,7 +56,7 @@ export default async function DrillBucketPage({
 
       {recent.length > 0 && (
         <div className="panel p-5">
-          <div className="text-xs uppercase tracking-wider text-muted mb-3">Recent drills</div>
+          <div className="text-xs uppercase tracking-wider text-muted mb-3">Recent role plays</div>
           <div className="space-y-3">
             {recent.map((d) => (
               <div key={d.id} className="border-t first:border-t-0 border-border-subtle pt-3 first:pt-0">

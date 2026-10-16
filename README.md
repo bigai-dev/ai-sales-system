@@ -11,7 +11,7 @@ SalesAI is a full-stack CRM purpose-built for a solo founder selling 2-day vibe-
 - **SPANCO pipeline** (`/pipeline`) — drag-and-drop kanban across the Suspect → Prospect → Analysis → Negotiation → Conclusion → Order stages.
 - **AI call workflow** (`/calls/[id]`) — pre-call briefing, auto-saved notes, post-call debrief, and one-click follow-up email drafting.
 - **AI readiness audit** (`/health-check`) — scores each client across 6 engineering dimensions (Tooling, Practices, Culture, Velocity, Adoption, Outcomes) with risks and recommended actions.
-- **AI sales training** (`/training`) — extract reusable plays into a playbook, practice drills against AI-generated scenarios, grade your responses, and track trends over time.
+- **AI sales training** (`/training`) — extract reusable plays into a playbook, role-play against AI-generated scenarios, grade your responses, and track trends over time.
 - **On-demand coaching** — a dashboard button grades the founder's recent closing calls and rewrites the coaching panel.
 - **PDF generation** — workshop proposal PDFs and 8% SST tax invoices with auto-incrementing `INV-{YYYY}-{NNNN}` numbering.
 - **Light/dark theme** — OKLCH design tokens with a flash-free (FOUC-free) dark mode.

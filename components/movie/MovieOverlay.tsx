@@ -657,7 +657,7 @@ function TransferView({ scene }: { scene: TransferScene }) {
         {/* The drill */}
         <Panel className="bg-white/6!">
           <div className="text-[11px] uppercase tracking-wider text-white/40 mb-2">
-            Turned into a 2-minute drill for your next hire
+            Turned into a 2-minute role play for your next hire
           </div>
           <div className="rounded-lg bg-black/30 border border-white/10 p-3.5">
             <div className="text-sm md:text-base font-medium">{scene.drill.prompt}</div>
