@@ -182,6 +182,7 @@ export async function extractPlays(input: ExtractInput): Promise<number> {
     })),
   );
 
+  revalidateTag("plays", "default");
   revalidatePath("/training/playbook");
   revalidateTag("training-trends", "default");
   // Briefing reads back unused for now, but suppress the lint about it.
