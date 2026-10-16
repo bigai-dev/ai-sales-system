@@ -1,3 +1,4 @@
+import { routes } from "@/lib/constants/routes";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { calls, healthChecks, proposals } from "@/db/schema";
@@ -123,7 +124,7 @@ export async function getClientTimeline(clientId: string): Promise<TimelineEvent
       occurredAt: a.generatedAt,
       title: `Readiness audit · ${a.overallScore} · ${a.status}`,
       subtitle: truncate(a.summary, 120),
-      href: `/clients/${clientId}/health-check`,
+      href: routes.readiness(clientId),
       tone,
     });
   }

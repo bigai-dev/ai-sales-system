@@ -1,3 +1,5 @@
+import { PAGE } from "@/lib/constants/copy";
+import { routes } from "@/lib/constants/routes";
 import Link from "next/link";
 import { desc } from "drizzle-orm";
 import { db } from "@/db/client";
@@ -30,6 +32,8 @@ function timeAgo(ms: number): string {
   if (d < 30) return `${Math.floor(d / 7)}w ago`;
   return `${Math.floor(d / 30)}mo ago`;
 }
+
+export const metadata = { title: PAGE.readinessIndex.title };
 
 export default async function ReadinessIndexPage() {
   const [clientRows, allChecks, stageMap] = await Promise.all([
@@ -92,7 +96,7 @@ export default async function ReadinessIndexPage() {
             return (
               <Link
                 key={c.id}
-                href={`/clients/${c.id}/health-check`}
+                href={routes.readiness(c.id)}
                 className="group row-hover rounded-lg px-4 py-3 flex items-center gap-4"
               >
                 <div className="w-9 h-9 rounded bg-surface-elevated text-accent flex items-center justify-center font-mono text-[12px] font-medium shrink-0">

@@ -1,5 +1,6 @@
+import { routes } from "@/lib/constants/routes";
 import Link from "next/link";
-import PipelineBoard from "@/app/(dashboard)/pipeline/PipelineBoard";
+import PipelineBoard from "@/app/(dashboard)/deals/PipelineBoard";
 import AddDealDialog, { type ClientOption } from "../AddDealDialog";
 import type { KanbanColumn } from "@/lib/types/ui";
 
@@ -28,7 +29,7 @@ export default function PipelineView({
         </div>
         <div className="flex gap-2">
           <Link
-            href={hotOnly ? "/pipeline" : "/pipeline?hot=1"}
+            href={routes.deals({ hot: !hotOnly })}
             scroll={false}
             className={hotOnly ? "btn" : "btn-ghost"}
             title={hotOnly ? "Click to show all deals" : "Show only deals marked hot"}

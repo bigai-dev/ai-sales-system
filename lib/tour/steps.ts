@@ -1,3 +1,4 @@
+import { routes } from "@/lib/constants/routes";
 import type { TourStep } from "./types";
 
 export const TOUR_STEPS: TourStep[] = [
@@ -7,7 +8,7 @@ export const TOUR_STEPS: TourStep[] = [
     body:
       "60-second tour of how a Malaysian SME founder runs the full sales cycle here — from cold lead to paid SST invoice. Hit Next to start.",
     placement: "center",
-    route: () => "/",
+    route: () => routes.dashboard(),
   },
   {
     id: "dashboard-kpis",
@@ -15,7 +16,7 @@ export const TOUR_STEPS: TourStep[] = [
     body:
       "Pipeline value, conversion, hot deals — the four numbers you check first thing each day before deciding where to spend energy.",
     placement: "bottom",
-    route: () => "/",
+    route: () => routes.dashboard(),
     anchor: '[data-tour="kpi-row"]',
   },
   {
@@ -24,7 +25,7 @@ export const TOUR_STEPS: TourStep[] = [
     body:
       "Auto-generated from stale proposals, deals stuck in stage, and your own quick-captures. Snooze what can wait — the queue rebuilds itself.",
     placement: "bottom",
-    route: () => "/today",
+    route: () => routes.today(),
     anchor: '[data-tour="today-list"]',
   },
   {
@@ -69,6 +70,6 @@ export const TOUR_STEPS: TourStep[] = [
     body:
       "Lead → discovery → call → debrief → proposal → close → invoice — without leaving the app. Click Demo mode anytime to replay.",
     placement: "center",
-    route: () => "/",
+    route: () => routes.dashboard(),
   },
 ];

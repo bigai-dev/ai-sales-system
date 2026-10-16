@@ -1,4 +1,5 @@
 "use server";
+import { routes } from "@/lib/constants/routes";
 import { generateText } from "ai";
 import { eq } from "drizzle-orm";
 import crypto from "node:crypto";
@@ -79,6 +80,6 @@ export async function generateDealInsight(dealId: string): Promise<Result<{ text
 
   await db.update(deals).set({ insight: text }).where(eq(deals.id, dealId));
   revalidateTag("pipeline", "default");
-  revalidatePath("/pipeline");
+  revalidatePath(routes.deals());
   return { ok: true, data: { text } };
 }

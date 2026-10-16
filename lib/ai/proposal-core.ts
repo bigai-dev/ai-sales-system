@@ -1,3 +1,4 @@
+import { routes } from "@/lib/constants/routes";
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { desc, eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
@@ -247,7 +248,7 @@ export async function generateProposalCore(
   revalidateTag("pipeline", "default");
   revalidateTag("dashboard-kpis", "default");
   revalidatePath(`/clients/${clientId}`);
-  revalidatePath("/today");
+  revalidatePath(routes.today());
 
   return {
     ok: true,

@@ -1,5 +1,4 @@
 import Sidebar from "@/components/Sidebar";
-import TopBar from "@/components/TopBar";
 import TourProvider from "@/components/tour/TourProvider";
 import TourOverlay from "@/components/tour/TourOverlay";
 import MovieProvider from "@/components/movie/MovieProvider";
@@ -15,8 +14,7 @@ export default async function DashboardLayout({
         <div className="min-h-screen">
           <Sidebar user={user} />
           <main className="md:pl-60">
-            <TopBar />
-            <div className="max-w-[1280px] mx-auto px-6 md:px-8 py-6">
+            <div className="mx-auto max-w-[1280px] px-6 pb-10 pt-16 md:px-8 md:pt-8">
               {children}
             </div>
           </main>

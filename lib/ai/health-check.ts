@@ -1,4 +1,5 @@
 "use server";
+import { routes } from "@/lib/constants/routes";
 import { generateText, Output } from "ai";
 import { eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
@@ -197,8 +198,8 @@ export async function generateHealthCheck(clientId: string): Promise<{
   }
 
   revalidateTag("health-checks", "default");
-  revalidatePath("/health-check");
-  revalidatePath(`/clients/${clientId}/health-check`);
+  revalidatePath(routes.readinessIndex());
+  revalidatePath(routes.readiness(clientId));
   revalidatePath(`/clients/${clientId}`);
   return { ok: true, data: { id: headerId } };
 }

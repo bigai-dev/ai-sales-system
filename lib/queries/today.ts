@@ -1,3 +1,4 @@
+import { routes } from "@/lib/constants/routes";
 import { and, eq, gt, gte, isNull, lte, ne, or } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
@@ -335,7 +336,7 @@ export async function getTodayInbox(): Promise<TodayInbox> {
       subtitle: `${d.clientName ?? "—"} · ${stageLabel(d.stage)}`,
       suggestion: STAGE[d.stage as StageCode]?.stuckSuggestion ?? null,
       clientName: d.clientName,
-      href: d.clientId ? `/clients/${d.clientId}` : "/pipeline",
+      href: d.clientId ? `/clients/${d.clientId}` : routes.deals(),
       eventAt: d.daysInStageStartsAt,
       sortKey: d.daysInStageStartsAt,
       valueCents: d.valueCents,
@@ -356,7 +357,7 @@ export async function getTodayInbox(): Promise<TodayInbox> {
       subtitle: d.clientName ?? "—",
       suggestion: "Confirm cohort headcount, venue, and run-of-day",
       clientName: d.clientName,
-      href: d.clientId ? `/clients/${d.clientId}` : "/pipeline",
+      href: d.clientId ? `/clients/${d.clientId}` : routes.deals(),
       eventAt: d.deliveryDate,
       sortKey: d.deliveryDate,
       valueCents: d.valueCents,
@@ -367,7 +368,7 @@ export async function getTodayInbox(): Promise<TodayInbox> {
       kind: "delivery",
       title: `${d.clientName ?? "Workshop"} delivery`,
       subtitle: formatMoney(d.valueCents),
-      href: d.clientId ? `/clients/${d.clientId}` : "/pipeline",
+      href: d.clientId ? `/clients/${d.clientId}` : routes.deals(),
       eventAt: d.deliveryDate,
     });
   }

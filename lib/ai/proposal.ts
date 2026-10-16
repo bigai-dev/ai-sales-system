@@ -1,4 +1,5 @@
 "use server";
+import { routes } from "@/lib/constants/routes";
 import { eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { db } from "@/db/client";
@@ -15,6 +16,6 @@ export async function deleteProposal(id: string): Promise<Result> {
   await db.delete(proposals).where(eq(proposals.id, id));
   revalidateTag("proposals", "default");
   revalidatePath(`/clients/${row.clientId}`);
-  revalidatePath("/today");
+  revalidatePath(routes.today());
   return { ok: true };
 }

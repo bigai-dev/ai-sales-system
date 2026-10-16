@@ -1,4 +1,5 @@
 "use server";
+import { routes } from "@/lib/constants/routes";
 import { eq } from "drizzle-orm";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { db } from "@/db/client";
@@ -65,7 +66,7 @@ export async function createClient(input: NewClientInput): Promise<Result<{ id: 
   revalidateTag("clients", "default");
   revalidateTag("dashboard-kpis", "default");
   revalidatePath("/clients");
-  revalidatePath("/today");
+  revalidatePath(routes.today());
   return { ok: true, data: { id: row.id } };
 }
 
@@ -151,6 +152,6 @@ export async function deleteClient(id: string): Promise<Result> {
   revalidateTag("pipeline", "default");
   revalidateTag("dashboard-kpis", "default");
   revalidatePath("/clients");
-  revalidatePath("/pipeline");
+  revalidatePath(routes.deals());
   return { ok: true };
 }

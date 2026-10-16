@@ -1,4 +1,5 @@
 "use server";
+import { routes } from "@/lib/constants/routes";
 import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -51,7 +52,7 @@ export async function createCallForClient(formData: FormData): Promise<void> {
 
   revalidatePath("/calls");
   revalidatePath(`/clients/${clientId}`);
-  revalidatePath("/today");
+  revalidatePath(routes.today());
   redirect(`/calls/${row.id}`);
 }
 
@@ -65,6 +66,6 @@ export async function deleteCall(callId: string): Promise<Result> {
   await db.delete(calls).where(eq(calls.id, callId));
   revalidatePath("/calls");
   if (row.clientId) revalidatePath(`/clients/${row.clientId}`);
-  revalidatePath("/today");
+  revalidatePath(routes.today());
   return { ok: true };
 }

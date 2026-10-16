@@ -1,4 +1,5 @@
 "use server";
+import { routes } from "@/lib/constants/routes";
 import { generateText, Output } from "ai";
 import { eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
@@ -237,7 +238,7 @@ export async function generateCallDebrief(callId: string): Promise<Result<CallDe
   revalidatePath(`/calls/${callId}`);
   revalidatePath("/calls");
   revalidatePath(`/clients/${context.clientId}`);
-  revalidatePath("/today");
+  revalidatePath(routes.today());
   revalidatePath("/training/playbook");
   // Tag-based instead of revalidatePath("/") — invalidates the dashboard's
   // cached KPIs without nuking unrelated route caches.

@@ -1,3 +1,4 @@
+import { routes } from "@/lib/constants/routes";
 import Link from "next/link";
 import { formatMoneyExact } from "@/db/lib/money";
 import { VENUE_LABEL } from "@/lib/schemas/proposal";
@@ -32,7 +33,7 @@ export default async function ProposalsList({
         <div className="text-sm text-muted">
           No proposals yet.{" "}
           <Link
-            href={`/clients/${clientId}/health-check`}
+            href={routes.readiness(clientId)}
             className="text-accent hover:underline"
           >
             Generate one from the readiness audit →

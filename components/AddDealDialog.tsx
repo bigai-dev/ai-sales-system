@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
-import { createDeal } from "@/app/(dashboard)/pipeline/actions";
+import { createDeal } from "@/app/(dashboard)/deals/actions";
 import { STAGE, STAGE_CODES, type SpancoCode } from "@/lib/constants/labels";
 import { DAY_MS } from "@/lib/format/time";
 

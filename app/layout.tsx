@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SALES.AI — Sales Intelligence",
-  description: "Sales intelligence dashboard for vibe-coding training workshops",
+  title: { template: "%s · SALES.AI", default: "SALES.AI" },
+  description: "Sales system for selling vibe-coding workshops",
 };
 
 export default function RootLayout({

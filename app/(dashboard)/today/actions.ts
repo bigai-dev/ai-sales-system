@@ -1,4 +1,5 @@
 "use server";
+import { routes } from "@/lib/constants/routes";
 
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
@@ -24,7 +25,7 @@ export async function snoozeTask(formData: FormData) {
     snoozedUntil: Date.now() + ms,
     reason: preset,
   });
-  revalidatePath("/today");
+  revalidatePath(routes.today());
 }
 
 export async function captureScratch(formData: FormData) {
@@ -36,12 +37,12 @@ export async function captureScratch(formData: FormData) {
     body,
     dueAt: dueAt ?? null,
   });
-  revalidatePath("/today");
+  revalidatePath(routes.today());
 }
 
 export async function completeScratch(formData: FormData) {
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return;
   await db.update(scratchNotes).set({ doneAt: Date.now() }).where(eq(scratchNotes.id, id));
-  revalidatePath("/today");
+  revalidatePath(routes.today());
 }

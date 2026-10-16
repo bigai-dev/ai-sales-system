@@ -1,3 +1,4 @@
+import { PAGE } from "@/lib/constants/copy";
 import Link from "next/link";
 import { TONE_CHIP } from "@/lib/constants/labels";
 import { getRecentCalls } from "@/lib/queries/calls";
@@ -23,6 +24,8 @@ function formatWhen(ms: number): string {
     day: "numeric",
   });
 }
+
+export const metadata = { title: PAGE.calls.title };
 
 export default async function CallsPage() {
   const calls = await getRecentCalls(50);

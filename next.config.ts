@@ -7,13 +7,25 @@ const nextConfig: NextConfig = {
   // resolution at runtime.
   serverExternalPackages: ["@react-pdf/renderer"],
 
-  // "Drills" was renamed to "Role play" — keep old links and bookmarks working.
+  // Pages have moved over time — keep old links and bookmarks working.
   async redirects() {
     return [
+      // "Drills" became "Role play".
       { source: "/training/drills", destination: "/training/role-play", permanent: true },
       {
         source: "/training/drills/:bucket",
         destination: "/training/role-play/:bucket",
+        permanent: true,
+      },
+      // Today is now the home page; the dashboard moved to /dashboard.
+      { source: "/today", destination: "/", permanent: true },
+      // The deals board is at /deals.
+      { source: "/pipeline", destination: "/deals", permanent: true },
+      // Readiness checks live under Clients.
+      { source: "/health-check", destination: "/clients/readiness", permanent: true },
+      {
+        source: "/clients/:id/health-check",
+        destination: "/clients/:id/readiness",
         permanent: true,
       },
     ];

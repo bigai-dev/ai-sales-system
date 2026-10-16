@@ -1,4 +1,5 @@
 "use server";
+import { routes } from "@/lib/constants/routes";
 import { generateText, Output } from "ai";
 import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -161,7 +162,7 @@ export async function generateCallBriefing(callId: string): Promise<Result<CallB
 
   await db.update(calls).set({ briefing }).where(eq(calls.id, callId));
   revalidatePath(`/calls/${callId}`);
-  revalidatePath("/today");
+  revalidatePath(routes.today());
   // Briefing presence affects the take_call task's suggestion ("no briefing —
   // generate one first") and the timeline on the client page.
   if (context.clientId) revalidatePath(`/clients/${context.clientId}`);

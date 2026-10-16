@@ -1,18 +1,18 @@
 // Every link, redirect() and revalidatePath() goes through here so a page can
-// move without hunting for hard-coded strings.
+// move without hunting for hard-coded strings. Old addresses are forwarded in
+// next.config.ts.
 
 export const routes = {
-  today: () => "/today",
-  dashboard: () => "/",
+  today: () => "/",
+  dashboard: () => "/dashboard",
   clients: () => "/clients",
   client: (id: string) => `/clients/${id}`,
-  readiness: (id: string) => `/clients/${id}/health-check`,
-  readinessIndex: () => "/health-check",
-  deals: (opts?: { hot?: boolean }) => (opts?.hot ? "/pipeline?hot=1" : "/pipeline"),
+  readiness: (id: string) => `/clients/${id}/readiness`,
+  readinessIndex: () => "/clients/readiness",
+  deals: (opts?: { hot?: boolean }) => (opts?.hot ? "/deals?hot=1" : "/deals"),
   calls: () => "/calls",
   call: (id: string) => `/calls/${id}`,
   training: () => "/training",
-  trends: () => "/training/trends",
   rolePlay: (topic?: string) =>
     topic ? `/training/role-play/${topic}` : "/training/role-play",
   playbook: (id?: string) => (id ? `/training/playbook/${id}` : "/training/playbook"),

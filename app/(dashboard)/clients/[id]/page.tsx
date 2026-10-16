@@ -1,3 +1,4 @@
+import { routes } from "@/lib/constants/routes";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq, desc } from "drizzle-orm";
@@ -63,7 +64,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<Par
         </div>
         <div className="flex gap-2">
           <PlanCallButton clientId={id} />
-          <Link href={`/clients/${id}/health-check`} className="btn">
+          <Link href={routes.readiness(id)} className="btn">
             Generate readiness audit
           </Link>
         </div>

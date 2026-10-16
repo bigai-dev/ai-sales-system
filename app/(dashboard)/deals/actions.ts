@@ -1,4 +1,5 @@
 "use server";
+import { routes } from "@/lib/constants/routes";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { db } from "@/db/client";
@@ -21,8 +22,8 @@ function revalidateDealRoutes(): void {
   // data directly (today queue, clients list, pipeline page).
   revalidateTag("pipeline", "default");
   revalidateTag("dashboard-kpis", "default");
-  revalidatePath("/pipeline");
-  revalidatePath("/today");
+  revalidatePath(routes.deals());
+  revalidatePath(routes.today());
   revalidatePath("/clients", "layout");
 }
 

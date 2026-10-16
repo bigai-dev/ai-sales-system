@@ -1,9 +1,12 @@
+import { PAGE } from "@/lib/constants/copy";
 import PipelineView from "@/components/views/PipelineView";
 import { getPipelineBoard } from "@/lib/queries/pipeline";
 import { db } from "@/db/client";
 import { clients as clientsTable } from "@/db/schema";
 
 type SearchParams = { hot?: string };
+
+export const metadata = { title: PAGE.deals.title };
 
 export default async function PipelinePage({
   searchParams,
