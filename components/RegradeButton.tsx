@@ -2,32 +2,39 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { regradeCalls } from "@/app/actions/regrade";
+import { Button, ErrorText } from "@/components/ui";
+import { BTN, BUSY } from "@/lib/constants/copy";
 
 export default function RegradeButton() {
   const [pending, start] = useTransition();
-  const [last, setLast] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   return (
     <div className="flex items-center gap-2">
-      {last && <span className="text-xs text-muted">{last}</span>}
-      <button
-        className="btn"
-        disabled={pending}
+      {note && <span className="text-xs text-muted">{note}</span>}
+      <ErrorText className="text-xs">{error}</ErrorText>
+      <Button
+        busy={pending}
+        busyLabel={BUSY.running}
         onClick={() =>
           start(async () => {
+            setError(null);
+            setNote(null);
             const r = await regradeCalls();
             if (r.ok) {
-              setLast(`Graded ${r.data?.graded ?? 0} calls`);
+              const n = r.data?.graded ?? 0;
+              setNote(n === 0 ? "No reviewed calls yet" : `Coached from ${n} call${n === 1 ? "" : "s"}`);
               router.refresh();
             } else {
-              setLast(`Error: ${r.error.slice(0, 60)}`);
+              setError(r.error);
             }
           })
         }
       >
-        {pending ? "Regrading…" : "Generate coaching plan"}
-      </button>
+        {BTN.refresh}
+      </Button>
     </div>
   );
 }

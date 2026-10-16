@@ -1,51 +1,32 @@
-import { PAGE } from "@/lib/constants/copy";
 import Link from "next/link";
-import {
-  getTodayInbox,
-  type TaskItem,
-  type TaskKind,
-  type TaskUrgency,
-} from "@/lib/queries/today";
+import { Calendar, Check, Flame } from "lucide-react";
+import { getTodayInbox, type TaskItem, type TaskKind, type TaskUrgency } from "@/lib/queries/today";
 import { relativeTime, calendarTime } from "@/lib/format/time";
 import { formatMoney } from "@/db/lib/money";
 import SnoozeButton from "@/components/today/SnoozeButton";
 import QuickCapture from "@/components/today/QuickCapture";
 import { completeScratch } from "@/app/(dashboard)/today/actions";
+import { PAGE } from "@/lib/constants/copy";
+import { routes } from "@/lib/constants/routes";
+import type { Tone } from "@/lib/constants/labels";
+import { EmptyState, PageHeader, Panel, SectionLabel, StatusChip } from "@/components/ui";
 
-const KIND_LABEL: Record<TaskKind, string> = {
-  prep_briefing: "Prep",
-  take_call: "Call",
-  debrief_call: "Debrief",
-  follow_up: "Follow up",
-  chase_proposal: "Chase",
-  move_deal: "Stuck",
-  confirm_delivery: "Delivery",
-  scratch: "Note",
+const KIND: Record<TaskKind, { label: string; tone: Tone }> = {
+  prep_briefing: { label: "Plan call", tone: "info" },
+  take_call: { label: "Call", tone: "warn" },
+  debrief_call: { label: "Review call", tone: "warn" },
+  follow_up: { label: "Follow up", tone: "neutral" },
+  chase_proposal: { label: "Chase proposal", tone: "neutral" },
+  move_deal: { label: "Deal stalled", tone: "bad" },
+  confirm_delivery: { label: "Workshop", tone: "info" },
+  scratch: { label: "Note", tone: "neutral" },
 };
 
-const KIND_CHIP: Record<TaskKind, string> = {
-  prep_briefing: "chip-info",
-  take_call: "chip-warn",
-  debrief_call: "chip-warn",
-  follow_up: "chip",
-  chase_proposal: "chip",
-  move_deal: "chip-bad",
-  confirm_delivery: "chip-info",
-  scratch: "chip",
-};
-
-const URGENCY_LABEL: Record<TaskUrgency, string> = {
-  overdue: "Overdue",
-  today: "Today",
-  this_week: "This week",
-  soon: "Later",
-};
-
-const URGENCY_CAPTION: Record<TaskUrgency, string> = {
-  overdue: "Past their window — handle first",
-  today: "Need attention in the next 24 hours",
-  this_week: "Pencil into this week's schedule",
-  soon: "On the radar but not urgent",
+const URGENCY: Record<TaskUrgency, { label: string; hint: string }> = {
+  overdue: { label: "Overdue", hint: "Past their time; handle these first." },
+  today: { label: "Today", hint: "Need attention in the next 24 hours." },
+  this_week: { label: "This week", hint: "Fit these in this week." },
+  soon: { label: "Later", hint: "On the radar, not urgent." },
 };
 
 export const metadata = { title: PAGE.today.title };
@@ -53,119 +34,82 @@ export const metadata = { title: PAGE.today.title };
 export default async function TodayPage() {
   const { tasks, calendar } = await getTodayInbox();
 
-  const buckets: Record<TaskUrgency, TaskItem[]> = {
-    overdue: [],
-    today: [],
-    this_week: [],
-    soon: [],
-  };
-  for (const t of tasks) buckets[t.urgency].push(t);
-
-  const totalActive = buckets.overdue.length + buckets.today.length;
-  const orderedUrgencies: TaskUrgency[] = ["overdue", "today", "this_week", "soon"];
+  const groups: Record<TaskUrgency, TaskItem[]> = { overdue: [], today: [], this_week: [], soon: [] };
+  for (const t of tasks) groups[t.urgency].push(t);
+  const needNow = groups.overdue.length + groups.today.length;
+  const order: TaskUrgency[] = ["overdue", "today", "this_week", "soon"];
 
   return (
     <section className="space-y-6">
-      <div>
-        <div className="text-xs text-muted">Today</div>
-        <h1 className="text-2xl font-bold mt-1">
-          {tasks.length === 0 ? (
-            <>You're clear</>
-          ) : (
-            <>
-              <span className="text-accent">{totalActive}</span> need you now
-              <span className="text-muted">
-                {" "}
-                · {tasks.length} total
-              </span>
-            </>
-          )}
-        </h1>
-        <div className="text-xs text-muted mt-1">
-          Pulled from active calls, stale proposals, deals stuck in stage, and
-          your quick-captures. Snooze items you'll handle later.
-        </div>
-      </div>
+      <PageHeader
+        title={PAGE.today.title}
+        description={
+          tasks.length === 0
+            ? "You're clear."
+            : `${needNow} need you now · ${tasks.length} in total. Snooze what can wait.`
+        }
+      />
 
       <QuickCapture />
 
       {calendar.length > 0 && (
-        <div>
-          <div className="flex items-baseline justify-between mb-2">
-            <div className="text-xs font-semibold text-muted">
-              Week ahead{" "}
-              <span className="text-quiet font-normal">· {calendar.length}</span>
-            </div>
-            <div className="text-xs text-muted">
-              Scheduled calls and workshop deliveries
-            </div>
-          </div>
-          <div className="panel p-1.5">
-            <div className="space-y-0.5">
+        <section>
+          <SectionLabel hint="Planned calls and workshop dates in the next 7 days." className="mb-2">
+            Week ahead
+          </SectionLabel>
+          <Panel padding="none">
+            <ul className="divide-y divide-border-subtle">
               {calendar.map((e) => (
-                <Link
-                  key={e.id}
-                  href={e.href}
-                  className="group row-hover rounded-lg px-4 py-2.5 flex items-center gap-3"
-                >
-                  <span className="text-xs text-muted shrink-0 w-20 tabular-nums">
-                    {calendarTime(e.eventAt)}
-                  </span>
-                  <span
-                    className={`chip ${
-                      e.kind === "delivery" ? "chip-good" : "chip-info"
-                    } shrink-0 text-xs`}
-                  >
-                    {e.kind === "delivery" ? "Workshop" : "Call"}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-foreground truncate">
-                      {e.title}
+                <li key={e.id}>
+                  <Link href={e.href} className="row-hover flex items-center gap-3 px-4 py-2.5">
+                    <span className="w-20 shrink-0 text-xs tabular-nums text-muted">
+                      {calendarTime(e.eventAt)}
+                    </span>
+                    <Calendar size={14} className="shrink-0 text-muted" aria-hidden />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-foreground">
+                        {e.kind === "delivery" ? "Workshop · " : ""}
+                        {e.title}
+                      </div>
+                      <div className="truncate text-xs text-muted">{e.subtitle}</div>
                     </div>
-                    <div className="text-xs text-muted truncate">
-                      {e.subtitle}
-                    </div>
-                  </div>
-                </Link>
+                  </Link>
+                </li>
               ))}
-            </div>
-          </div>
-        </div>
+            </ul>
+          </Panel>
+        </section>
       )}
 
       {tasks.length === 0 && (
-        <div className="panel p-8 text-center">
-          <div className="text-sm text-foreground">
-            Nothing demands your attention right now.
-          </div>
-          <div className="text-xs text-muted mt-1">
-            Use quick-capture above to drop something for later, or check the
-            pipeline to scan deal momentum.
-          </div>
-        </div>
+        <EmptyState
+          title="Nothing needs you right now."
+          hint={
+            <>
+              Add a note above for later, or open <Link href={routes.deals()} className="underline">Deals</Link> to
+              see what's moving.
+            </>
+          }
+        />
       )}
 
       <div data-tour="today-list" className="space-y-6">
-        {orderedUrgencies.map((u) => {
-          const items = buckets[u];
+        {order.map((u) => {
+          const items = groups[u];
           if (items.length === 0) return null;
           return (
-            <div key={u}>
-              <div className="flex items-baseline justify-between mb-2">
-                <div className="text-xs font-semibold text-muted">
-                  {URGENCY_LABEL[u]}{" "}
-                  <span className="text-quiet font-normal">· {items.length}</span>
-                </div>
-                <div className="text-xs text-muted">{URGENCY_CAPTION[u]}</div>
-              </div>
-              <div className="panel p-1.5">
-                <div className="space-y-0.5">
+            <section key={u}>
+              <SectionLabel hint={URGENCY[u].hint} className="mb-2">
+                {URGENCY[u].label} · {items.length}
+              </SectionLabel>
+              <Panel padding="none">
+                <ul className="divide-y divide-border-subtle">
                   {items.map((t) => (
                     <TaskRow key={t.id} task={t} />
                   ))}
-                </div>
-              </div>
-            </div>
+                </ul>
+              </Panel>
+            </section>
           );
         })}
       </div>
@@ -174,55 +118,34 @@ export default async function TodayPage() {
 }
 
 function TaskRow({ task }: { task: TaskItem }) {
+  const kind = KIND[task.kind];
   return (
-    <div className="group row-hover rounded-lg px-3 py-2.5 flex items-start gap-3">
-      <span
-        className={`chip ${KIND_CHIP[task.kind]} shrink-0 text-xs mt-0.5`}
-      >
-        {KIND_LABEL[task.kind]}
-      </span>
-      <Link href={task.href} className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <div className="text-sm font-medium text-foreground truncate">
-            {task.title}
-          </div>
-        </div>
-        <div className="text-xs text-muted truncate">{task.subtitle}</div>
+    <li className="row-hover flex flex-wrap items-start gap-3 px-4 py-3">
+      <StatusChip tone={kind.tone} className="mt-0.5 shrink-0">
+        {kind.label}
+      </StatusChip>
+      <Link href={task.href} className="min-w-0 flex-1">
+        <div className="truncate text-sm font-medium text-foreground">{task.title}</div>
+        <div className="truncate text-xs text-muted">{task.subtitle}</div>
         {task.suggestion && (
-          <div className="text-xs text-muted/70 italic truncate mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            → {task.suggestion}
-          </div>
+          <div className="mt-0.5 truncate text-xs italic text-muted">{task.suggestion}</div>
         )}
       </Link>
-      <div className="flex flex-col items-end gap-1 shrink-0 text-right">
-        <div className="flex items-center gap-1.5">
-          {task.hot && (
-            <span
-              className="text-xs leading-none"
-              title="Hot deal"
-              aria-label="Hot deal"
-            >
-              🔥
-            </span>
-          )}
+      <div className="flex shrink-0 flex-col items-end gap-1.5 text-right">
+        <div className="flex items-center gap-1.5 text-xs">
+          {task.hot && <Flame size={13} className="text-accent" aria-label="Hot deal" />}
           {task.valueCents !== null && (
-            <span className="text-xs font-medium text-foreground tabular-nums">
-              {formatMoney(task.valueCents)}
-            </span>
+            <span className="font-medium tabular-nums text-foreground">{formatMoney(task.valueCents)}</span>
           )}
-          <span className="text-xs text-muted tabular-nums">
-            · {relativeTime(task.eventAt)}
-          </span>
+          <span className="tabular-nums text-muted">{relativeTime(task.eventAt)}</span>
         </div>
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          {task.kind === "scratch" ? (
-            <CompleteScratchButton id={task.id.replace(/^scratch-/, "")} />
-          ) : (
-            <SnoozeButton taskId={task.id} />
-          )}
-        </div>
+        {task.kind === "scratch" ? (
+          <CompleteScratchButton id={task.id.replace(/^scratch-/, "")} />
+        ) : (
+          <SnoozeButton taskId={task.id} />
+        )}
       </div>
-    </div>
+    </li>
   );
 }
 
@@ -230,33 +153,10 @@ function CompleteScratchButton({ id }: { id: string }) {
   return (
     <form action={completeScratch}>
       <input type="hidden" name="id" value={id} />
-      <button
-        type="submit"
-        className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md border border-border-subtle bg-surface text-muted hover:text-success hover:border-success/40 transition shrink-0"
-        aria-label="Mark done"
-        title="Mark done"
-      >
-        <CheckIcon />
+      <button type="submit" className="btn-ghost btn-sm" aria-label="Mark done">
+        <Check size={13} aria-hidden />
         Done
       </button>
     </form>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
   );
 }

@@ -1,21 +1,20 @@
 "use server";
 import { KnownError, friendlyError } from "./errors";
 import { generateText, Output } from "ai";
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { createId } from "@paralleldrive/cuid2";
 import { reasoner } from "./deepseek";
 import { scrubObject } from "./scrub";
 import { db } from "@/db/client";
 import {
-  callTurns,
   calls,
   coachingOpportunities,
   coachingScores,
   coachingWins,
 } from "@/db/schema";
 import { graderSchema, type GraderOutput } from "@/lib/schemas/grade-calls";
-import { STAGE_NAME, type SpancoCode } from "@/lib/constants/labels";
+import { stageLabel } from "@/lib/constants/labels";
 
 const SYSTEM = `You are a sales-coaching reviewer. Given the transcripts of
 recent CLOSING calls, return:
@@ -35,52 +34,26 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
   ok: true;
   data: { graded: number };
 } | { ok: false; error: string }> {
-  // Pull recent ENDED calls preferring closing-stage hints.
-  const recent = await db
+  // Recent calls that have been reviewed (notes + AI review).
+  const targetCalls = await db
     .select()
     .from(calls)
-    .where(and(eq(calls.status, "ended"), isNotNull(calls.summary)))
-    .orderBy(desc(calls.startedAt))
+    .where(and(eq(calls.status, "completed"), isNotNull(calls.debrief)))
+    .orderBy(desc(calls.analyzedAt))
     .limit(limit);
 
-  // Fallback to all ended calls if none have summaries
-  const targetCalls =
-    recent.length > 0
-      ? recent
-      : await db
-          .select()
-          .from(calls)
-          .where(eq(calls.status, "ended"))
-          .orderBy(desc(calls.startedAt))
-          .limit(limit);
-
-  // Single batched query for all turns across the target calls — replaces
-  // an N+1 (was firing `limit` separate SELECTs in parallel). Group in JS.
-  const callIds = targetCalls.map((c) => c.id);
-  const allTurns = callIds.length
-    ? await db.select().from(callTurns).where(inArray(callTurns.callId, callIds))
-    : [];
-  const turnsByCall = new Map<string, typeof allTurns>();
-  for (const t of allTurns) {
-    const arr = turnsByCall.get(t.callId);
-    if (arr) arr.push(t);
-    else turnsByCall.set(t.callId, [t]);
-  }
-
-  const callsWithTurns = targetCalls.map((c) => {
-    const turns = turnsByCall.get(c.id) ?? [];
-    return scrubObject({
+  const callsWithTurns = targetCalls.map((c) =>
+    scrubObject({
       title: c.title,
-      stage: STAGE_NAME[(c.stageHint ?? "C") as SpancoCode] ?? c.stageHint,
-      talkPct: c.talkPct,
-      questionsAsked: c.questionsAsked,
-      sentiment: c.sentiment,
-      summary: c.summary,
-      turns: turns
-        .sort((a, b) => a.idx - b.idx)
-        .map((t) => `${t.who}: ${t.text}`),
-    });
-  });
+      stage: stageLabel(c.debrief?.suggestedStage ?? c.stageHint),
+      summary: c.debrief?.summary ?? c.summary,
+      outcome: c.debrief?.outcome,
+      objections: c.debrief?.objectionsRaised?.map((o) => o.verbatim) ?? [],
+      commitments: c.debrief?.commitments?.map((k) => `${k.who}: ${k.what}`) ?? [],
+      coachingNote: c.debrief?.coachingNote,
+      notes: c.notes,
+    }),
+  );
 
   let output: GraderOutput;
   try {

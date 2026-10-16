@@ -1,4 +1,6 @@
 "use client";
+import { Flame } from "lucide-react";
+import { routes } from "@/lib/constants/routes";
 import { useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -41,7 +43,7 @@ function applyMove(state: KanbanColumn[], move: Move): KanbanColumn[] {
   });
 }
 
-export default function PipelineBoard({ initialBoard }: { initialBoard: KanbanColumn[] }) {
+export default function DealsBoard({ initialBoard }: { initialBoard: KanbanColumn[] }) {
   const [board, applyOptimistic] = useOptimistic(initialBoard, applyMove);
   const [, startTransition] = useTransition();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -65,7 +67,7 @@ export default function PipelineBoard({ initialBoard }: { initialBoard: KanbanCo
   }
 
   return (
-    <DndContext id="pipeline-board" sensors={sensors} onDragEnd={onDragEnd}>
+    <DndContext id="deals-board" sensors={sensors} onDragEnd={onDragEnd}>
       <div className="grid grid-flow-col auto-cols-[minmax(260px,1fr)] gap-4 overflow-x-auto pb-4">
         {board.map((col) => (
           <Column key={col.code} col={col} />
@@ -120,7 +122,7 @@ function Card({ deal }: { deal: Deal }) {
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     if (!deal.clientId) return;
     if ((e.target as HTMLElement).closest("button")) return;
-    router.push(`/clients/${deal.clientId}`);
+    router.push(routes.client(deal.clientId));
   }
   return (
     <div
@@ -138,7 +140,7 @@ function Card({ deal }: { deal: Deal }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1">
             <div className="font-semibold text-sm truncate">{deal.company}</div>
-            {deal.hot && <span className="text-orange-400 text-xs">🔥</span>}
+            {deal.hot && <Flame size={13} className="shrink-0 text-accent" aria-label="Hot deal" />}
           </div>
           <div className="text-xs text-muted truncate">
             {deal.contact} · {deal.role}
@@ -155,7 +157,7 @@ function Card({ deal }: { deal: Deal }) {
         <div className="text-xs text-muted">{deal.daysInStage}d in stage</div>
       </div>
       <div className="text-xs text-muted mt-2 flex items-center gap-1">
-        📞 <span>{deal.lastActivity}</span>
+        <span>{deal.lastActivity}</span>
       </div>
       <div className="mt-2 rounded-lg border border-border-subtle bg-background p-2">
         <div className="flex items-center justify-between mb-1">
@@ -165,7 +167,7 @@ function Card({ deal }: { deal: Deal }) {
         {deal.insight ? (
           <div className="text-xs text-foreground leading-snug">{deal.insight}</div>
         ) : (
-          <div className="text-xs text-muted italic">No insight yet — generate one.</div>
+          <div className="text-xs text-muted italic">No insight yet.</div>
         )}
       </div>
       <div className="flex flex-wrap gap-1 mt-2">
@@ -176,7 +178,7 @@ function Card({ deal }: { deal: Deal }) {
         ))}
       </div>
       <div className="text-xs text-muted mt-2 flex items-center gap-1">
-        ⏰ <span>{deal.next}</span>
+        <span>Next: {deal.next}</span>
       </div>
     </div>
   );

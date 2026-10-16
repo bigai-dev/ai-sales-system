@@ -8,18 +8,18 @@ export function buildCoachingMarkdown(data: CoachingPanelData): string {
     day: "numeric",
   });
 
-  lines.push(`# Closing call coaching scorecard`);
-  lines.push(`_Generated ${date} · source: ${data.sourcedFrom === "db" ? "AI-graded calls" : "baseline targets"}_`);
+  lines.push(`# Coaching from your calls`);
+  lines.push(`_${date} · from ${data.sourcedFrom === "db" ? "reviewed calls" : "starting targets"}_`);
   lines.push(``);
 
-  lines.push(`## Score breakdown`);
+  lines.push(`## Scores`);
   for (const s of data.scores) {
     lines.push(`- **${s.label}** — ${s.score}/100`);
   }
   lines.push(``);
 
   if (data.opportunities.length > 0) {
-    lines.push(`## Top improvement opportunities`);
+    lines.push(`## Work on next`);
     for (const o of data.opportunities) {
       lines.push(`### ${o.title} _(${o.impact.text})_`);
       lines.push(o.detail);

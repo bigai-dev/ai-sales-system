@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Clock } from "lucide-react";
 import { snoozeTask } from "@/app/(dashboard)/today/actions";
 
 const PRESETS: { value: string; label: string }[] = [
@@ -27,35 +28,30 @@ export default function SnoozeButton({ taskId }: { taskId: string }) {
   return (
     <div className="relative" onClick={(e) => e.preventDefault()}>
       <button
+        type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition shrink-0 ${
-          open
-            ? "border-border bg-surface-elevated text-foreground"
-            : "border-border-subtle bg-surface text-muted hover:text-foreground hover:border-border"
-        }`}
-        aria-label="Snooze"
-        title="Snooze this task"
+        className="btn-ghost btn-sm"
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
-        <ClockIcon />
+        <Clock size={13} aria-hidden />
         Snooze
       </button>
       {open && (
         <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
           <div
-            className="fixed inset-0 z-40"
-            onClick={() => setOpen(false)}
-            aria-hidden
-          />
-          <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-lg border border-border bg-surface-elevated shadow-xl p-1">
-            <div className="text-xs text-muted px-2 py-1.5">
-              Snooze until…
-            </div>
+            role="menu"
+            className="absolute right-0 top-full z-50 mt-1 w-44 rounded-lg border border-border bg-surface-elevated p-1 shadow-xl"
+          >
+            <div className="px-2 py-1.5 text-xs text-muted">Snooze until…</div>
             {PRESETS.map((p) => (
               <button
                 key={p.value}
+                role="menuitem"
                 onClick={() => pick(p.value)}
                 disabled={pending}
-                className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-surface text-foreground disabled:opacity-50 transition-colors"
+                className="w-full rounded px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-surface disabled:opacity-50"
               >
                 {p.label}
               </button>
@@ -64,24 +60,5 @@ export default function SnoozeButton({ taskId }: { taskId: string }) {
         </>
       )}
     </div>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <circle cx="12" cy="12" r="9" />
-      <polyline points="12 7 12 12 15.5 14" />
-    </svg>
   );
 }

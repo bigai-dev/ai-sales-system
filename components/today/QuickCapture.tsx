@@ -1,8 +1,12 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { Plus } from "lucide-react";
 import { captureScratch } from "@/app/(dashboard)/today/actions";
+import { Button, Input } from "@/components/ui";
+import { BUSY } from "@/lib/constants/copy";
 
+/** One-line box to drop a note onto the Today list. */
 export default function QuickCapture() {
   const [body, setBody] = useState("");
   const [dueAt, setDueAt] = useState("");
@@ -23,10 +27,8 @@ export default function QuickCapture() {
   }
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface px-3 py-2.5 flex items-center gap-2">
-      <span className="text-muted text-sm shrink-0" aria-hidden>
-        +
-      </span>
+    <div className="panel flex flex-wrap items-center gap-2 px-3 py-2.5">
+      <Plus size={16} className="shrink-0 text-muted" aria-hidden />
       <input
         ref={inputRef}
         value={body}
@@ -37,23 +39,21 @@ export default function QuickCapture() {
             submit();
           }
         }}
-        placeholder="Quick capture — anything you don't want to forget"
-        className="flex-1 bg-transparent border-0 text-sm text-foreground placeholder:text-muted focus:outline-none"
+        placeholder="Add a note — anything you don't want to forget"
+        aria-label="Add a note"
+        className="min-w-[12rem] flex-1 border-0 bg-transparent text-sm text-foreground placeholder:text-quiet focus:outline-none"
       />
-      <input
+      <Input
         type="datetime-local"
         value={dueAt}
         onChange={(e) => setDueAt(e.target.value)}
-        className="bg-surface-elevated border border-border-subtle rounded-md px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent/40"
-        title="Due date (optional)"
+        className="w-auto py-1 text-xs"
+        title="When (optional)"
+        aria-label="When (optional)"
       />
-      <button
-        onClick={submit}
-        disabled={pending || !body.trim()}
-        className="btn-ghost shrink-0 disabled:opacity-50"
-      >
+      <Button variant="ghost" size="sm" onClick={submit} disabled={!body.trim()} busy={pending} busyLabel={BUSY.adding}>
         Add
-      </button>
+      </Button>
     </div>
   );
 }

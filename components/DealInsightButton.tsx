@@ -1,6 +1,7 @@
 "use client";
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
+import { RefreshCw, Sparkles } from "lucide-react";
 import { generateDealInsight } from "@/lib/ai/deal-insight";
 
 export default function DealInsightButton({
@@ -29,9 +30,10 @@ export default function DealInsightButton({
       }}
       disabled={pending}
       title={error ?? undefined}
-      className="text-xs text-muted hover:text-accent transition disabled:opacity-50"
+      className="inline-flex items-center gap-1 text-xs text-muted transition hover:text-accent disabled:opacity-50"
     >
-      {pending ? "Thinking…" : hasInsight ? "↻ Regenerate" : "✨ Generate AI insight"}
+      {hasInsight ? <RefreshCw size={12} aria-hidden /> : <Sparkles size={12} aria-hidden />}
+      {pending ? "Thinking…" : hasInsight ? "Refresh" : "Ask AI"}
     </button>
   );
 }

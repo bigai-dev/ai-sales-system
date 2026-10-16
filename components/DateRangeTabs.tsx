@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Range } from "@/lib/quarter";
+import { routes } from "@/lib/constants/routes";
 
 const RANGES: { value: Range; label: string }[] = [
   { value: "week", label: "This week" },
@@ -9,13 +10,15 @@ const RANGES: { value: Range; label: string }[] = [
 
 export default function DateRangeTabs({ active }: { active: Range }) {
   return (
-    <div className="flex gap-2">
+    <div className="switch">
       {RANGES.map((r) => (
         <Link
           key={r.value}
-          href={r.value === "quarter" ? "/" : `/?range=${r.value}`}
+          href={r.value === "quarter" ? routes.dashboard() : `${routes.dashboard()}?range=${r.value}`}
           scroll={false}
-          className={active === r.value ? "btn" : "btn-ghost"}
+          className={`rounded px-3 py-1.5 text-xs font-medium transition ${
+            active === r.value ? "bg-accent text-accent-foreground" : "text-muted hover:text-foreground"
+          }`}
         >
           {r.label}
         </Link>

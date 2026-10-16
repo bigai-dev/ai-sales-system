@@ -1,5 +1,5 @@
 import { PAGE } from "@/lib/constants/copy";
-import PipelineView from "@/components/views/PipelineView";
+import DealsView from "@/components/views/DealsView";
 import { getPipelineBoard } from "@/lib/queries/pipeline";
 import { db } from "@/db/client";
 import { clients as clientsTable } from "@/db/schema";
@@ -8,7 +8,7 @@ type SearchParams = { hot?: string };
 
 export const metadata = { title: PAGE.deals.title };
 
-export default async function PipelinePage({
+export default async function DealsPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
@@ -26,5 +26,5 @@ export default async function PipelinePage({
         return { ...col, deals, count: deals.length };
       })
     : board;
-  return <PipelineView board={filteredBoard} clients={clientRows} hotOnly={hotOnly} />;
+  return <DealsView board={filteredBoard} clients={clientRows} hotOnly={hotOnly} />;
 }

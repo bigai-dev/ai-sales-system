@@ -63,3 +63,31 @@ export async function getCallsByClient(clientId: string): Promise<CallListItem[]
     .orderBy(desc(calls.startedAt));
   return rows;
 }
+
+export type WeeklyCalls = { label: string; planned: number; completed: number };
+
+/** Calls per week for the last `weeks` weeks (oldest first), for the dashboard chart. */
+export async function getCallsPerWeek(weeks = 8): Promise<WeeklyCalls[]> {
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const start = now - weeks * WEEK_MS;
+  const rows = await db
+    .select({ status: calls.status, startedAt: calls.startedAt, scheduledAt: calls.scheduledAt })
+    .from(calls);
+  const out: WeeklyCalls[] = Array.from({ length: weeks }, (_, i) => {
+    const weekStart = new Date(start + i * WEEK_MS);
+    return {
+      label: weekStart.toLocaleDateString("en-MY", { day: "numeric", month: "short" }),
+      planned: 0,
+      completed: 0,
+    };
+  });
+  for (const r of rows) {
+    const ts = r.scheduledAt ?? r.startedAt;
+    if (ts < start || ts > now + WEEK_MS) continue;
+    const idx = Math.min(weeks - 1, Math.max(0, Math.floor((ts - start) / WEEK_MS)));
+    if (r.status === "completed" || r.status === "ended") out[idx].completed += 1;
+    else out[idx].planned += 1;
+  }
+  return out;
+}

@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,66 +11,67 @@ import {
   Filler,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { callSeries } from "@/lib/data/fallbacks";
+import type { WeeklyCalls } from "@/lib/queries/calls";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  Legend,
-  Filler
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
-// Colors aligned with the OKLCH theme tokens (Chart.js can't read CSS vars,
-// so we mirror the values here).
-const COLOR = {
-  background: "#27241f",       // surface-elevated
-  border: "#52473d",           // border
-  borderSubtle: "rgba(82,71,61,0.35)",
-  foreground: "#f5f3ee",       // foreground (cream)
-  muted: "#a8a39a",            // muted (warm gray)
-  accent: "#f7a85d",           // accent (warm amber)
-  series: {
-    callsMade: "#a8a39a",      // muted gray — top of funnel, low signal
-    pickedUp: "#d6cfc4",       // foreground-tinted gray — middle
-    conversations: "#f7a85d",  // accent — the conversion that matters
-  },
+type Colors = {
+  surface: string;
+  border: string;
+  grid: string;
+  foreground: string;
+  muted: string;
+  accent: string;
 };
 
-export default function CallActivityChart() {
+/** Chart.js can't read CSS variables, so read the theme once mounted and
+ *  again whenever light/dark flips. */
+function readColors(): Colors {
+  const css = getComputedStyle(document.documentElement);
+  const v = (name: string) => css.getPropertyValue(name).trim();
+  return {
+    surface: v("--surface-elevated"),
+    border: v("--border"),
+    grid: `color-mix(in oklch, ${v("--border-subtle")} 60%, transparent)`,
+    foreground: v("--foreground"),
+    muted: v("--muted"),
+    accent: v("--accent"),
+  };
+}
+
+export default function CallActivityChart({ weeks }: { weeks: WeeklyCalls[] }) {
+  const [colors, setColors] = useState<Colors | null>(null);
+
+  useEffect(() => {
+    setColors(readColors());
+    const obs = new MutationObserver(() => setColors(readColors()));
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+
+  if (!colors) return <div style={{ height: 240 }} className="skeleton" />;
+
   const data = {
-    labels: callSeries.labels,
+    labels: weeks.map((w) => w.label),
     datasets: [
       {
-        label: "Calls made",
-        data: callSeries.callsMade,
-        borderColor: COLOR.series.callsMade,
-        backgroundColor: COLOR.series.callsMade + "1a",
+        label: "Planned",
+        data: weeks.map((w) => w.planned),
+        borderColor: colors.muted,
+        backgroundColor: `color-mix(in oklch, ${colors.muted} 12%, transparent)`,
         tension: 0.4,
         fill: true,
-        pointRadius: 0,
+        pointRadius: 2,
         borderWidth: 1.5,
       },
       {
-        label: "Picked up",
-        data: callSeries.pickedUp,
-        borderColor: COLOR.series.pickedUp,
-        backgroundColor: COLOR.series.pickedUp + "1a",
+        label: "Completed",
+        data: weeks.map((w) => w.completed),
+        borderColor: colors.accent,
+        backgroundColor: `color-mix(in oklch, ${colors.accent} 15%, transparent)`,
         tension: 0.4,
         fill: true,
-        pointRadius: 0,
-        borderWidth: 1.5,
-      },
-      {
-        label: "Conversations",
-        data: callSeries.conversations,
-        borderColor: COLOR.series.conversations,
-        backgroundColor: COLOR.series.conversations + "22",
-        tension: 0.4,
-        fill: true,
-        pointRadius: 0,
+        pointRadius: 2,
         borderWidth: 2,
       },
     ],
@@ -79,26 +81,29 @@ export default function CallActivityChart() {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: true,
+        position: "top" as const,
+        align: "end" as const,
+        labels: { color: colors.muted, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { size: 11 } },
+      },
       tooltip: {
-        backgroundColor: COLOR.background,
-        borderColor: COLOR.border,
+        backgroundColor: colors.surface,
+        borderColor: colors.border,
         borderWidth: 1,
-        titleColor: COLOR.foreground,
-        bodyColor: COLOR.muted,
+        titleColor: colors.foreground,
+        bodyColor: colors.muted,
       },
     },
     scales: {
-      x: {
-        grid: { color: COLOR.borderSubtle },
-        ticks: { color: COLOR.muted, font: { size: 11 } },
-      },
+      x: { grid: { color: colors.grid }, ticks: { color: colors.muted, font: { size: 11 } } },
       y: {
-        grid: { color: COLOR.borderSubtle },
-        ticks: { color: COLOR.muted, font: { size: 11 } },
+        beginAtZero: true,
+        grid: { color: colors.grid },
+        ticks: { color: colors.muted, font: { size: 11 }, precision: 0 },
       },
     },
-  } as const;
+  };
 
   return (
     <div style={{ height: 240 }}>

@@ -1,69 +1,47 @@
+import dynamic from "next/dynamic";
 import KpiCard from "../KpiCard";
 import DateRangeTabs from "../DateRangeTabs";
-import PipelineByStage from "../PipelineByStage";
-import dynamic from "next/dynamic";
-
-// ~85KB gz of chart.js + react-chartjs-2. Dynamic import keeps the chart in
-// its own chunk so it's not in the initial dashboard JS payload — the chunk
-// loads when the chart component mounts. Can't use { ssr: false } here
-// because DashboardView is a Server Component (Next 15+ restriction).
-const CallActivityChart = dynamic(() => import("../CallActivityChart"));
+import DealsByStage from "../DealsByStage";
 import CoachingPanel from "../CoachingPanel";
 import { rangeLabel, type Range } from "@/lib/quarter";
 import type { Kpi, Stage } from "@/lib/types/ui";
 import type { CoachingPanelData } from "@/lib/queries/coaching";
+import type { WeeklyCalls } from "@/lib/queries/calls";
+import { PAGE } from "@/lib/constants/copy";
+import { PageHeader, Panel } from "@/components/ui";
+
+// chart.js is ~85KB gzipped; keep it in its own chunk that loads when the
+// chart mounts rather than in the first dashboard payload.
+const CallActivityChart = dynamic(() => import("../CallActivityChart"));
 
 type Props = {
   kpis: Kpi[];
   stages: Stage[];
   coaching: CoachingPanelData;
+  weeks: WeeklyCalls[];
   range: Range;
 };
 
-export default function DashboardView({ kpis, stages, coaching, range }: Props) {
+export default function DashboardView({ kpis, stages, coaching, weeks, range }: Props) {
   return (
     <section>
-      <div className="flex items-end justify-between mb-6">
-        <div>
-          <div className="text-xs text-muted">My pipeline</div>
-          <h1 className="text-2xl font-bold mt-1">
-            Workshops booked — <span className="text-accent">{rangeLabel(range)}</span>
-          </h1>
-        </div>
-        <DateRangeTabs active={range} />
-      </div>
+      <PageHeader
+        title={PAGE.dashboard.title}
+        description={rangeLabel(range)}
+        actions={<DateRangeTabs active={range} />}
+      />
 
-      <div data-tour="kpi-row" className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div data-tour="kpi-row" className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
         {kpis.map((k) => (
           <KpiCard key={k.label} kpi={k} />
         ))}
       </div>
 
-      <div className="grid grid-cols-12 gap-4 mb-6">
-        <PipelineByStage stages={stages} />
-        <div className="panel p-5 col-span-12 lg:col-span-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <div className="font-semibold">Discovery activity</div>
-              <div className="text-xs text-muted">Last 8 weeks</div>
-            </div>
-            <div className="flex gap-3 text-xs text-muted">
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#a8a39a" }} />
-                Calls made
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#d6cfc4" }} />
-                Picked up
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                Conversations
-              </span>
-            </div>
-          </div>
-          <CallActivityChart />
-        </div>
+      <div className="mb-4 grid grid-cols-12 gap-4">
+        <DealsByStage stages={stages} />
+        <Panel className="col-span-12 lg:col-span-5" title="Calls per week" aside={<span className="text-xs text-muted">Last 8 weeks</span>}>
+          <CallActivityChart weeks={weeks} />
+        </Panel>
       </div>
 
       <CoachingPanel data={coaching} />
