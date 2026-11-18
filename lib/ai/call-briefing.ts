@@ -154,7 +154,7 @@ export async function generateCallBriefing(callId: string): Promise<Result<CallB
       output: Output.object({ schema: callBriefingSchema }),
       system: SYSTEM_PROMPT,
       prompt: `Client + audit + open deal + prior calls:\n${JSON.stringify(context.context, null, 2)}\n\nProduce the briefing now.`,
-      maxOutputTokens: 1500,
+      maxOutputTokens: 3000,
     });
     briefing = callBriefingSchema.parse(result.output);
   } catch (e) {

@@ -141,7 +141,7 @@ async function runGrader(args: {
       output: Output.object({ schema: gradeOutputSchema }),
       system: GRADER_SYSTEM,
       prompt: `Bucket: ${DRILL_BUCKET_LABEL[bucket]}\n\nScenario (prospect speech):\n"""${scenarioPrompt}"""\n\nRubric (what good looks like):\n${rubric.map((r) => `- ${r}`).join("\n")}\n\nRep's response:\n"""${repResponse}"""\n\nGrade now.`,
-      maxOutputTokens: 400,
+      maxOutputTokens: 800,
     });
     const parsed = gradeOutputSchema.parse(res.output);
     return { ok: true, data: parsed };

@@ -61,12 +61,12 @@ export const scenarioOutputSchema = z.object({
   scenario: z
     .string()
     .min(20)
-    .max(280)
+    .max(420)
     .describe(
       "The verbatim prospect statement that triggers the drill. Quote it as if heard on a real call.",
     ),
   rubric: z
-    .array(z.string().min(8).max(160))
+    .array(z.string().min(8).max(240))
     .min(2)
     .max(3)
     .describe(
@@ -89,7 +89,7 @@ export const gradeOutputSchema = z.object({
   feedback: z
     .string()
     .min(10)
-    .max(280)
+    .max(420)
     .describe("One-line specific critique. Reference WHAT the rep said or missed, not generic advice."),
 });
 
@@ -101,8 +101,8 @@ export const dryRunPackSchema = z.object({
     .array(
       z.object({
         bucket: z.enum(DRILL_BUCKETS),
-        prompt: z.string().min(15).max(280),
-        rubric: z.array(z.string().min(8).max(160)).min(2).max(3),
+        prompt: z.string().min(15).max(420),
+        rubric: z.array(z.string().min(8).max(240)).min(2).max(3),
       }),
     )
     .length(3)

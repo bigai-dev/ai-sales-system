@@ -120,7 +120,7 @@ export async function generateHealthCheck(clientId: string): Promise<{
       output: Output.object({ schema: healthCheckSchema }),
       system: SYSTEM_PROMPT,
       prompt: `Client: ${JSON.stringify(context.client)}\nDeals: ${JSON.stringify(context.deals)}`,
-      maxOutputTokens: 4000,
+      maxOutputTokens: 6000,
     });
     output = healthCheckSchema.parse(result.output);
   } catch (e) {
@@ -149,7 +149,7 @@ export async function generateHealthCheck(clientId: string): Promise<{
       ]
         .filter(Boolean)
         .join(" · "),
-      modelVersion: "deepseek-chat",
+      modelVersion: chat.modelId,
     })
     .returning({ id: healthChecks.id });
 

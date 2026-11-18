@@ -10,16 +10,16 @@ export const dryRunMomentSchema = z.object({
   prompt: z
     .string()
     .min(15)
-    .max(280)
+    .max(420)
     .describe("The hardest opening exchange to expect for THIS specific prospect."),
   rubric: z
-    .array(z.string().min(8).max(160))
+    .array(z.string().min(8).max(240))
     .min(2)
     .max(3)
     .describe("Brief 'what good looks like' anchors the grader uses."),
   repResponse: z.string().max(800).default(""),
   grade: z.number().int().min(0).max(100).nullable().default(null),
-  feedback: z.string().max(280).default(""),
+  feedback: z.string().max(420).default(""),
 });
 
 export type DryRunMoment = z.infer<typeof dryRunMomentSchema>;
@@ -28,7 +28,7 @@ export const callDryRunSchema = z.object({
   generatedAt: z.number().int(),
   takeaway: z
     .string()
-    .max(280)
+    .max(420)
     .default("")
     .describe(
       "One-sentence reminder to take into the live call. Empty until all 3 moments are graded.",

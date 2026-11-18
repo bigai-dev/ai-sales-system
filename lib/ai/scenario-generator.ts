@@ -116,7 +116,7 @@ export async function generateDrillScenario(
         output: Output.object({ schema: scenarioOutputSchema }),
         system: DRILL_SYSTEM,
         prompt: `Bucket: ${DRILL_BUCKET_LABEL[bucket]} — ${DRILL_BUCKET_HELP[bucket]}${focusHint}\n\n${variationHint}${exemplarHint}\n\nGenerate the drill scenario now.`,
-        maxOutputTokens: 600,
+        maxOutputTokens: 1200,
       });
       return { ok: true, data: scenarioOutputSchema.parse(res.output) };
     } catch (e) {
@@ -196,7 +196,7 @@ export async function generateDryRunPack(args: {
         output: Output.object({ schema: dryRunPackSchema }),
         system: DRY_RUN_SYSTEM,
         prompt: `Client: ${clientName}${industry ? ` (${industry})` : ""}${size ? ` · ${size}` : ""}${employees ? ` · ${employees} employees` : ""}${devCount ? ` · ${devCount} devs` : ""}\n\nBriefing summary:\n${JSON.stringify(briefingSummary, null, 2)}${exemplarHint}\n\nGenerate the 3-moment dry-run pack now.`,
-        maxOutputTokens: 900,
+        maxOutputTokens: 4000,
       });
       return { ok: true, data: dryRunPackSchema.parse(res.output) };
     } catch (e) {

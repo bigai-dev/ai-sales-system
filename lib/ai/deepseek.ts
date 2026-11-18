@@ -1,10 +1,12 @@
 import { deepseek } from "@ai-sdk/deepseek";
 
-// Stable aliases. DeepSeek points each alias at the latest model in its family.
-//   chat     — general / streaming workloads
-//   reasoner — multi-step thinking, batch / async work
+// The two DeepSeek models every AI feature uses.
+//   chat     — general / streaming workloads (fast, cheap)
+//   reasoner — multi-step thinking, batch / async work (call grading)
 //
-// If a future release renames these, change them here only — every other file
-// in this codebase imports `chat` / `reasoner` from this module.
-export const chat = deepseek("deepseek-chat");
-export const reasoner = deepseek("deepseek-reasoner");
+// DeepSeek retired the old "deepseek-chat" / "deepseek-reasoner" aliases in
+// favour of named models; see GET https://api.deepseek.com/models for the
+// current list. If DeepSeek renames them again, change them here only — every
+// other file imports `chat` / `reasoner` from this module.
+export const chat = deepseek("deepseek-flash");
+export const reasoner = deepseek("deepseek-v4-pro");

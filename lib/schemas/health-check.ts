@@ -12,7 +12,7 @@ const metric = z.object({
 const dimension = z.object({
   score: z.number().int().min(0).max(100),
   status,
-  summary: z.string().min(20).max(400),
+  summary: z.string().min(20).max(600),
   metrics: z.array(metric).min(1).max(6),
 });
 
@@ -22,7 +22,7 @@ export const healthCheckSchema = z.object({
   executiveSummary: z
     .string()
     .min(80)
-    .max(800)
+    .max(1200)
     .describe(
       "Narrative paragraph naming the 1-2 biggest gaps in the engineering team's AI-coding readiness and the highest-leverage 90-day move.",
     ),

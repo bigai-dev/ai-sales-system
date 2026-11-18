@@ -157,7 +157,7 @@ export async function generateCallDebrief(callId: string): Promise<Result<CallDe
       output: Output.object({ schema: callDebriefSchema }),
       system: SYSTEM_PROMPT,
       prompt: `Context:\n${JSON.stringify(context.context, null, 2)}\n\nRep notes:\n"""\n${context.notes}\n"""\n\nProduce the debrief.`,
-      maxOutputTokens: 1500,
+      maxOutputTokens: 3000,
     });
     debrief = callDebriefSchema.parse(result.output);
   } catch (e) {

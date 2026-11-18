@@ -64,7 +64,7 @@ export async function generateDealInsight(dealId: string): Promise<Result<{ text
       model: chat,
       system: SYSTEM,
       prompt: `Deal: ${JSON.stringify(ctx)}\n\nWrite the observation now.`,
-      maxOutputTokens: 120,
+      maxOutputTokens: 200,
     });
     text = res.text.trim();
   } catch (e) {

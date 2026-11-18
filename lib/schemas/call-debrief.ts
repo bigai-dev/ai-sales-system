@@ -15,7 +15,7 @@ export const callDebriefSchema = z.object({
   summary: z
     .string()
     .min(20)
-    .max(400)
+    .max(600)
     .describe("2-3 sentence neutral summary of what was discussed."),
   objectionsRaised: z
     .array(
@@ -24,7 +24,7 @@ export const callDebriefSchema = z.object({
         verbatim: z
           .string()
           .min(5)
-          .max(220)
+          .max(330)
           .describe(
             "The actual objection as the rep captured it. Stay close to the rep's wording.",
           ),
@@ -36,7 +36,7 @@ export const callDebriefSchema = z.object({
     .array(
       z.object({
         who: z.enum(["rep", "client"]),
-        what: z.string().min(5).max(220),
+        what: z.string().min(5).max(330),
       }),
     )
     .max(6)
@@ -45,7 +45,7 @@ export const callDebriefSchema = z.object({
   nextStep: z
     .string()
     .min(8)
-    .max(240)
+    .max(360)
     .describe(
       "ONE clear next step the rep should take, with timing if possible (e.g. 'Send proposal by Friday').",
     ),
@@ -57,7 +57,7 @@ export const callDebriefSchema = z.object({
   coachingNote: z
     .string()
     .min(15)
-    .max(280)
+    .max(420)
     .describe(
       "One observation about HOW the rep handled the call — strength to repeat or gap to fix. Be specific.",
     ),

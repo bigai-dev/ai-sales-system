@@ -193,7 +193,7 @@ export async function generateProposalCore(
         output: Output.object({ schema: proposalSchema }),
         system: SYSTEM_PROMPT,
         prompt: `Client + audit + open deal context:\n${JSON.stringify(context.prompt, null, 2)}\n\nProduce the proposal now.`,
-        maxOutputTokens: 3000,
+        maxOutputTokens: 6000,
         abortSignal: signal,
       });
       output = proposalSchema.parse(result.output);
@@ -233,7 +233,7 @@ export async function generateProposalCore(
       sstCents: pricing.sstCents,
       totalCents: pricing.totalCents,
       venue: output.logistics.venueRecommendation,
-      modelVersion: "deepseek-chat",
+      modelVersion: chat.modelId,
       generatedAt,
     })
     .returning({ id: proposals.id });

@@ -147,7 +147,7 @@ export async function generateFollowupEmail(
       output: Output.object({ schema: emailDraftSchema }),
       system: SYSTEM_PROMPT,
       prompt: `Context:\n${JSON.stringify(context, null, 2)}\n\nDraft the follow-up email now.`,
-      maxOutputTokens: 1500,
+      maxOutputTokens: 3000,
     });
     return { ok: true, data: emailDraftSchema.parse(result.output) };
   } catch (e) {

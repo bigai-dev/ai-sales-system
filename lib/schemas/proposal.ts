@@ -13,11 +13,11 @@ import { z } from "zod";
 // generous, only to stop runaway output from breaking the PDF layout.
 
 const moduleEntry = z.object({
-  title: z.string().min(1).max(100),
+  title: z.string().min(1).max(150),
   rationale: z
     .string()
     .min(1)
-    .max(300)
+    .max(450)
     .describe(
       "One sentence (aim for ~20–220 characters) tying this module to a specific audit finding (e.g. 'Adoption is at 30% — this module standardizes a baseline').",
     ),
@@ -36,7 +36,7 @@ export const proposalSchema = z.object({
     rationale: z
       .string()
       .min(1)
-      .max(600)
+      .max(900)
       .describe(
         "Why this cohort size, given the team's headcount and AI-knowledge level (aim for 2–4 sentences). Reference audit findings.",
       ),
@@ -45,7 +45,7 @@ export const proposalSchema = z.object({
     day1Theme: z
       .string()
       .min(1)
-      .max(100)
+      .max(150)
       .describe(
         "Day 1 weighting headline (e.g. 'Tool stack + prompt fluency baseline').",
       ),
@@ -57,7 +57,7 @@ export const proposalSchema = z.object({
     day2Theme: z
       .string()
       .min(1)
-      .max(100)
+      .max(150)
       .describe(
         "Day 2 weighting headline (e.g. 'Workflow integration + agentic dev guardrails').",
       ),
@@ -79,20 +79,20 @@ export const proposalSchema = z.object({
     venueRationale: z
       .string()
       .min(1)
-      .max(450)
+      .max(680)
       .describe(
         "Why this venue style fits the team (aim for 1–3 sentences) — reference distributed/colocated, security posture, retention.",
       ),
   }),
   followUps: z
-    .array(z.string().min(1).max(220))
+    .array(z.string().min(1).max(330))
     .min(1)
     .max(4)
     .describe(
       "Post-workshop engagements that compound the workshop's value (e.g. lead-engineer 1:1s, readiness re-audit at 90 days).",
     ),
   nextSteps: z
-    .array(z.string().min(1).max(220))
+    .array(z.string().min(1).max(330))
     .min(1)
     .max(4)
     .describe(

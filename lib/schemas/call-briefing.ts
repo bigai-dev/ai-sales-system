@@ -4,18 +4,18 @@ export const callBriefingSchema = z.object({
   context: z
     .string()
     .min(20)
-    .max(400)
+    .max(600)
     .describe(
       "1-2 sentence summary of where this client is in the sales process and what just happened. Use the stage's plain-English name (never the letter code) and recent activity.",
     ),
   discoveryQuestions: z
     .array(
       z.object({
-        question: z.string().min(8).max(220),
+        question: z.string().min(8).max(330),
         why: z
           .string()
           .min(8)
-          .max(220)
+          .max(330)
           .describe("Why ask this question for THIS client right now."),
       }),
     )
@@ -28,11 +28,11 @@ export const callBriefingSchema = z.object({
     .array(
       z.object({
         category: z.enum(["content", "budget", "venue", "time", "other"]),
-        objection: z.string().min(8).max(180),
+        objection: z.string().min(8).max(270),
         response: z
           .string()
           .min(20)
-          .max(280)
+          .max(420)
           .describe("How to respond — concise, defensible from the audit data."),
       }),
     )
@@ -44,14 +44,14 @@ export const callBriefingSchema = z.object({
       what: z
         .string()
         .min(15)
-        .max(220)
+        .max(330)
         .describe(
           "The specific commitment to extract from the prospect to advance to the target stage.",
         ),
     })
     .describe("What 'good' looks like for this call — the next-stage move to land."),
   watchouts: z
-    .array(z.string().min(8).max(180))
+    .array(z.string().min(8).max(270))
     .min(0)
     .max(3)
     .describe(

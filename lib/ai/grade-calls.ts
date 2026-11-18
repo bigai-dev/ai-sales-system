@@ -65,7 +65,7 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
         callsWithTurns.length === 0
           ? `No recent calls in the system yet. Generate a sensible baseline coaching panel a sales manager would set as the team's initial targets.`
           : `Recent closing calls (${callsWithTurns.length}):\n${JSON.stringify(callsWithTurns)}`,
-      maxOutputTokens: 1500,
+      maxOutputTokens: 8000,
     });
     output = graderSchema.parse(res.output);
   } catch (e) {
