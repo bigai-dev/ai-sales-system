@@ -70,6 +70,9 @@ export async function generateDealInsight(dealId: string): Promise<Result<{ text
   } catch (e) {
     return { ok: false, error: friendlyError(e, "write the insight") };
   }
+  // An empty answer (e.g. the model spent its whole allowance thinking) must
+  // not be saved, or the deal would show a blank tip until its details change.
+  if (!text) return { ok: false, error: friendlyError(new Error("empty insight"), "write the insight") };
 
   await db
     .insert(dealInsightCache)

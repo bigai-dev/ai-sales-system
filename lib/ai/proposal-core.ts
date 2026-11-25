@@ -75,6 +75,13 @@ version evidently didn't land. Meaningfully differentiate this version:
   ("Refined from the X-pax / Y proposal sent N days ago to better fit Z signal")
 Do NOT regenerate the same proposal with cosmetic changes.
 
+Length limits — the client reads this as a PDF, so keep it crisp:
+- cohortRecommendation.rationale: 2-3 sentences, under 70 words.
+- day1Modules and day2Modules: 3-4 each. Module titles under 8 words; each
+  rationale one sentence under 25 words.
+- logistics.venueRationale: 1-2 sentences, under 40 words.
+- followUps and nextSteps: 2-3 each, one sentence under 20 words.
+
 ${DISCOVERY_PRIMER}
 
 Respond ONLY with JSON conforming to the requested schema. No code fences. No

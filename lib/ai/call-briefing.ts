@@ -50,6 +50,15 @@ For expectedObjections, predict 1-3 most likely from the audit + stage:
 The nextStageMove must be one stage ahead of the client's current stage
 (or same stage if it's stuck). 'what' is the verbatim commitment to extract.
 
+Length limits — shorter answers arrive faster and are easier to read:
+- context: 1-2 sentences, under 40 words.
+- discoveryQuestions: exactly 3. Each question under 25 words; each "why"
+  under 20 words.
+- expectedObjections: 1-3. Each objection under 20 words; each response
+  under 40 words.
+- nextStageMove.what: one sentence, under 25 words.
+- watchouts: 0-3 items, never more than 3, each under 20 words.
+
 ${DISCOVERY_PRIMER}
 
 Respond ONLY with JSON conforming to the schema. No code fences. No commentary.`;
@@ -147,19 +156,26 @@ export async function generateCallBriefing(callId: string): Promise<Result<CallB
     return { ok: false, error: (e as Error).message };
   }
 
-  let briefing: CallBriefing;
-  try {
-    const result = await generateText({
-      model: chat,
-      output: Output.object({ schema: callBriefingSchema }),
-      system: SYSTEM_PROMPT,
-      prompt: `Client + audit + open deal + prior calls:\n${JSON.stringify(context.context, null, 2)}\n\nProduce the briefing now.`,
-      maxOutputTokens: 3000,
-    });
-    briefing = callBriefingSchema.parse(result.output);
-  } catch (e) {
-    return { ok: false, error: friendlyError(e, "plan this call") };
+  // DeepSeek reads the schema as a hint, so an answer now and then runs one
+  // item or a few words over a limit. One retry (a fresh answer) clears it.
+  let briefing: CallBriefing | undefined;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 2 && !briefing; attempt++) {
+    try {
+      const result = await generateText({
+        model: chat,
+        output: Output.object({ schema: callBriefingSchema }),
+        system: SYSTEM_PROMPT,
+        prompt: `Client + audit + open deal + prior calls:\n${JSON.stringify(context.context, null, 2)}\n\nProduce the briefing now.`,
+        maxOutputTokens: 3000,
+      });
+      briefing = callBriefingSchema.parse(result.output);
+    } catch (e) {
+      lastError = e;
+      if (attempt === 1) console.warn("Call plan attempt 1/2 failed:", (e as Error).message);
+    }
   }
+  if (!briefing) return { ok: false, error: friendlyError(lastError, "plan this call") };
 
   await db.update(calls).set({ briefing }).where(eq(calls.id, callId));
   revalidatePath(`/calls/${callId}`);

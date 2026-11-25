@@ -13,7 +13,7 @@ import {
   coachingScores,
   coachingWins,
 } from "@/db/schema";
-import { graderSchema, type GraderOutput } from "@/lib/schemas/grade-calls";
+import { graderSchema, normalizeImpact, type GraderOutput } from "@/lib/schemas/grade-calls";
 import { stageLabel } from "@/lib/constants/labels";
 
 const SYSTEM = `You are a sales-coaching reviewer. Given the transcripts of
@@ -21,7 +21,8 @@ recent CLOSING calls, return:
   - 3-5 scoring dimensions (0-100) you would coach to most. Examples:
     "Discovery depth", "Active listening", "Objection handling",
     "Pricing setup", "Next-step clarity".
-  - 0-4 specific improvement opportunities with detail and impact tag.
+  - 0-4 specific improvement opportunities with detail and an impact tag:
+    exactly "high impact", "medium impact" or "low impact".
   - 0-5 short "what's working" wins (each split into prefix / num / suffix
     so the UI can highlight a number). Use null for num/suffix when not
     relevant.
@@ -90,17 +91,20 @@ export async function gradeRecentClosingCalls(limit = 20): Promise<{
 
   if (output.opportunities.length) {
     await db.insert(coachingOpportunities).values(
-      output.opportunities.map((o, idx) => ({
-        runId,
-        title: o.title,
-        detail: o.detail,
-        impactText: o.impact,
-        impactTone:
-          o.impact === "high impact" ? ("bad" as const) :
-          o.impact === "medium" ? ("warn" as const) :
-          ("good" as const),
-        sortIdx: idx,
-      })),
+      output.opportunities.map((o, idx) => {
+        const impact = normalizeImpact(o.impact);
+        return {
+          runId,
+          title: o.title,
+          detail: o.detail,
+          impactText: impact,
+          impactTone:
+            impact === "high impact" ? ("bad" as const) :
+            impact === "medium impact" ? ("warn" as const) :
+            ("good" as const),
+          sortIdx: idx,
+        };
+      }),
     );
   }
 

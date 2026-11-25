@@ -57,6 +57,13 @@ follow-up engagement) can deliver inside 90 days; prefer measurable impact.
 
 Status thresholds: 0-49 critical, 50-64 at_risk, 65-79 watch, 80-100 healthy.
 
+Length limits — shorter answers arrive faster and are easier to read:
+- executiveSummary: 2-3 sentences, under 80 words.
+- Each dimension summary: 1-2 sentences, under 40 words.
+- metrics: 2-3 per dimension. Keep "note" under 12 words, or leave it out.
+- risks: 3-6. Title under 8 words; description one sentence under 25 words.
+- actions: 4-6. Title under 10 words; "impact" one sentence under 20 words.
+
 Respond ONLY with JSON conforming to the requested schema. No code fences.
 No commentary.`;
 
@@ -113,19 +120,26 @@ export async function generateHealthCheck(clientId: string): Promise<{
     return { ok: false, error: (e as Error).message };
   }
 
-  let output: HealthCheckOutput;
-  try {
-    const result = await generateText({
-      model: chat,
-      output: Output.object({ schema: healthCheckSchema }),
-      system: SYSTEM_PROMPT,
-      prompt: `Client: ${JSON.stringify(context.client)}\nDeals: ${JSON.stringify(context.deals)}`,
-      maxOutputTokens: 6000,
-    });
-    output = healthCheckSchema.parse(result.output);
-  } catch (e) {
-    return { ok: false, error: friendlyError(e, "run the readiness check") };
+  // DeepSeek reads the schema as a hint, so an answer now and then runs a few
+  // words over a limit. One retry (a fresh answer) clears it.
+  let output: HealthCheckOutput | undefined;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 2 && !output; attempt++) {
+    try {
+      const result = await generateText({
+        model: chat,
+        output: Output.object({ schema: healthCheckSchema }),
+        system: SYSTEM_PROMPT,
+        prompt: `Client: ${JSON.stringify(context.client)}\nDeals: ${JSON.stringify(context.deals)}`,
+        maxOutputTokens: 6000,
+      });
+      output = healthCheckSchema.parse(result.output);
+    } catch (e) {
+      lastError = e;
+      if (attempt === 1) console.warn("Readiness check attempt 1/2 failed:", (e as Error).message);
+    }
   }
+  if (!output) return { ok: false, error: friendlyError(lastError, "run the readiness check") };
 
   // Persist as a single transaction
   const [client] = await db.select().from(clients).where(eq(clients.id, clientId));

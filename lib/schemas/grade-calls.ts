@@ -15,7 +15,12 @@ export const graderSchema = z.object({
       z.object({
         title: z.string(),
         detail: z.string(),
-        impact: z.enum(["high impact", "medium", "low impact"]),
+        // A plain string, not an enum: the AI often writes "medium impact"
+        // (or "High"), and an enum turned that into a failed coaching run.
+        // normalizeImpact() maps whatever it wrote onto the three levels.
+        impact: z
+          .string()
+          .describe('Exactly one of: "high impact", "medium impact", "low impact".'),
       }),
     )
     .min(0)
@@ -33,3 +38,13 @@ export const graderSchema = z.object({
 });
 
 export type GraderOutput = z.infer<typeof graderSchema>;
+
+export type ImpactLevel = "high impact" | "medium impact" | "low impact";
+
+/** Map the AI's impact tag ("High", "medium", "low impact"…) to one of three levels. */
+export function normalizeImpact(raw: string): ImpactLevel {
+  const s = raw.toLowerCase();
+  if (s.includes("high")) return "high impact";
+  if (s.includes("low")) return "low impact";
+  return "medium impact";
+}
